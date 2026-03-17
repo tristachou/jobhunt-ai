@@ -17,29 +17,10 @@ const OHMYCV_URL = `http://localhost:${OHMYCV_PORT}`;
 
 let _devServerProcess = null;
 
-// Default Oh My CV CSS (template 1, with #resume-preview selector inlined)
-const DEFAULT_CSS = `
-#resume-preview [data-scope="vue-smart-pages"][data-part="page"] {
-  background-color: white; color: black; text-align: justify; hyphens: auto;
-}
-#resume-preview p, #resume-preview li, #resume-preview dl { margin: 0; }
-#resume-preview h1, #resume-preview h2, #resume-preview h3 { font-weight: bold; }
-#resume-preview h1 { font-size: 2.13em; }
-#resume-preview h2, #resume-preview h3 { margin-bottom: 5px; font-size: 1.2em; }
-#resume-preview h2 { border-bottom-style: solid; border-bottom-width: 1px; }
-#resume-preview ul, #resume-preview ol { padding-left: 1.5em; margin: 0.2em 0; }
-#resume-preview ul { list-style-type: circle; }
-#resume-preview dl { display: flex; }
-#resume-preview dl dt, #resume-preview dl dd:not(:last-child) { flex: 1; }
-#resume-preview .resume-header { text-align: center; }
-#resume-preview .resume-header h1 { text-align: center; line-height: 1; margin-bottom: 8px; }
-#resume-preview .resume-header-item:not(.no-separator)::after { content: " | "; }
-@media print {
-  #resume-preview [data-scope="vue-smart-pages"][data-part="page"] {
-    background-color: white; color: black;
-  }
-}
-`.trim();
+// Resume CSS — loaded from resumes/resume.css at startup.
+// Edit that file to change the PDF appearance; no code changes needed.
+const CSS_PATH = path.resolve(__dirname, '../resumes/resume.css');
+const DEFAULT_CSS = fs.readFileSync(CSS_PATH, 'utf8');
 
 const DEFAULT_STYLES = {
   marginV: 50,
