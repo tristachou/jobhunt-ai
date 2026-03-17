@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Apply Bot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header nav a {
+      color: #ccc;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 0.9rem;
+    }
+    header nav a:hover { color: #fff; }
+
+    main {
+      max-width: 860px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    /* ── Form card ── */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.12);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: #444; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+    .row.three { grid-template-columns: 2fr 1fr 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; }
+    .field input, .field select, .field textarea {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color .15s;
+      font-family: inherit;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: #4a90d9; }
+    .field textarea { resize: vertical; min-height: 160px; }
+
+    .actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 26px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary { background: #1a1a2e; color: #fff; }
+
+    /* ── Status / result ── */
+    #status-bar {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 5px;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+    }
+    #status-bar.loading { background: #eef4ff; color: #336; border: 1px solid #b8d0f7; }
+    #status-bar.error   { background: #fff0f0; color: #900; border: 1px solid #f5c0c0; }
+
+    #result { display: none; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px 20px;
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+    }
+    .result-label { font-weight: 600; color: #555; white-space: nowrap; }
+    .result-value { color: #222; }
+
+    .score-badge {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 12px;
+      padding: 2px 12px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .score-badge.low  { background: #fff3e0; color: #e65100; }
+    .score-badge.mid  { background: #fff8e1; color: #f57f17; }
+
+    .tag {
+      display: inline-block;
+      background: #f0f4ff;
+      color: #334;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      margin: 2px 3px 2px 0;
+    }
+    .tag.bold { background: #dbeafe; color: #1e3a8a; font-weight: 600; }
+
+    .download-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+    .download-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: #1a1a2e;
+      color: #fff;
+    }
+    .download-links a:hover { opacity: .85; }
+
+    /* ── Applications table ── */
+    #apps-section { display: none; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      background: #f0f0f0;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #555;
+    }
+    td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .status-select {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Job Apply Bot</h1>
+  <nav>
+    <a href="#" id="nav-form">New Application</a>
+    <a href="#" id="nav-apps">History</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── Generate Form ── -->
+  <section id="form-section">
+    <div class="card">
+      <h2>Paste Job Details</h2>
+
+      <div class="row three">
+        <div class="field">
+          <label>Job Title</label>
+          <input id="job_title" type="text" placeholder="e.g. Full-Stack Developer">
+        </div>
+        <div class="field">
+          <label>Company</label>
+          <input id="company" type="text" placeholder="e.g. Atlassian">
+        </div>
+        <div class="field">
+          <label>Source</label>
+          <select id="source">
+            <option value="linkedin">LinkedIn</option>
+            <option value="seek">Seek</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Job URL</label>
+          <input id="url" type="text" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Job Description</label>
+        <textarea id="jd" placeholder="Paste the full job description here..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" id="btn-generate">Generate</button>
+      </div>
+    </div>
+
+    <div id="status-bar"></div>
+
+    <!-- Result -->
+    <div id="result" class="card">
+      <h2>Result</h2>
+
+      <div class="result-grid">
+        <span class="result-label">Fit Score</span>
+        <span><span id="r-score" class="score-badge"></span></span>
+
+        <span class="result-label">Stack</span>
+        <span id="r-stack" class="result-value"></span>
+
+        <span class="result-label">Detected Skills</span>
+        <span id="r-detected" class="result-value"></span>
+
+        <span class="result-label">Bolded in Resume</span>
+        <span id="r-bolded" class="result-value"></span>
+
+        <span class="result-label">Downloads</span>
+        <span id="r-links" class="result-value">
+          <div class="download-links" id="r-downloads"></div>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Applications History ── -->
+  <section id="apps-section">
+    <div class="card">
+      <h2>Application History</h2>
+      <div class="table-wrap">
+        <table id="apps-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Company</th>
+              <th>Title</th>
+              <th>Source</th>
+              <th>Score</th>
+              <th>Stack</th>
+              <th>Status</th>
+              <th>Files</th>
+            </tr>
+          </thead>
+          <tbody id="apps-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+@import "./fonts.css";
+@import "./editor.css";
+@import "./dashboard.css";
+
+/* Variables have been injected via `unocss-preset-shadcn` (https://github.com/hyoban/unocss-preset-shadcn) */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--accent));
+}
+
+/* `workspace` element should fill the space not occupied by the header */
+header {
+  height: 48px;
+}
+
+.workspace {
+  height: calc(100% - 48px);
+}
+
+/* For icons used in resumes */
+svg.iconify {
+  display: inline-block;
+}
+
+/* Utility for hiding scrollbar */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar { /* Safari and Chrome */
+  display: none;
+}
