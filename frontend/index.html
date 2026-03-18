@@ -28,16 +28,17 @@
       text-decoration: none;
       margin-left: 20px;
       font-size: 0.9rem;
+      transition: color .15s;
     }
-    header nav a:hover { color: #fff; }
+    header nav a:hover, header nav a.active { color: #fff; }
 
     main {
-      max-width: 860px;
+      max-width: 1080px;
       margin: 32px auto;
       padding: 0 16px;
     }
 
-    /* ── Form card ── */
+    /* ── Card ── */
     .card {
       background: #fff;
       border-radius: 8px;
@@ -47,9 +48,9 @@
     }
     .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: #444; }
 
+    /* ── Form ── */
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
     .row.three { grid-template-columns: 2fr 1fr 1fr; }
-
     .field { display: flex; flex-direction: column; gap: 5px; }
     .field label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; }
     .field input, .field select, .field textarea {
@@ -63,7 +64,6 @@
     }
     .field input:focus, .field select:focus, .field textarea:focus { border-color: #4a90d9; }
     .field textarea { resize: vertical; min-height: 160px; }
-
     .actions { display: flex; justify-content: flex-end; margin-top: 18px; }
 
     button {
@@ -78,94 +78,157 @@
     }
     button:hover { opacity: .85; }
     button:disabled { opacity: .5; cursor: not-allowed; }
-
     .btn-primary { background: #1a1a2e; color: #fff; }
+    .btn-danger {
+      background: none; color: #c00;
+      padding: 4px 8px; font-size: 0.8rem; font-weight: 400;
+      border: 1px solid #f5c0c0; border-radius: 4px;
+    }
+    .btn-danger:hover { background: #fff0f0; opacity: 1; }
 
-    /* ── Status / result ── */
+    /* ── Status / Result ── */
     #status-bar {
-      display: none;
-      padding: 10px 14px;
-      border-radius: 5px;
-      font-size: 0.88rem;
-      margin-bottom: 16px;
+      display: none; padding: 10px 14px; border-radius: 5px;
+      font-size: 0.88rem; margin-bottom: 16px;
     }
     #status-bar.loading { background: #eef4ff; color: #336; border: 1px solid #b8d0f7; }
     #status-bar.error   { background: #fff0f0; color: #900; border: 1px solid #f5c0c0; }
-
     #result { display: none; }
-
     .result-grid {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px 20px;
-      font-size: 0.9rem;
-      margin-bottom: 18px;
+      display: grid; grid-template-columns: auto 1fr;
+      gap: 10px 20px; font-size: 0.9rem; margin-bottom: 18px;
     }
     .result-label { font-weight: 600; color: #555; white-space: nowrap; }
     .result-value { color: #222; }
-
     .score-badge {
-      display: inline-block;
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-radius: 12px;
-      padding: 2px 12px;
-      font-weight: 700;
-      font-size: 1rem;
+      display: inline-block; background: #e8f5e9; color: #2e7d32;
+      border-radius: 12px; padding: 2px 12px; font-weight: 700; font-size: 1rem;
     }
-    .score-badge.low  { background: #fff3e0; color: #e65100; }
-    .score-badge.mid  { background: #fff8e1; color: #f57f17; }
-
+    .score-badge.low { background: #fff3e0; color: #e65100; }
+    .score-badge.mid { background: #fff8e1; color: #f57f17; }
     .tag {
-      display: inline-block;
-      background: #f0f4ff;
-      color: #334;
-      border-radius: 4px;
-      padding: 2px 8px;
-      font-size: 0.8rem;
-      margin: 2px 3px 2px 0;
+      display: inline-block; background: #f0f4ff; color: #334;
+      border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; margin: 2px 3px 2px 0;
     }
     .tag.bold { background: #dbeafe; color: #1e3a8a; font-weight: 600; }
-
     .download-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
     .download-links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      background: #1a1a2e;
-      color: #fff;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 5px; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600; background: #1a1a2e; color: #fff;
     }
     .download-links a:hover { opacity: .85; }
 
-    /* ── Applications table ── */
+    /* ── History ── */
     #apps-section { display: none; }
+
+    .filter-bar {
+      display: flex; gap: 6px; margin-bottom: 18px;
+      flex-wrap: wrap; align-items: center; justify-content: space-between;
+    }
+    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-tab {
+      padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd;
+      background: #fff; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; color: #555; transition: all .15s; font-family: inherit;
+    }
+    .filter-tab:hover { border-color: #aaa; color: #222; }
+    .filter-tab.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+    .sort-btn {
+      padding: 5px 12px; border-radius: 5px; border: 1px solid #ddd;
+      background: #fff; font-size: 0.82rem; cursor: pointer; color: #555;
+      font-family: inherit; transition: all .15s;
+    }
+    .sort-btn:hover { border-color: #aaa; color: #222; opacity: 1; }
+
+    /* Table */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     th {
-      text-align: left;
-      padding: 8px 10px;
-      background: #f0f0f0;
-      font-size: 0.76rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      color: #555;
+      text-align: left; padding: 8px 10px; background: #f0f0f0;
+      font-size: 0.76rem; text-transform: uppercase;
+      letter-spacing: .04em; color: #555; white-space: nowrap;
     }
-    td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
+    td { padding: 6px 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    tr.main-row:hover > td { background: #f9f9ff; }
+    tr.detail-row > td { padding: 0; background: #fafafa; border-bottom: 1px solid #eee; }
 
-    .status-select {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 3px 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      background: #fff;
+    /* Expand cell */
+    .expand-cell {
+      color: #bbb; font-size: 0.72rem; cursor: pointer;
+      user-select: none; width: 22px; text-align: center;
     }
+    .expand-cell:hover { color: #555; }
+
+    /* Editable cells */
+    .editable-cell { cursor: text; }
+    .editable-cell:hover > *:not(input):not(select) { opacity: 0.75; }
+    .cell-input {
+      width: 100%; min-width: 60px;
+      border: 1px solid #4a90d9; border-radius: 3px;
+      padding: 3px 6px; font: inherit; font-size: 0.85rem;
+      outline: none; background: #fff;
+    }
+    select.cell-input { min-width: 90px; }
+
+    /* Score bar */
+    .score-cell { display: flex; align-items: center; gap: 8px; }
+    .score-bar-wrap { width: 40px; height: 5px; background: #eee; border-radius: 3px; flex-shrink: 0; }
+    .score-bar { height: 5px; border-radius: 3px; }
+
+    /* Status badge */
+    .status-wrap { position: relative; display: inline-block; }
+    .status-badge {
+      display: inline-block; border-radius: 4px; padding: 3px 10px;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer; user-select: none;
+    }
+    .status-badge.generated { background: #f0f0f0; color: #555; }
+    .status-badge.applied   { background: #dbeafe; color: #1e40af; }
+    .status-badge.interview { background: #dcfce7; color: #166534; }
+    .status-badge.rejected  { background: #fee2e2; color: #991b1b; }
+    .status-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0;
+      background: #fff; border: 1px solid #ddd; border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.12); z-index: 100;
+      min-width: 130px; overflow: hidden; display: none;
+    }
+    .status-dropdown.open { display: block; }
+    .status-option {
+      padding: 7px 14px; font-size: 0.82rem; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-option:hover { background: #f5f5f5; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-generated { background: #aaa; }
+    .dot-applied   { background: #3b82f6; }
+    .dot-interview { background: #22c55e; }
+    .dot-rejected  { background: #ef4444; }
+
+    /* Links */
+    .url-link, .file-link { color: #4a90d9; text-decoration: none; font-size: 0.82rem; }
+    .url-link:hover, .file-link:hover { text-decoration: underline; }
+    .file-sep { color: #ccc; margin: 0 4px; }
+
+    /* Detail panel */
+    .detail-panel { display: none; padding: 16px 20px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .detail-section h4 {
+      font-size: 0.76rem; font-weight: 600; color: #888;
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;
+    }
+    .detail-jd-edit {
+      width: 100%; min-height: 180px;
+      font-size: 0.82rem; line-height: 1.6; color: #444;
+      border: 1px solid #eee; border-radius: 5px;
+      padding: 10px 12px; font-family: inherit;
+      resize: vertical; outline: none; background: #fff;
+      transition: border-color .15s;
+    }
+    .detail-jd-edit:focus { border-color: #4a90d9; }
+    .autosave-hint { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
+
+    /* Empty state */
+    .empty-state { text-align: center; color: #999; padding: 40px; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -173,7 +236,7 @@
 <header>
   <h1>Job Apply Bot</h1>
   <nav>
-    <a href="#" id="nav-form">New Application</a>
+    <a href="#" id="nav-form" class="active">New Application</a>
     <a href="#" id="nav-apps">History</a>
   </nav>
 </header>
@@ -184,7 +247,6 @@
   <section id="form-section">
     <div class="card">
       <h2>Paste Job Details</h2>
-
       <div class="row three">
         <div class="field">
           <label>Job Title</label>
@@ -203,19 +265,16 @@
           </select>
         </div>
       </div>
-
       <div class="row">
         <div class="field" style="grid-column: 1 / -1;">
           <label>Job URL</label>
           <input id="url" type="text" placeholder="https://...">
         </div>
       </div>
-
       <div class="field">
         <label>Job Description</label>
         <textarea id="jd" placeholder="Paste the full job description here..."></textarea>
       </div>
-
       <div class="actions">
         <button class="btn-primary" id="btn-generate">Generate</button>
       </div>
@@ -223,25 +282,19 @@
 
     <div id="status-bar"></div>
 
-    <!-- Result -->
     <div id="result" class="card">
       <h2>Result</h2>
-
       <div class="result-grid">
         <span class="result-label">Fit Score</span>
         <span><span id="r-score" class="score-badge"></span></span>
-
         <span class="result-label">Stack</span>
         <span id="r-stack" class="result-value"></span>
-
         <span class="result-label">Detected Skills</span>
         <span id="r-detected" class="result-value"></span>
-
         <span class="result-label">Bolded in Resume</span>
         <span id="r-bolded" class="result-value"></span>
-
         <span class="result-label">Downloads</span>
-        <span id="r-links" class="result-value">
+        <span class="result-value">
           <div class="download-links" id="r-downloads"></div>
         </span>
       </div>
@@ -252,11 +305,21 @@
   <section id="apps-section">
     <div class="card">
       <h2>Application History</h2>
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="generated">Generated</button>
+          <button class="filter-tab" data-filter="applied">Applied</button>
+          <button class="filter-tab" data-filter="interview">Interview</button>
+          <button class="filter-tab" data-filter="rejected">Rejected</button>
+        </div>
+        <button class="sort-btn" id="sort-btn">Date ↓</button>
+      </div>
       <div class="table-wrap">
-        <table id="apps-table">
+        <table>
           <thead>
             <tr>
-              <th>#</th>
+              <th></th>
               <th>Date</th>
               <th>Company</th>
               <th>Title</th>
@@ -264,7 +327,9 @@
               <th>Score</th>
               <th>Stack</th>
               <th>Status</th>
+              <th>URL</th>
               <th>Files</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="apps-body"></tbody>

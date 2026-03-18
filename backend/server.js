@@ -7,7 +7,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const axios = require('axios');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const { insertApplication, getAllApplications, updateApplicationStatus } = require('./db');
+const { insertApplication, getAllApplications, updateApplication, deleteApplication } = require('./db');
 
 // ─── Oh My CV process management ─────────────────────────────────────────────
 
@@ -166,8 +166,12 @@ app.get('/applications', (_req, res) => {
 });
 
 app.patch('/applications/:id', (req, res) => {
-  const { status } = req.body;
-  const ok = updateApplicationStatus(Number(req.params.id), status);
+  const ok = updateApplication(Number(req.params.id), req.body);
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
+});
+
+app.delete('/applications/:id', (req, res) => {
+  const ok = deleteApplication(Number(req.params.id));
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
 });
 

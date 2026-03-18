@@ -41,4 +41,18 @@ function updateApplicationStatus(id, status) {
   return db.prepare('UPDATE applications SET status = ? WHERE id = ?').run(status, id).changes > 0;
 }
 
-module.exports = { insertApplication, getAllApplications, updateApplicationStatus };
+function updateApplication(id, fields) {
+  const ALLOWED = ['created_at', 'company', 'job_title', 'url', 'source',
+                   'jd_text', 'stack_used', 'fit_score', 'status'];
+  const pairs = Object.entries(fields).filter(([k]) => ALLOWED.includes(k));
+  if (!pairs.length) return false;
+  const setClause = pairs.map(([k]) => `${k} = :${k}`).join(', ');
+  const params = { ...Object.fromEntries(pairs), id };
+  return db.prepare(`UPDATE applications SET ${setClause} WHERE id = :id`).run(params).changes > 0;
+}
+
+function deleteApplication(id) {
+  return db.prepare('DELETE FROM applications WHERE id = ?').run(id).changes > 0;
+}
+
+module.exports = { insertApplication, getAllApplications, updateApplicationStatus, updateApplication, deleteApplication };
