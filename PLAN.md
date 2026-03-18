@@ -33,6 +33,9 @@
 | 8 | `backend/coverletter.js` — cover letter placeholder fill | `[x]` | Gemini JSON mode |
 | 9 | `backend/exporter.js` — Oh My CV + Puppeteer → PDF | `[x]` | Oh My CV+IndexedDB for resume; plain HTML for cover letter |
 | 10 | `backend/server.js` — full `/process` wiring all modules | `[x]` | all modules wired |
+| 10a | `backend/server.js` — auto-start Oh My CV + `/cv` reverse proxy | `[x]` | spawns `pnpm dev` on startup, polls 40s, proxies `/cv` → `localhost:5173` via `http-proxy-middleware` |
+| 10b | `backend/exporter.js` — remove dev server management | `[x]` | Oh My CV lifecycle moved to server.js; exporter assumes it's already running |
+| 10c | `resumes/resume.css` — externalized CSS for PDF export | `[x]` | exporter reads from `resumes/resume.css` at startup; `themeColor` defaults to `#000000` |
 
 ---
 
@@ -82,8 +85,13 @@ Response: { fit_score, stack, detected_skills, bolded_skills, resume_pdf, coverl
 
 ### Oh My CV
 - Root: `oh-my-cv-main/` — pnpm workspace, run `pnpm install` from root after moving project
-- Dev server: `cd oh-my-cv-main && PORT=5173 pnpm dev` (must use 5173 to avoid conflict with backend)
+- Dev server: auto-started by `server.js` on port 5173 (`PORT` + `NUXT_PORT` env vars)
+- Access: `localhost:3000/cv` (reverse proxied; no need to open port 5173 directly)
 - Data store: IndexedDB via localForage — key `ohmycv_data`, version key `ohmycv_version`
+- CSS: read from `resumes/resume.css` at exporter startup (edit there; no code changes needed)
+
+### package.json dependencies
+`express`, `axios`, `dotenv`, `puppeteer`, `http-proxy-middleware`
 
 ### .env keys
 ```

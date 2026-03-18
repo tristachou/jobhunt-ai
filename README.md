@@ -50,36 +50,19 @@ OUTPUT_DIR=../output
 
 **macOS / Linux**
 ```bash
-# Terminal 1 — Oh My CV renderer (must be port 5173)
-cd oh-my-cv-main && PORT=5173 pnpm dev
-
-# Terminal 2 — Backend + Frontend
 cd backend && node server.js
 ```
 
-**Windows (Command Prompt)**
+**Windows**
 ```cmd
-:: Terminal 1 — Oh My CV renderer
-cd oh-my-cv-main
-set PORT=5173 && pnpm dev
-
-:: Terminal 2 — Backend + Frontend
 cd backend
 node server.js
 ```
 
-**Windows (PowerShell)**
-```powershell
-# Terminal 1 — Oh My CV renderer
-cd oh-my-cv-main
-$env:PORT = "5173"; pnpm dev
+- App: http://localhost:3000
+- Oh My CV editor: http://localhost:3000/cv
 
-# Terminal 2 — Backend + Frontend
-cd backend
-node server.js
-```
-
-Open http://localhost:3000
+Oh My CV starts automatically in the background — no second terminal needed.
 
 ---
 

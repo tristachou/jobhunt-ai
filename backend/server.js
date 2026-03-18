@@ -4,18 +4,92 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const { spawn } = require('child_process');
+const axios = require('axios');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const { insertApplication, getAllApplications, updateApplicationStatus } = require('./db');
+
+// ─── Oh My CV process management ─────────────────────────────────────────────
+
+const OHMYCV_SITE_PATH = path.resolve(
+  __dirname,
+  process.env.OHMYCV_PATH || '../oh-my-cv-main',
+  'site'
+);
+const OHMYCV_PORT = process.env.OHMYCV_PORT || 5173;
+const OHMYCV_URL = `http://localhost:${OHMYCV_PORT}`;
+
+let ohmycvProcess = null;
+
+async function startOhMyCV() {
+  console.log('[ohmycv] Starting Oh My CV dev server...');
+
+  ohmycvProcess = spawn('pnpm', ['dev'], {
+    cwd: OHMYCV_SITE_PATH,
+    shell: true,
+    stdio: 'pipe',
+    env: {
+      ...process.env,
+      PORT: String(OHMYCV_PORT),
+      NUXT_PORT: String(OHMYCV_PORT),
+    },
+  });
+
+  ohmycvProcess.stdout.on('data', d => process.stdout.write(`[ohmycv] ${d}`));
+  ohmycvProcess.stderr.on('data', d => process.stderr.write(`[ohmycv] ${d}`));
+  ohmycvProcess.on('exit', code => {
+    if (code !== null) console.log(`[ohmycv] process exited with code ${code}`);
+  });
+
+  // Poll until Oh My CV is ready (up to 40s)
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    try {
+      await axios.get(OHMYCV_URL, { timeout: 1000 });
+      console.log(`[ohmycv] Ready at ${OHMYCV_URL}`);
+      return;
+    } catch { /* not ready yet */ }
+  }
+  throw new Error('Oh My CV failed to start within 40s');
+}
+
+function killOhMyCV() {
+  if (ohmycvProcess) {
+    ohmycvProcess.kill();
+    ohmycvProcess = null;
+  }
+}
+
+// Kill Oh My CV when the main process exits
+process.on('SIGINT',  () => { killOhMyCV(); process.exit(0); });
+process.on('SIGTERM', () => { killOhMyCV(); process.exit(0); });
+
+// ─── Express app ──────────────────────────────────────────────────────────────
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/output', express.static(path.join(__dirname, '../output')));
 
-// ─── Health ──────────────────────────────────────────────────────────────────
+// Reverse proxy: /cv/* → Oh My CV dev server (localhost:5173)
+app.use('/cv', createProxyMiddleware({
+  target: OHMYCV_URL,
+  changeOrigin: true,
+  pathRewrite: { '^/cv': '' },
+  ws: true, // proxy WebSocket for Nuxt HMR
+  on: {
+    error: (err, req, res) => {
+      console.error('[proxy error]', err.message);
+      res.status(502).send('Oh My CV proxy error');
+    },
+  },
+}));
+
+// ─── Health ───────────────────────────────────────────────────────────────────
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// ─── Process ─────────────────────────────────────────────────────────────────
+// ─── Process ──────────────────────────────────────────────────────────────────
 
 app.post('/process', async (req, res) => {
   const { job_title, company, jd, url, source } = req.body;
@@ -100,4 +174,15 @@ app.patch('/applications/:id', (req, res) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+
+startOhMyCV()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`\nServer running at http://localhost:${PORT}`);
+      console.log(`Oh My CV editor: http://localhost:${PORT}/cv\n`);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to start Oh My CV:', err.message);
+    process.exit(1);
+  });

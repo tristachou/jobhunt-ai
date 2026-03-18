@@ -1,21 +1,13 @@
 'use strict';
 
+// Oh My CV is managed by server.js — this module assumes it is already running.
+
 const path = require('path');
 const fs = require('fs');
-const { spawn } = require('child_process');
 const puppeteer = require('puppeteer');
-const axios = require('axios');
 
-// Oh My CV dev server settings
-const OHMYCV_SITE_PATH = path.resolve(
-  __dirname,
-  process.env.OHMYCV_PATH || '../oh-my-cv-main',
-  'site'
-);
 const OHMYCV_PORT = process.env.OHMYCV_PORT || 5173;
 const OHMYCV_URL = `http://localhost:${OHMYCV_PORT}`;
-
-let _devServerProcess = null;
 
 // Resume CSS — loaded from resumes/resume.css at startup.
 // Edit that file to change the PDF appearance; no code changes needed.
@@ -27,56 +19,16 @@ const DEFAULT_STYLES = {
   marginH: 45,
   lineHeight: 1.3,
   paragraphSpace: 5,
-  themeColor: '#377bb5',
+  themeColor: '#000000',
   fontCJK: { name: '华康宋体', fontFamily: 'HKST' },
   fontEN: { name: 'Minion Pro' },
   fontSize: 15,
   paper: 'A4',
 };
 
-// ─── Dev Server ───────────────────────────────────────────────────────────────
-
-async function _isServerRunning() {
-  try {
-    await axios.get(OHMYCV_URL, { timeout: 2000 });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function _ensureDevServer() {
-  if (await _isServerRunning()) return;
-
-  console.log('Starting Oh My CV dev server at', OHMYCV_SITE_PATH);
-  _devServerProcess = spawn('pnpm', ['dev'], {
-    cwd: OHMYCV_SITE_PATH,
-    shell: true,
-    stdio: 'pipe',
-    env: {
-      ...process.env,
-      PORT: String(OHMYCV_PORT),
-      NUXT_PORT: String(OHMYCV_PORT),
-    },
-  });
-
-  _devServerProcess.stderr.on('data', d => process.stderr.write(d));
-
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, 1000));
-    if (await _isServerRunning()) {
-      console.log('Oh My CV dev server ready');
-      return;
-    }
-  }
-  throw new Error('Oh My CV dev server failed to start within 40s');
-}
-
 // ─── Resume PDF via Oh My CV ──────────────────────────────────────────────────
 
 async function exportResumePDF({ markdown, name = 'resume', outputPath }) {
-  await _ensureDevServer();
-
   const resumeId = Date.now();
   const now = new Date().toISOString();
   const storageData = {

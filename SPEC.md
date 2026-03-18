@@ -21,7 +21,7 @@ job-apply-bot/
 │   ├── coverletter.js        # Cover letter placeholder fill (Gemini)
 │   ├── exporter.js           # PDF export: Oh My CV (resume) + HTML (cover letter)
 │   ├── db.js                 # SQLite operations via node:sqlite (built-in)
-│   ├── package.json          # Dependencies: express, axios, dotenv, puppeteer
+│   ├── package.json          # Dependencies: express, axios, dotenv, puppeteer, http-proxy-middleware
 │   └── .env                  # GEMINI_API_KEY, GEMINI_MODEL, OHMYCV_PATH, etc.
 ├── resumes/
 │   ├── base.md               # Universal resume template with {{placeholders}}
@@ -92,6 +92,15 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 ### 2. Local Backend (Node.js + Express)
 
 **Port:** 3000
+
+**Startup sequence:**
+1. `server.js` spawns Oh My CV (`pnpm dev`) in `oh-my-cv-main/site/` with `PORT=5173`
+2. Polls `localhost:5173` until ready (up to 40s)
+3. Starts Express on port 3000
+4. On process exit (SIGINT/SIGTERM), kills the Oh My CV child process
+
+**Reverse proxy:** `/cv/*` → `localhost:5173` via `http-proxy-middleware`
+- `localhost:3000/cv` = Oh My CV editor (no need to open port 5173 directly)
 
 **Endpoints:**
 
@@ -243,9 +252,10 @@ Replace every `{{placeholder}}` in `base.md` with the corresponding value.
 
 ### 5. PDF Exporter (exporter.js)
 
+**Assumes Oh My CV is already running** — lifecycle managed entirely by `server.js`.
+
 **Resume PDF — via Oh My CV + Puppeteer:**
-1. Auto-start Oh My CV dev server if not already running (`PORT=5173 pnpm dev` in `oh-my-cv-main/`)
-2. Launch Puppeteer (headless), navigate to `localhost:5173`
+1. Launch Puppeteer (headless), navigate to `localhost:5173`
 3. Inject resume data into the app's IndexedDB (localForage key: `ohmycv_data`, version key: `ohmycv_version`)
 4. Navigate to `/editor/{resumeId}`, wait for `#resume-preview` to render
 5. Call `page.pdf()` → save to `output/YYYY-MM-DD_Company_Title/resume.pdf`
