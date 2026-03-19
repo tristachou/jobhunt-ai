@@ -3,95 +3,32 @@
 require('dotenv').config();
 
 const express = require('express');
-const path = require('path');
-const { spawn } = require('child_process');
-const axios = require('axios');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const { insertApplication, getAllApplications, updateApplication, deleteApplication } = require('./db');
+const path    = require('path');
+const fs      = require('fs');
 
-// ─── Oh My CV process management ─────────────────────────────────────────────
+const PROMPTS_PATH = path.resolve(__dirname, '../resumes/prompts.json');
 
-const OHMYCV_SITE_PATH = path.resolve(
-  __dirname,
-  process.env.OHMYCV_PATH || '../oh-my-cv-main',
-  'site'
-);
-const OHMYCV_PORT = process.env.OHMYCV_PORT || 5173;
-const OHMYCV_URL = `http://localhost:${OHMYCV_PORT}`;
-
-let ohmycvProcess = null;
-
-async function startOhMyCV() {
-  console.log('[ohmycv] Starting Oh My CV dev server...');
-
-  ohmycvProcess = spawn('pnpm', ['dev'], {
-    cwd: OHMYCV_SITE_PATH,
-    shell: true,
-    stdio: 'pipe',
-    env: {
-      ...process.env,
-      PORT: String(OHMYCV_PORT),
-      NUXT_PORT: String(OHMYCV_PORT),
-    },
-  });
-
-  ohmycvProcess.stdout.on('data', d => process.stdout.write(`[ohmycv] ${d}`));
-  ohmycvProcess.stderr.on('data', d => process.stderr.write(`[ohmycv] ${d}`));
-  ohmycvProcess.on('exit', code => {
-    if (code !== null) console.log(`[ohmycv] process exited with code ${code}`);
-  });
-
-  // Poll until Oh My CV is ready (up to 40s)
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, 1000));
-    try {
-      await axios.get(OHMYCV_URL, { timeout: 1000 });
-      console.log(`[ohmycv] Ready at ${OHMYCV_URL}`);
-      return;
-    } catch { /* not ready yet */ }
-  }
-  throw new Error('Oh My CV failed to start within 40s');
-}
-
-function killOhMyCV() {
-  if (ohmycvProcess) {
-    ohmycvProcess.kill();
-    ohmycvProcess = null;
-  }
-}
-
-// Kill Oh My CV when the main process exits
-process.on('SIGINT',  () => { killOhMyCV(); process.exit(0); });
-process.on('SIGTERM', () => { killOhMyCV(); process.exit(0); });
-
-// ─── Express app ──────────────────────────────────────────────────────────────
+const {
+  insertApplication,
+  getAllApplications,
+  getApplicationById,
+  updateApplication,
+  deleteApplication,
+} = require('./db');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
-app.use('/output', express.static(path.join(__dirname, '../output')));
 
-// Reverse proxy: /cv/* → Oh My CV dev server (localhost:5173)
-app.use('/cv', createProxyMiddleware({
-  target: OHMYCV_URL,
-  changeOrigin: true,
-  pathRewrite: { '^/cv': '' },
-  ws: true, // proxy WebSocket for Nuxt HMR
-  on: {
-    error: (err, req, res) => {
-      console.error('[proxy error]', err.message);
-      res.status(502).send('Oh My CV proxy error');
-    },
-  },
-}));
-
-// ─── Health ───────────────────────────────────────────────────────────────────
+// ─── Health ────────────────────────────────────────────────────────────────────
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-// ─── Process ──────────────────────────────────────────────────────────────────
+// ─── Analyze — Stage 1 ────────────────────────────────────────────────────────
+// Runs AI tailoring + cover letter, saves markdown to DB, returns metadata.
+// No PDF is generated here.
 
-app.post('/process', async (req, res) => {
+app.post('/analyze', async (req, res) => {
   const { job_title, company, jd, url, source } = req.body;
 
   if (!job_title || !company || !jd) {
@@ -99,63 +36,115 @@ app.post('/process', async (req, res) => {
   }
 
   try {
-    const { tailorResume } = require('./tailor');
+    const { tailorResume }      = require('./tailor');
     const { generateCoverLetter } = require('./coverletter');
-    const { exportResumePDF, exportCoverLetterPDF } = require('./exporter');
 
-    const outputBase = path.resolve(__dirname, process.env.OUTPUT_DIR || '../output');
-    const date = new Date().toISOString().slice(0, 10);
-    const folderName = `${date}_${company.replace(/[^a-zA-Z0-9]/g, '-')}_${job_title.replace(/[^a-zA-Z0-9]/g, '-')}`;
-    const folder = path.join(outputBase, folderName);
-
-    // 1. Tailor resume
-    const { markdown: resumeMd, stack, detected_skills, bolded_skills, fit_score } = await tailorResume({ jd });
-
-    // 2. Export resume PDF
-    const resumePdfAbs = path.join(folder, 'resume.pdf');
-    await exportResumePDF({ markdown: resumeMd, name: `${company} Resume`, outputPath: resumePdfAbs });
-
-    // 3. Generate cover letter
+    const tailor  = await tailorResume({ jd });
     const coverMd = await generateCoverLetter({ company, job_title, jd });
-    let coverletter_pdf = null;
 
-    if (coverMd) {
-      const coverPdfAbs = path.join(folder, 'cover-letter.pdf');
-      await exportCoverLetterPDF({ markdown: coverMd, outputPath: coverPdfAbs });
-      coverletter_pdf = `/output/${folderName}/cover-letter.pdf`;
-    }
-
-    // 4. Save to DB
-    const record_id = insertApplication({
+    const id = insertApplication({
       created_at: new Date().toISOString(),
       company,
       job_title,
-      url: url || '',
-      source: source || 'other',
-      jd_text: jd,
-      stack_used: stack,
-      fit_score,
-      resume_pdf_path: `/output/${folderName}/resume.pdf`,
-      coverletter_pdf_path: coverletter_pdf || '',
-      status: 'generated',
+      url:       url    || '',
+      source:    source || 'other',
+      jd_text:   jd,
+      stack_used: tailor.stack,
+      fit_score:  tailor.fit_score,
+      resume_md:  tailor.markdown,
+      cover_md:   coverMd || '',
+      status:    'analyzed',
     });
 
     res.json({
-      fit_score,
-      stack,
-      detected_skills,
-      bolded_skills,
-      resume_pdf: `/output/${folderName}/resume.pdf`,
-      coverletter_pdf,
-      record_id,
+      id,
+      fit_score:       tailor.fit_score,
+      stack:           tailor.stack,
+      detected_skills: tailor.detected_skills,
+      bolded_skills:   tailor.bolded_skills,
     });
   } catch (err) {
-    console.error('[/process error]', err);
+    console.error('[/analyze error]', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ─── Applications ─────────────────────────────────────────────────────────────
+// ─── PDF Export — Stage 2 (on-demand) ─────────────────────────────────────────
+// GET /applications/:id/pdf?type=resume|coverletter
+// Generates PDF from stored markdown and streams it as a download.
+
+app.get('/applications/:id/pdf', async (req, res) => {
+  const type = req.query.type === 'coverletter' ? 'coverletter' : 'resume';
+  const record = getApplicationById(Number(req.params.id));
+
+  if (!record) return res.status(404).json({ error: 'Not found' });
+
+  const markdown = type === 'coverletter' ? record.cover_md : record.resume_md;
+  if (!markdown) {
+    return res.status(404).json({ error: `No ${type} markdown saved for this application` });
+  }
+
+  try {
+    const { exportResumePDF, exportCoverLetterPDF } = require('./exporter');
+    const buffer = type === 'coverletter'
+      ? await exportCoverLetterPDF(markdown)
+      : await exportResumePDF(markdown);
+
+    const slug     = `${record.company}_${record.job_title}`.replace(/[^a-zA-Z0-9]/g, '-');
+    const filename = `${slug}_${type}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error('[/pdf error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Preview — for editor live preview ────────────────────────────────────────
+// POST /preview  { markdown, type: "resume"|"coverletter" }
+// Returns rendered HTML string (not a PDF).
+
+app.post('/preview', (req, res) => {
+  const { markdown, type } = req.body;
+  if (!markdown) return res.status(400).json({ error: 'markdown is required' });
+
+  try {
+    const { renderResume, renderCoverLetter } = require('./renderer');
+    const html = type === 'coverletter'
+      ? renderCoverLetter(markdown)
+      : renderResume(markdown);
+    res.json({ html });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Prompts ───────────────────────────────────────────────────────────────────
+
+app.get('/prompts', (_req, res) => {
+  try {
+    res.json(JSON.parse(fs.readFileSync(PROMPTS_PATH, 'utf8')));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/prompts', (req, res) => {
+  const { tailor, coverletter } = req.body;
+  if (typeof tailor !== 'string' || typeof coverletter !== 'string') {
+    return res.status(400).json({ error: 'tailor and coverletter must be strings' });
+  }
+  try {
+    fs.writeFileSync(PROMPTS_PATH, JSON.stringify({ tailor, coverletter }, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Applications CRUD ─────────────────────────────────────────────────────────
 
 app.get('/applications', (_req, res) => {
   try {
@@ -163,6 +152,11 @@ app.get('/applications', (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.get('/applications/:id', (req, res) => {
+  const record = getApplicationById(Number(req.params.id));
+  record ? res.json(record) : res.status(404).json({ error: 'Not found' });
 });
 
 app.patch('/applications/:id', (req, res) => {
@@ -175,18 +169,9 @@ app.delete('/applications/:id', (req, res) => {
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
 });
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Start ─────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-
-startOhMyCV()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`\nServer running at http://localhost:${PORT}`);
-      console.log(`Oh My CV editor: http://localhost:${PORT}/cv\n`);
-    });
-  })
-  .catch(err => {
-    console.error('Failed to start Oh My CV:', err.message);
-    process.exit(1);
-  });
+app.listen(PORT, () => {
+  console.log(`\nServer running at http://localhost:${PORT}\n`);
+});

@@ -2,27 +2,25 @@
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
-const formSection = document.getElementById('form-section');
-const appsSection = document.getElementById('apps-section');
-const navForm = document.getElementById('nav-form');
-const navApps = document.getElementById('nav-apps');
+const formSection     = document.getElementById('form-section');
+const appsSection     = document.getElementById('apps-section');
+const settingsSection = document.getElementById('settings-section');
+const navForm     = document.getElementById('nav-form');
+const navApps     = document.getElementById('nav-apps');
+const navSettings = document.getElementById('nav-settings');
 
-navForm.addEventListener('click', e => {
-  e.preventDefault();
-  formSection.style.display = 'block';
-  appsSection.style.display = 'none';
-  navForm.classList.add('active');
-  navApps.classList.remove('active');
-});
+function showSection(active) {
+  formSection.style.display     = active === 'form'     ? 'block' : 'none';
+  appsSection.style.display     = active === 'apps'     ? 'block' : 'none';
+  settingsSection.style.display = active === 'settings' ? 'block' : 'none';
+  navForm.classList.toggle('active',     active === 'form');
+  navApps.classList.toggle('active',     active === 'apps');
+  navSettings.classList.toggle('active', active === 'settings');
+}
 
-navApps.addEventListener('click', e => {
-  e.preventDefault();
-  formSection.style.display = 'none';
-  appsSection.style.display = 'block';
-  navApps.classList.add('active');
-  navForm.classList.remove('active');
-  loadApplications();
-});
+navForm.addEventListener('click', e => { e.preventDefault(); showSection('form'); });
+navApps.addEventListener('click', e => { e.preventDefault(); showSection('apps'); loadApplications(); });
+navSettings.addEventListener('click', e => { e.preventDefault(); showSection('settings'); loadPrompts(); });
 
 // ─── Generate ─────────────────────────────────────────────────────────────────
 
@@ -42,12 +40,12 @@ btnGenerate.addEventListener('click', async () => {
     return;
   }
 
-  showStatus('loading', 'Generating tailored resume and cover letter… this may take a minute.');
+  showStatus('loading', 'Analysing job description and tailoring resume… this may take ~30s.');
   btnGenerate.disabled = true;
   resultBox.style.display = 'none';
 
   try {
-    const res = await fetch('/process', {
+    const res = await fetch('/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ job_title, company, source, url, jd }),
@@ -85,16 +83,11 @@ function renderResult(data) {
 
   const downloads = document.getElementById('r-downloads');
   downloads.innerHTML = '';
-  if (data.resume_pdf) {
+  if (data.id) {
     const a = document.createElement('a');
-    a.href = data.resume_pdf; a.target = '_blank'; a.download = '';
-    a.textContent = '⬇ Resume PDF';
-    downloads.appendChild(a);
-  }
-  if (data.coverletter_pdf) {
-    const a = document.createElement('a');
-    a.href = data.coverletter_pdf; a.target = '_blank'; a.download = '';
-    a.textContent = '⬇ Cover Letter PDF';
+    a.href = `/editor.html?id=${data.id}`;
+    a.className = 'btn-editor';
+    a.textContent = '✏ Open Editor & Download PDFs';
     downloads.appendChild(a);
   }
   resultBox.style.display = 'block';
@@ -232,13 +225,13 @@ function buildRow(app) {
       : `<span style="color:#ccc">—</span>`,
   }));
 
-  // files (read-only)
+  // files — on-demand PDF download + editor link
   const filesTd = document.createElement('td');
-  const parts = [
-    app.resume_pdf_path      ? `<a class="file-link" href="${esc(app.resume_pdf_path)}" target="_blank">Resume</a>` : '',
-    app.coverletter_pdf_path ? `<a class="file-link" href="${esc(app.coverletter_pdf_path)}" target="_blank">CL</a>` : '',
-  ].filter(Boolean);
-  filesTd.innerHTML = parts.join('<span class="file-sep">·</span>') || '<span style="color:#ccc">—</span>';
+  const parts = [];
+  if (app.resume_md)  parts.push(`<a class="file-link" href="/applications/${app.id}/pdf?type=resume" download>Resume</a>`);
+  if (app.cover_md)   parts.push(`<a class="file-link" href="/applications/${app.id}/pdf?type=coverletter" download>CL</a>`);
+  parts.push(`<a class="file-link" href="/editor.html?id=${app.id}">✏ Edit</a>`);
+  filesTd.innerHTML = parts.join('<span class="file-sep">·</span>');
   mainTr.appendChild(filesTd);
 
   // delete
@@ -446,6 +439,51 @@ async function deleteApp(id) {
     const res = await fetch(`/applications/${id}`, { method: 'DELETE' });
     return res.ok;
   } catch { return false; }
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+async function loadPrompts() {
+  try {
+    const res = await fetch('/prompts');
+    if (!res.headers.get('content-type')?.includes('application/json')) {
+      throw new Error('Backend not reachable — make sure the server is running on port 3000 (not Oh My CV)');
+    }
+    const data = await res.json();
+    document.getElementById('prompt-tailor').value      = data.tailor      || '';
+    document.getElementById('prompt-coverletter').value = data.coverletter || '';
+  } catch (err) {
+    showSettingsStatus('error', `Failed to load prompts: ${err.message}`);
+  }
+}
+
+document.getElementById('btn-save-prompts').addEventListener('click', async () => {
+  const tailor      = document.getElementById('prompt-tailor').value;
+  const coverletter = document.getElementById('prompt-coverletter').value;
+  const btn = document.getElementById('btn-save-prompts');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/prompts', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tailor, coverletter }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showSettingsStatus('error', data.error || 'Save failed'); return; }
+    showSettingsStatus('ok', 'Saved!');
+  } catch (err) {
+    showSettingsStatus('error', `Network error: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function showSettingsStatus(type, msg) {
+  const el = document.getElementById('settings-status');
+  el.textContent = msg;
+  el.className = 'settings-status' + (type === 'error' ? ' error' : '');
+  el.style.display = 'inline';
+  if (type === 'ok') setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

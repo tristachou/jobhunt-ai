@@ -1,6 +1,7 @@
 {
   "stacks": {
     "csharp": {
+      "name": "Hsin-Yu Chou",
       "primary_stack": "C# (ASP.NET Core)",
       "job_title_display": "Full-Stack Developer",
       "lang_skills": ["C#", "Python", "JavaScript", "TypeScript", "PHP"],
@@ -20,6 +21,7 @@
       }
     },
     "python": {
+      "name": "Trista",
       "primary_stack": "Python (FastAPI)",
       "job_title_display": "Software Engineer",
       "lang_skills": ["Python", "JavaScript", "TypeScript", "PHP"],
@@ -39,6 +41,7 @@
       }
     },
     "java": {
+      "name": "Hsin-Yu Chou",
       "primary_stack": "Java (Spring Boot)",
       "job_title_display": "Full-Stack Developer",
       "lang_skills": ["Java", "Python", "JavaScript", "TypeScript", "PHP"],

@@ -118,6 +118,14 @@
       font-size: 0.85rem; font-weight: 600; background: #1a1a2e; color: #fff;
     }
     .download-links a:hover { opacity: .85; }
+    .btn-editor {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 5px; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      background: #2563eb; color: #fff; border: none; cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-editor:hover { opacity: .85; }
 
     /* ── History ── */
     #apps-section { display: none; }
@@ -229,6 +237,20 @@
 
     /* Empty state */
     .empty-state { text-align: center; color: #999; padding: 40px; font-size: 0.9rem; }
+
+    /* ── Settings ── */
+    #settings-section { display: none; }
+    .settings-label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; display: block; }
+    .settings-textarea {
+      width: 100%; min-height: 240px; font-size: 0.85rem; font-family: "Fira Mono", "Consolas", monospace;
+      line-height: 1.6; border: 1px solid #ddd; border-radius: 5px;
+      padding: 12px 14px; resize: vertical; outline: none;
+      transition: border-color .15s; background: #fdfdfd;
+    }
+    .settings-textarea:focus { border-color: #4a90d9; }
+    .settings-save-row { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+    .settings-status { font-size: 0.85rem; color: #2e7d32; display: none; }
+    .settings-status.error { color: #900; }
   </style>
 </head>
 <body>
@@ -238,6 +260,7 @@
   <nav>
     <a href="#" id="nav-form" class="active">New Application</a>
     <a href="#" id="nav-apps">History</a>
+    <a href="#" id="nav-settings">Settings</a>
   </nav>
 </header>
 
@@ -293,10 +316,29 @@
         <span id="r-detected" class="result-value"></span>
         <span class="result-label">Bolded in Resume</span>
         <span id="r-bolded" class="result-value"></span>
-        <span class="result-label">Downloads</span>
+        <span class="result-label">Next Step</span>
         <span class="result-value">
           <div class="download-links" id="r-downloads"></div>
         </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Settings ── -->
+  <section id="settings-section">
+    <div class="card">
+      <h2>Prompt Settings</h2>
+      <div class="field" style="margin-bottom:24px">
+        <label class="settings-label">Tailor Prompt</label>
+        <textarea id="prompt-tailor" class="settings-textarea" spellcheck="false" placeholder="Loading…"></textarea>
+      </div>
+      <div class="field">
+        <label class="settings-label">Cover Letter Prompt</label>
+        <textarea id="prompt-coverletter" class="settings-textarea" spellcheck="false" placeholder="Loading…"></textarea>
+      </div>
+      <div class="settings-save-row">
+        <button class="btn-primary" id="btn-save-prompts">Save Prompts</button>
+        <span id="settings-status" class="settings-status"></span>
       </div>
     </div>
   </section>

@@ -4,8 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
-const BASE_MD = path.join(__dirname, '../resumes/base.md');
-const CONFIG_JSON = path.join(__dirname, '../resumes/config.json');
+const BASE_MD      = path.join(__dirname, '../resumes/base.md');
+const CONFIG_JSON  = path.join(__dirname, '../resumes/config.json');
+const PROMPTS_JSON = path.join(__dirname, '../resumes/prompts.json');
 
 async function geminiJSON(prompt) {
   const res = await axios.post(
@@ -62,22 +63,11 @@ async function tailorResume({ jd }) {
   )];
 
   // Step 1: Gemini picks stack + detected skills + fit score
-  const step1 = await geminiJSON(`You are a resume tailoring assistant.
-
-Given the job description below:
-1. Pick ONE backend stack: csharp, python, or java (based on the primary backend language/framework required).
-2. List skills from this array that appear in the JD: ${JSON.stringify(allSkills)}
-3. Calculate a fit score 0-100 based on how well a full-stack developer with these stacks matches the role.
-
-Return ONLY valid JSON in this exact format:
-{
-  "stack": "csharp",
-  "detected_skills": ["C#", "ASP.NET Core", "React"],
-  "fit_score": 87
-}
-
-Job Description:
-${jd}`);
+  const prompts = JSON.parse(fs.readFileSync(PROMPTS_JSON, 'utf8'));
+  const prompt  = prompts.tailor
+    .replace('{{STACKS}}', JSON.stringify(allSkills))
+    .replace('{{JD}}', jd);
+  const step1 = await geminiJSON(prompt);
 
   const { stack, detected_skills, fit_score } = step1;
   const stackConfig = config.stacks[stack];
@@ -103,6 +93,7 @@ ${jd}`);
 
   // Step 4: Fill all placeholders
   const replacements = {
+    '{{name}}':                       stackConfig.name,
     '{{primary_stack}}':              stackConfig.primary_stack,
     '{{job_title_display}}':          stackConfig.job_title_display,
     '{{lang_skills}}':                skillLines.lang_skills,
@@ -139,4 +130,4 @@ ${jd}`);
   return { markdown: filled, stack, detected_skills, bolded_skills, fit_score };
 }
 
-module.exports = { tailorResume };
+module.exports = { tailorResume, formatSkillList, injectSoftSkillBullets };

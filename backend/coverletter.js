@@ -5,6 +5,7 @@ const path = require('path');
 const axios = require('axios');
 
 const TEMPLATE_PATH = path.join(__dirname, '../cover-letter/template.md');
+const PROMPTS_JSON  = path.join(__dirname, '../resumes/prompts.json');
 
 async function geminiJSON(prompt) {
   const res = await axios.post(
@@ -24,44 +25,24 @@ async function generateCoverLetter({ company, job_title, jd }) {
   }
 
   const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+  const prompts  = JSON.parse(fs.readFileSync(PROMPTS_JSON, 'utf8'));
+  const prompt   = prompts.coverletter
+    .replace(/\{\{COMPANY\}\}/g,    company)
+    .replace(/\{\{JOB_TITLE\}\}/g,  job_title)
+    .replace('{{JD}}',              jd)
+    .replace('{{TEMPLATE}}',        template);
 
-  const result = await geminiJSON(`You are a cover letter writing assistant.
-Fill in the placeholder tokens in the cover letter template below. Do NOT rewrite or change any other text.
+  const result = await geminiJSON(prompt);
 
-Placeholder rules:
-- {{company}}: the company name
-- {{job_title}}: the job title
-- {{why_company}}: 1-2 sentences from the JD about why this company is exciting (unique product, mission, or impact)
-- {{matching_skills}}: top 3 skills from the JD that match a full-stack developer's background (comma-separated)
-- {{specific_project}}: pick the single most relevant bullet point from a software engineer's experience that matches the JD
-- {{why_company_culture}}: 1-2 sentences about company culture, values, or mission from the JD that resonate
-
-Context:
-- Company: ${company}
-- Job Title: ${job_title}
-
-Return ONLY valid JSON with these exact keys:
-{
-  "company": "${company}",
-  "job_title": "${job_title}",
-  "why_company": "...",
-  "matching_skills": "...",
-  "specific_project": "...",
-  "why_company_culture": "..."
+  return fillTemplate(template, result);
 }
 
-Job Description:
-${jd}
-
-Cover Letter Template:
-${template}`);
-
+function fillTemplate(template, values) {
   let filled = template;
-  for (const [key, value] of Object.entries(result)) {
+  for (const [key, value] of Object.entries(values)) {
     filled = filled.replaceAll(`{{${key}}}`, value);
   }
-
   return filled;
 }
 
-module.exports = { generateCoverLetter };
+module.exports = { generateCoverLetter, fillTemplate };

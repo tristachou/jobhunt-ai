@@ -64,40 +64,59 @@
 1. Gemini reads JD → returns `{ stack, detected_skills, fit_score }` (JSON mode)
 2. Programmatic: format each skill list (primary always bold; detected others bold+front; rest plain)
 3. Programmatic: scan JD for `soft_skills.pool[].keyword` → pick ≤2 bullets → inject before Phygitalker block
-4. Programmatic: `replaceAll` all 15 `{{placeholders}}` in `base.md`
+4. Programmatic: `replaceAll` all 16 `{{placeholders}}` in `base.md` (includes `{{name}}` driven by stack)
 5. Summary / bullets / education / certs / dates: **DO NOT touch**
 
 ### coverletter.js placeholders
 `{{company}}` `{{job_title}}` `{{why_company}}` `{{matching_skills}}` `{{specific_project}}` `{{why_company_culture}}`
 
-### POST /process
+### API endpoints
 ```
-Request:  { job_title, company, jd, url, source }
-Response: { fit_score, stack, detected_skills, bolded_skills, resume_pdf, coverletter_pdf, record_id }
+POST /analyze        { job_title, company, jd, url, source } → { id, fit_score, stack, detected_skills, bolded_skills }
+GET  /applications/:id/pdf?type=resume|coverletter → PDF download (generated on demand from stored markdown)
+POST /preview        { markdown, type } → { html }
+GET  /prompts        → { tailor, coverletter }
+PUT  /prompts        { tailor, coverletter } → { ok }
+GET  /applications   → all records
+GET  /applications/:id → single record
+PATCH /applications/:id → partial update
+DELETE /applications/:id → delete
+GET  /health         → { status: "ok" }
 ```
-
-### GET /applications — all SQLite records
-### PATCH /applications/:id — update `status` field
-### GET /health — `{ status: "ok" }`
 
 ### SQLite table: `applications`
-`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_pdf_path, coverletter_pdf_path, status`
+`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status`
 
-### Oh My CV
-- Root: `oh-my-cv-main/` — pnpm workspace, run `pnpm install` from root after moving project
-- Dev server: auto-started by `server.js` on port 5173 (`PORT` + `NUXT_PORT` env vars)
-- Access: `localhost:3000/cv` (reverse proxied; no need to open port 5173 directly)
-- Data store: IndexedDB via localForage — key `ohmycv_data`, version key `ohmycv_version`
-- CSS: read from `resumes/resume.css` at exporter startup (edit there; no code changes needed)
+### renderer.js
+- `renderResume(markdown)` — parses Oh My CV `~` syntax + YAML front matter → full HTML string (with inlined CSS from `resumes/resume.css`)
+- `renderCoverLetter(markdown)` — simple markdown → HTML
+
+### exporter.js
+- `exportResumePDF(markdown)` — calls `renderResume` → `page.setContent()` → `page.pdf()` via Puppeteer
+- `exportCoverLetterPDF(markdown)` — calls `renderCoverLetter` → same pipeline
+- No external dev server dependency
 
 ### package.json dependencies
-`express`, `axios`, `dotenv`, `puppeteer`, `http-proxy-middleware`
+`express`, `axios`, `dotenv`, `puppeteer`
 
 ### .env keys
 ```
 GEMINI_API_KEY   — Gemini API key
 GEMINI_MODEL     — model name (e.g. gemini-2.5-flash) — change here to switch models
-OHMYCV_PATH      — path to oh-my-cv-main/ relative to backend/ (default: ../oh-my-cv-main)
-OHMYCV_PORT      — port for Oh My CV dev server (default: 5173)
 OUTPUT_DIR       — output folder relative to backend/ (default: ../output)
 ```
+
+---
+
+## Future Plans
+
+### Scoring System (Phase 5 — to be designed)
+
+Current state: single `fit_score: 0–100` returned by Gemini, displayed as one number.
+
+Planned direction:
+- Multi-dimension breakdown: technical match, seniority match, keyword coverage rate
+- Rule-based scoring layer on top of Gemini analysis
+- UI shows score breakdown (not just one number)
+
+> Design deferred — research other resume scoring systems before implementing.

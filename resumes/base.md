@@ -1,5 +1,5 @@
 ---
-name: Hsin-Yu Chou
+name: {{name}}
 header:
   - text: "mobile: 0401321635"
   - text: "portfolio: tristachou.vercel.app/"
