@@ -18,17 +18,17 @@ const {
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ─── Health ────────────────────────────────────────────────────────────────────
+// ─── API Router ────────────────────────────────────────────────────────────────
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+const api = express.Router();
+
+// Health
+api.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ─── Analyze — Stage 1 ────────────────────────────────────────────────────────
-// Runs AI tailoring + cover letter, saves markdown to DB, returns metadata.
-// No PDF is generated here.
 
-app.post('/analyze', async (req, res) => {
+api.post('/analyze', async (req, res) => {
   const { job_title, company, jd, url, source } = req.body;
 
   if (!job_title || !company || !jd) {
@@ -36,7 +36,7 @@ app.post('/analyze', async (req, res) => {
   }
 
   try {
-    const { tailorResume }      = require('./tailor');
+    const { tailorResume }        = require('./tailor');
     const { generateCoverLetter } = require('./coverletter');
 
     const tailor  = await tailorResume({ jd });
@@ -46,14 +46,14 @@ app.post('/analyze', async (req, res) => {
       created_at: new Date().toISOString(),
       company,
       job_title,
-      url:       url    || '',
-      source:    source || 'other',
-      jd_text:   jd,
+      url:        url    || '',
+      source:     source || 'other',
+      jd_text:    jd,
       stack_used: tailor.stack,
       fit_score:  tailor.fit_score,
       resume_md:  tailor.markdown,
       cover_md:   coverMd || '',
-      status:    'analyzed',
+      status:     'analyzed',
     });
 
     res.json({
@@ -64,17 +64,15 @@ app.post('/analyze', async (req, res) => {
       bolded_skills:   tailor.bolded_skills,
     });
   } catch (err) {
-    console.error('[/analyze error]', err);
+    console.error('[/api/analyze error]', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ─── PDF Export — Stage 2 (on-demand) ─────────────────────────────────────────
-// GET /applications/:id/pdf?type=resume|coverletter
-// Generates PDF from stored markdown and streams it as a download.
 
-app.get('/applications/:id/pdf', async (req, res) => {
-  const type = req.query.type === 'coverletter' ? 'coverletter' : 'resume';
+api.get('/applications/:id/pdf', async (req, res) => {
+  const type   = req.query.type === 'coverletter' ? 'coverletter' : 'resume';
   const record = getApplicationById(Number(req.params.id));
 
   if (!record) return res.status(404).json({ error: 'Not found' });
@@ -97,16 +95,14 @@ app.get('/applications/:id/pdf', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(buffer);
   } catch (err) {
-    console.error('[/pdf error]', err);
+    console.error('[/api/pdf error]', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ─── Preview — for editor live preview ────────────────────────────────────────
-// POST /preview  { markdown, type: "resume"|"coverletter" }
-// Returns rendered HTML string (not a PDF).
+// ─── Preview ───────────────────────────────────────────────────────────────────
 
-app.post('/preview', (req, res) => {
+api.post('/preview', (req, res) => {
   const { markdown, type } = req.body;
   if (!markdown) return res.status(400).json({ error: 'markdown is required' });
 
@@ -123,7 +119,7 @@ app.post('/preview', (req, res) => {
 
 // ─── Prompts ───────────────────────────────────────────────────────────────────
 
-app.get('/prompts', (_req, res) => {
+api.get('/prompts', (_req, res) => {
   try {
     res.json(JSON.parse(fs.readFileSync(PROMPTS_PATH, 'utf8')));
   } catch (err) {
@@ -131,7 +127,7 @@ app.get('/prompts', (_req, res) => {
   }
 });
 
-app.put('/prompts', (req, res) => {
+api.put('/prompts', (req, res) => {
   const { tailor, coverletter } = req.body;
   if (typeof tailor !== 'string' || typeof coverletter !== 'string') {
     return res.status(400).json({ error: 'tailor and coverletter must be strings' });
@@ -146,7 +142,7 @@ app.put('/prompts', (req, res) => {
 
 // ─── Applications CRUD ─────────────────────────────────────────────────────────
 
-app.get('/applications', (_req, res) => {
+api.get('/applications', (_req, res) => {
   try {
     res.json(getAllApplications());
   } catch (err) {
@@ -154,20 +150,35 @@ app.get('/applications', (_req, res) => {
   }
 });
 
-app.get('/applications/:id', (req, res) => {
+api.get('/applications/:id', (req, res) => {
   const record = getApplicationById(Number(req.params.id));
   record ? res.json(record) : res.status(404).json({ error: 'Not found' });
 });
 
-app.patch('/applications/:id', (req, res) => {
+api.patch('/applications/:id', (req, res) => {
   const ok = updateApplication(Number(req.params.id), req.body);
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
 });
 
-app.delete('/applications/:id', (req, res) => {
+api.delete('/applications/:id', (req, res) => {
   const ok = deleteApplication(Number(req.params.id));
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
 });
+
+// Mount all API routes under /api
+app.use('/api', api);
+
+// ─── Frontend (production) ─────────────────────────────────────────────────────
+// In dev, Vite serves the frontend on port 5173.
+// In production, serve the built frontend from backend/public/.
+
+const publicDir = path.join(__dirname, 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+}
 
 // ─── Start ─────────────────────────────────────────────────────────────────────
 

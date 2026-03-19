@@ -6,7 +6,9 @@
       "Bash(timeout 5 node -e \"require\\(''./db''\\); console.log\\(''db ok''\\)\")",
       "Bash(pnpm install:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(npm create:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

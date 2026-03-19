@@ -48,13 +48,33 @@
 
 ---
 
-## Phase 4 — End-to-End Test
+## Phase 4 — End-to-End Test ✅
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 13 | Smoke test: paste JD → POST /process → PDFs generated | `[x]` | Atlassian/Full-Stack-Developer — fit_score: 92, stack: csharp |
 | 14 | Verify: SQLite record created, status updatable | `[x]` | DB insert + PATCH /applications/:id confirmed |
 | 15 | Verify: PDFs saved to `output/YYYY-MM-DD_Company_Title/` | `[x]` | resume.pdf (72 KB) + cover-letter.pdf (48 KB) |
+
+---
+
+## Phase 5 — Frontend Modernization (Open Source Prep)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 16 | Root `package.json` with `concurrently` dev script | `[x]` | `npm run dev` starts both servers |
+| 17 | Init Vite + React + TypeScript project in `frontend/` | `[x]` | Manual scaffold, build outputs to `backend/public/` |
+| 18 | Install & configure Tailwind CSS | `[x]` | With CSS variables for shadcn/ui compatibility |
+| 19 | Install shadcn/ui, add base components (Button, Badge, Card, Input, Textarea, Label, Select) | `[x]` | Manual setup (non-interactive env); all components in `src/components/ui/` |
+| 20 | `vite.config.ts`: proxy `/api/*` → `localhost:3000`, build outDir → `../backend/public` | `[x]` | |
+| 21 | Backend: add `/api` prefix to all routes | `[x]` | Using express.Router mounted at `/api` |
+| 22 | Backend: serve `public/` in production, keep CORS for dev | `[x]` | Serves `public/` only if directory exists |
+| 23 | Migrate NewApplication page → React | `[x]` | Form + result card with skill badges and score |
+| 24 | Migrate History page → React (table, filters, inline edit, status badge) | `[x]` | Expandable rows, inline edit, status dropdown |
+| 25 | Migrate Settings page → React | `[x]` | Prompt editor with auto-save feedback |
+| 26 | Migrate Editor page → React | `[x]` | Split view: markdown editor + iframe preview, tab for resume/CL |
+| 27 | `lib/api.ts` — typed API client wrapping all fetch calls | `[x]` | Full TypeScript types for all endpoints |
+| 28 | Integration test: dev mode (proxy) + prod build (express.static) | `[ ]` | |
 
 ---
 
