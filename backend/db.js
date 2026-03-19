@@ -26,7 +26,7 @@ db.exec(`
 `);
 
 // Migration: add new columns to existing DBs (safe to run every time)
-for (const col of ['resume_md TEXT', 'cover_md TEXT']) {
+for (const col of ['resume_md TEXT', 'cover_md TEXT', "theme TEXT DEFAULT 'classic'"]) {
   try { db.exec(`ALTER TABLE applications ADD COLUMN ${col}`); } catch { /* already exists */ }
 }
 
@@ -35,9 +35,9 @@ for (const col of ['resume_md TEXT', 'cover_md TEXT']) {
 function insertApplication(data) {
   return db.prepare(`
     INSERT INTO applications
-      (created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status)
+      (created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status, theme)
     VALUES
-      (:created_at, :company, :job_title, :url, :source, :jd_text, :stack_used, :fit_score, :resume_md, :cover_md, :status)
+      (:created_at, :company, :job_title, :url, :source, :jd_text, :stack_used, :fit_score, :resume_md, :cover_md, :status, :theme)
   `).run(data).lastInsertRowid;
 }
 
@@ -51,7 +51,7 @@ function getApplicationById(id) {
 
 function updateApplication(id, fields) {
   const ALLOWED = ['created_at', 'company', 'job_title', 'url', 'source',
-                   'jd_text', 'stack_used', 'fit_score', 'status', 'resume_md', 'cover_md'];
+                   'jd_text', 'stack_used', 'fit_score', 'status', 'resume_md', 'cover_md', 'theme'];
   const pairs = Object.entries(fields).filter(([k]) => ALLOWED.includes(k));
   if (!pairs.length) return false;
   const setClause = pairs.map(([k]) => `${k} = :${k}`).join(', ');

@@ -15,17 +15,35 @@
 const fs   = require('fs');
 const path = require('path');
 
-const CSS_PATH = path.resolve(__dirname, '../resumes/resume.css');
+const THEMES_DIR      = path.resolve(__dirname, '../themes');
+const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
+
+/** Load CSS for the given theme name (or the default from user.config.js). */
+function loadThemeCss(theme) {
+  const resolved = theme || (require(USER_CONFIG_PATH).theme) || 'classic';
+  return fs.readFileSync(path.join(THEMES_DIR, `${resolved}.css`), 'utf8');
+}
 
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 /**
  * Render filled resume markdown to a complete HTML document string.
+ * Uses the default theme from user.config.js.
  * @param {string} markdown
+ * @param {string} [theme] - theme name override (e.g. 'modern')
  * @returns {string}
  */
-function renderResume(markdown) {
-  const css = fs.readFileSync(CSS_PATH, 'utf8');
+function renderResume(markdown, theme) {
+  return renderResumeWithCss(markdown, loadThemeCss(theme));
+}
+
+/**
+ * Render resume markdown with an explicit CSS string (used for style previews).
+ * @param {string} markdown
+ * @param {string} css
+ * @returns {string}
+ */
+function renderResumeWithCss(markdown, css) {
   const { name, headerItems, body } = parseFrontMatter(markdown);
   const bodyHtml = renderBody(body);
   return buildHTML(name, headerItems, bodyHtml, css);
@@ -86,13 +104,41 @@ function parseFrontMatter(markdown) {
 
 // ─── Body renderer ─────────────────────────────────────────────────────────────
 
+/**
+ * Groups body blocks into sections (split by ## headings) and wraps each in
+ * <section class="resume-section section-[slug]"> so CSS can target them by name.
+ * This enables both single-column and multi-column CSS layouts.
+ */
 function renderBody(body) {
-  return body
+  const allBlocks = body
     .split(/\n{2,}/)
     .map(b => b.trim())
-    .filter(Boolean)
-    .map(renderBlock)
-    .join('\n');
+    .filter(Boolean);
+
+  const sections = [];
+  let current = null;
+
+  for (const block of allBlocks) {
+    if (block.startsWith('## ')) {
+      if (current) sections.push(current);
+      const heading = block.slice(3).trim();
+      const slug = heading.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      current = { heading, slug, blocks: [] };
+    } else {
+      if (current) current.blocks.push(block);
+    }
+  }
+  if (current) sections.push(current);
+
+  // Fallback: no ## headings found, render blocks as-is
+  if (sections.length === 0) {
+    return allBlocks.map(renderBlock).join('\n');
+  }
+
+  return sections.map(({ heading, slug, blocks }) => {
+    const inner = blocks.map(renderBlock).join('\n');
+    return `<section class="resume-section section-${slug}">\n<h2>${inlineMd(heading)}</h2>\n${inner}\n</section>`;
+  }).join('\n');
 }
 
 function renderBlock(block) {
@@ -161,4 +207,4 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-module.exports = { renderResume, renderCoverLetter, renderBlock, inlineMd, parseFrontMatter };
+module.exports = { renderResume, renderResumeWithCss, renderCoverLetter, renderBlock, inlineMd, parseFrontMatter, loadThemeCss };

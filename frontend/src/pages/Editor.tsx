@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { api, type Application } from '@/lib/api'
+import { api, type Application, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Download, ArrowLeft, RefreshCw } from 'lucide-react'
 
 type Tab = 'resume' | 'coverletter'
@@ -36,16 +37,12 @@ export default function Editor() {
       .finally(() => setLoadingApp(false))
   }, [appId])
 
-  useEffect(() => {
-    if (!app) return
-    setMarkdown(tab === 'resume' ? app.resume_md || '' : app.cover_md || '')
-  }, [tab])
-
-  async function refreshPreview(md = markdown) {
+  async function refreshPreview(md: string, currentTab: Tab, currentTheme?: string) {
     if (!md) return
     setLoadingPreview(true)
     try {
-      const { html } = await api.preview(md, tab)
+      const theme = currentTheme ?? app?.theme
+      const { html } = await api.preview(md, currentTab, currentTab === 'resume' ? theme : undefined)
       setPreview(html)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Preview failed')
@@ -54,8 +51,20 @@ export default function Editor() {
     }
   }
 
-  // Load preview when tab or markdown first set
-  useEffect(() => { if (markdown) refreshPreview() }, [tab, markdown === '' ? null : 'ready'])
+  async function handleThemeChange(newTheme: string) {
+    if (!app) return
+    setApp({ ...app, theme: newTheme })
+    await api.patchApplication(appId, { theme: newTheme })
+    refreshPreview(markdown, tab, newTheme)
+  }
+
+  // When tab changes, update markdown AND preview together using the new values directly
+  useEffect(() => {
+    if (!app) return
+    const newMd = tab === 'resume' ? app.resume_md || '' : app.cover_md || ''
+    setMarkdown(newMd)
+    refreshPreview(newMd, tab)
+  }, [tab, app])
 
   function handleMarkdownChange(value: string) {
     setMarkdown(value)
@@ -118,6 +127,19 @@ export default function Editor() {
               <Loader2 className="h-3 w-3 animate-spin" /> Saving
             </span>
           )}
+          {/* Theme selector — only shown while viewing resume tab */}
+          {tab === 'resume' && app && (
+            <Select value={app.theme || 'classic'} onValueChange={handleThemeChange}>
+              <SelectTrigger className="h-8 text-xs w-28 bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {THEMES.map(t => (
+                  <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <a href={api.getPdfUrl(appId, 'resume')} download>
             <Button size="sm" variant="outline" className="h-8 text-xs bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hidden sm:flex">
               <Download className="h-3.5 w-3.5" /> Resume
@@ -159,7 +181,7 @@ export default function Editor() {
         {(['editor', 'preview'] as PanelTab[]).map(p => (
           <button
             key={p}
-            onClick={() => { setPanelTab(p); if (p === 'preview') refreshPreview() }}
+            onClick={() => { setPanelTab(p); if (p === 'preview') refreshPreview(markdown, tab) }}
             className={`flex-1 py-2 text-xs font-medium capitalize transition-colors ${
               panelTab === p ? 'text-black bg-white border-b-2 border-black -mb-px' : 'text-neutral-400'
             }`}
@@ -196,7 +218,7 @@ export default function Editor() {
           <div className="px-4 py-2 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between flex-shrink-0">
             <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Preview</span>
             <button
-              onClick={() => refreshPreview()}
+              onClick={() => refreshPreview(markdown, tab)}
               className="text-neutral-400 hover:text-black transition-colors"
               title="Refresh"
             >

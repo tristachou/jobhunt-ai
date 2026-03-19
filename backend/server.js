@@ -6,7 +6,23 @@ const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
 
-const PROMPTS_PATH = path.resolve(__dirname, '../resumes/prompts.json');
+// ─── Paths ─────────────────────────────────────────────────────────────────────
+
+const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
+const PROMPTS_PATH     = path.resolve(__dirname, '../resumes/prompts.json');
+const THEMES_DIR       = path.resolve(__dirname, '../themes');
+const BASE_MD_PATH     = path.resolve(__dirname, '../user/base.md');
+
+/** Load user config (not cached — allows live changes without restart issues) */
+function getUserConfig() {
+  delete require.cache[require.resolve(USER_CONFIG_PATH)];
+  return require(USER_CONFIG_PATH);
+}
+
+/** Get CSS path for a theme name. */
+function themeCssPath(theme) {
+  return path.join(THEMES_DIR, `${theme}.css`);
+}
 
 const {
   insertApplication,
@@ -29,11 +45,14 @@ api.get('/health', (_req, res) => res.json({ status: 'ok' }));
 // ─── Analyze — Stage 1 ────────────────────────────────────────────────────────
 
 api.post('/analyze', async (req, res) => {
-  const { job_title, company, jd, url, source } = req.body;
+  const { job_title, company, jd, url, source, theme } = req.body;
 
   if (!job_title || !company || !jd) {
     return res.status(400).json({ error: 'job_title, company, and jd are required' });
   }
+
+  // Theme: explicit in request → user.config.js default → 'classic'
+  const resolvedTheme = theme || getUserConfig().theme || 'classic';
 
   try {
     const { tailorResume }        = require('./tailor');
@@ -54,6 +73,7 @@ api.post('/analyze', async (req, res) => {
       resume_md:  tailor.markdown,
       cover_md:   coverMd || '',
       status:     'analyzed',
+      theme:      resolvedTheme,
     });
 
     res.json({
@@ -62,6 +82,7 @@ api.post('/analyze', async (req, res) => {
       stack:           tailor.stack,
       detected_skills: tailor.detected_skills,
       bolded_skills:   tailor.bolded_skills,
+      theme:           resolvedTheme,
     });
   } catch (err) {
     console.error('[/api/analyze error]', err);
@@ -86,7 +107,7 @@ api.get('/applications/:id/pdf', async (req, res) => {
     const { exportResumePDF, exportCoverLetterPDF } = require('./exporter');
     const buffer = type === 'coverletter'
       ? await exportCoverLetterPDF(markdown)
-      : await exportResumePDF(markdown);
+      : await exportResumePDF(markdown, record.theme || 'classic');
 
     const slug     = `${record.company}_${record.job_title}`.replace(/[^a-zA-Z0-9]/g, '-');
     const filename = `${slug}_${type}.pdf`;
@@ -103,14 +124,14 @@ api.get('/applications/:id/pdf', async (req, res) => {
 // ─── Preview ───────────────────────────────────────────────────────────────────
 
 api.post('/preview', (req, res) => {
-  const { markdown, type } = req.body;
+  const { markdown, type, theme } = req.body;
   if (!markdown) return res.status(400).json({ error: 'markdown is required' });
 
   try {
     const { renderResume, renderCoverLetter } = require('./renderer');
     const html = type === 'coverletter'
       ? renderCoverLetter(markdown)
-      : renderResume(markdown);
+      : renderResume(markdown, theme || null);
     res.json({ html });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -139,6 +160,69 @@ api.put('/prompts', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ─── Style / Themes ────────────────────────────────────────────────────────────
+
+// GET /api/style — return the active theme name + its CSS
+api.get('/style', (_req, res) => {
+  try {
+    const config = getUserConfig();
+    const theme  = config.theme || 'classic';
+    res.json({ theme, css: fs.readFileSync(themeCssPath(theme), 'utf8') });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/style — save CSS to a theme file (defaults to active theme)
+api.put('/style', (req, res) => {
+  const { css, theme } = req.body;
+  if (typeof css !== 'string') return res.status(400).json({ error: 'css must be a string' });
+  try {
+    const resolvedTheme = theme || getUserConfig().theme || 'classic';
+    fs.writeFileSync(themeCssPath(resolvedTheme), css, 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/style/themes — list all available themes
+api.get('/style/themes', (_req, res) => {
+  try {
+    const themes = fs.readdirSync(THEMES_DIR)
+      .filter(f => f.endsWith('.css'))
+      .map(file => ({
+        name:  file.replace('.css', ''),
+        label: formatThemeLabel(file.replace('.css', '')),
+        css:   fs.readFileSync(path.join(THEMES_DIR, file), 'utf8'),
+      }));
+    res.json(themes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/style/preview — render resume HTML with a given CSS string
+api.post('/style/preview', (req, res) => {
+  const { css } = req.body;
+  if (typeof css !== 'string') return res.status(400).json({ error: 'css must be a string' });
+  try {
+    const { renderResumeWithCss } = require('./renderer');
+    const apps     = getAllApplications();
+    const latest   = apps.find(a => a.resume_md);
+    const markdown = latest
+      ? latest.resume_md
+      : fs.readFileSync(BASE_MD_PATH, 'utf8');
+    res.json({ html: renderResumeWithCss(markdown, css) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+function formatThemeLabel(name) {
+  return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 // ─── Applications CRUD ─────────────────────────────────────────────────────────
 

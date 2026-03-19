@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
-const TEMPLATE_PATH = path.join(__dirname, '../cover-letter/template.md');
+const TEMPLATE_PATH = path.join(__dirname, '../user/cover-letter/template.md');
 const PROMPTS_JSON  = path.join(__dirname, '../resumes/prompts.json');
 
 async function geminiJSON(prompt) {

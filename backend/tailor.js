@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 
-const BASE_MD      = path.join(__dirname, '../resumes/base.md');
-const CONFIG_JSON  = path.join(__dirname, '../resumes/config.json');
+const BASE_MD      = path.join(__dirname, '../user/base.md');
+const CONFIG_JSON  = path.join(__dirname, '../user/config.json');
 const PROMPTS_JSON = path.join(__dirname, '../resumes/prompts.json');
 
 async function geminiJSON(prompt) {

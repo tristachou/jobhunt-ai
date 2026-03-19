@@ -8,7 +8,13 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
       "Bash(node -e \":*)",
       "Bash(npm create:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(CLASSIC=/c/Users/User/Documents/project/Job-Apply-Bot/resumes/resume.css)",
+      "Bash(THEMES=/c/Users/User/Documents/project/Job-Apply-Bot/themes)",
+      "Bash(cp \"$CLASSIC\" \"$THEMES/classic.css\")",
+      "Bash(cp \"$CLASSIC\" \"$THEMES/modern.css\")",
+      "Bash(cp \"$CLASSIC\" \"$THEMES/minimal.css\")"
     ]
   }
 }

@@ -12,28 +12,35 @@ No browser extension required. No scraping. No permission issues.
 
 ```
 job-apply-bot/
+├── user/                          # ← EDIT THIS to personalise your instance
+│   ├── base.md                    # Your resume template with {{placeholders}}
+│   ├── config.json                # Your per-stack skill lists, bullet variants, soft skill pool
+│   └── cover-letter/
+│       └── template.md            # Your cover letter template with {{placeholders}}
+├── themes/                        # Resume CSS themes (classic / modern / minimal / compact / bold)
+│   ├── classic.css
+│   ├── modern.css
+│   ├── minimal.css
+│   ├── compact.css
+│   └── bold.css
+├── user.config.js                 # Top-level user config (active theme, Gemini model)
 ├── frontend/
-│   ├── index.html            # Main input page + applications history (single-page)
-│   └── app.js                # UI logic (vanilla JS)
+│   └── src/
+│       ├── pages/                 # React pages (NewApplication, History, Editor, Style, Settings)
+│       └── lib/api.ts             # Typed API client
 ├── backend/
-│   ├── server.js             # Express server (port 3000), serves frontend + API
-│   ├── tailor.js             # Resume tailoring logic (Gemini + programmatic)
-│   ├── coverletter.js        # Cover letter placeholder fill (Gemini)
-│   ├── exporter.js           # PDF export: Oh My CV (resume) + HTML (cover letter)
-│   ├── db.js                 # SQLite operations via node:sqlite (built-in)
-│   ├── package.json          # Dependencies: express, axios, dotenv, puppeteer, http-proxy-middleware
-│   └── .env                  # GEMINI_API_KEY, GEMINI_MODEL, OHMYCV_PATH, etc.
+│   ├── server.js                  # Express server (port 3000) — all routes under /api
+│   ├── tailor.js                  # Resume tailoring (Gemini + programmatic)
+│   ├── coverletter.js             # Cover letter generation (Gemini)
+│   ├── renderer.js                # Markdown → HTML (reads CSS from themes/)
+│   ├── exporter.js                # HTML → PDF via Puppeteer
+│   ├── db.js                      # SQLite CRUD via node:sqlite
+│   ├── package.json
+│   └── .env                       # GEMINI_API_KEY, GEMINI_MODEL (overrides user.config.js)
 ├── resumes/
-│   ├── base.md               # Universal resume template with {{placeholders}}
-│   └── config.json           # Per-stack skill lists, bullet variants, soft skill pool
-├── cover-letter/
-│   └── template.md           # Cover letter template with 6 {{placeholders}}
+│   └── prompts.json               # Gemini prompt templates (editable in Settings UI)
 ├── output/
 │   └── YYYY-MM-DD_Company_Title/
-│       ├── resume.pdf
-│       └── cover-letter.pdf
-├── oh-my-cv-main/            # Oh My CV local project (pnpm workspace)
-│   └── site/                 # Nuxt app — run with: PORT=5173 pnpm dev
 ├── SPEC.md
 ├── PLAN.md
 └── README.md
@@ -131,7 +138,7 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 
 ### 3. Resume Tailor (tailor.js)
 
-**Inputs:** `resumes/base.md` + `resumes/config.json` + JD text
+**Inputs:** `user/base.md` + `user/config.json` + JD text
 
 **Implementation:** One Gemini call for stack selection + fit score + detected skills. All skill formatting and placeholder substitution done programmatically (no second Gemini call).
 
@@ -231,7 +238,7 @@ Replace every `{{placeholder}}` in `base.md` with the corresponding value.
 
 **Approach:** Fill-in-the-blank only. Gemini fills placeholders via JSON mode, does not rewrite the template.
 
-**Placeholders in cover-letter/template.md:**
+**Placeholders in user/cover-letter/template.md:**
 ```
 {{company}}              ← company name
 {{job_title}}            ← job title
@@ -246,7 +253,7 @@ Replace every `{{placeholder}}` in `base.md` with the corresponding value.
 - Only replace the `{{placeholder}}` tokens
 - Output length must match the template (no extra paragraphs)
 
-> If `cover-letter/template.md` is missing, skip cover letter generation and log a clear TODO. Do not block the rest of the pipeline.
+> If `user/cover-letter/template.md` is missing, skip cover letter generation and log a clear TODO. Do not block the rest of the pipeline.
 
 ---
 

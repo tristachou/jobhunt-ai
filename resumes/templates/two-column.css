@@ -1,0 +1,181 @@
+/*
+ * Resume CSS — Two Column layout
+ *
+ * Left column  (~38%): Summary, Certification, Education
+ * Right column (~62%): Skills, Experience
+ *
+ * Key selectors:
+ *   .resume-section          — wraps each section (added by renderer.js)
+ *   .section-summary         — Summary section
+ *   .section-skills          — Skills section
+ *   .section-experience      — Experience section
+ *   .section-certification   — Certification section
+ *   .section-education       — Education section
+ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 10pt;
+  line-height: 1.45;
+  color: #111;
+  background: #fff;
+}
+
+#resume {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 12mm 16mm;
+}
+
+/* ── Header ───────────────────────────────────── */
+
+.resume-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #111;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.resume-name {
+  font-size: 22pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.resume-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 8.5pt;
+  color: #333;
+}
+
+.resume-contact a,
+.resume-contact span {
+  color: #333;
+  text-decoration: none;
+  text-align: right;
+}
+
+/* ── Two-column body ──────────────────────────── */
+/*
+ * Uses CSS Multi-column layout rather than Grid so each column
+ * fills independently — no shared row heights causing gaps.
+ * Left col:  Summary → Certification → Education
+ * Right col: Skills  → Experience
+ * `break-before: column` on .section-skills forces the column break.
+ */
+
+.resume-body {
+  column-count: 2;
+  column-gap: 14mm;
+  column-fill: auto;
+  /* tall enough to hold a full page of body content */
+  height: 242mm;
+}
+
+.resume-section {
+  break-inside: avoid;
+}
+
+/* Force Skills (and everything after) into the right column */
+.section-skills {
+  break-before: column;
+}
+
+/* ── Section headings ─────────────────────────── */
+
+h2 {
+  font-size: 9pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #111;
+  padding-bottom: 1px;
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.section-certification h2,
+.section-education h2 {
+  margin-top: 12px;
+}
+
+/* ── Paired rows ──────────────────────────────── */
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1px;
+}
+
+.row-meta {
+  font-size: 9pt;
+  color: #444;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* ── Paragraphs ───────────────────────────────── */
+
+p {
+  margin-bottom: 3px;
+  font-size: 9.5pt;
+}
+
+/* Left column paragraphs — no justify (narrower column) */
+.section-summary p,
+.section-certification p,
+.section-education p {
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* Right column paragraphs */
+.section-skills p,
+.section-experience p {
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+/* ── Bullet lists ─────────────────────────────── */
+
+ul {
+  margin: 2px 0 2px 15px;
+  list-style-type: disc;
+}
+
+li {
+  margin-bottom: 1px;
+  font-size: 9.5pt;
+}
+
+/* Left column: smaller bullets, no list style to save space */
+.section-summary ul,
+.section-education ul {
+  list-style-type: none;
+  margin-left: 0;
+}
+
+/* ── Inline ───────────────────────────────────── */
+
+strong { font-weight: 700; }
+
+a { color: #111; text-decoration: none; }
+
+/* ── Print ────────────────────────────────────── */
+
+@media print {
+  body { background: white; }
+}

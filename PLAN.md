@@ -78,6 +78,23 @@
 
 ---
 
+## Phase 6 — Open Source User-Data Separation
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 29 | Create `user/` folder: base.md, config.json, cover-letter/template.md | `[x]` | Copied from resumes/ and cover-letter/ |
+| 30 | Create `themes/` folder with 5 CSS themes (classic/modern/minimal/compact/bold) | `[x]` | modern/minimal/compact/bold are copies of classic for now |
+| 31 | Create root `user.config.js` (theme + geminiModel) | `[x]` | |
+| 32 | Update backend path references to user/ and themes/ | `[x]` | tailor.js, coverletter.js, renderer.js, exporter.js, server.js |
+| 33 | Add `theme` column to SQLite applications table | `[x]` | Migration in db.js |
+| 34 | Frontend theme dropdown on Generate form | `[x]` | 4-column row: Job Title / Company / Source / Theme |
+| 35 | Frontend theme switcher in Editor header | `[x]` | PATCH application.theme on change, re-renders preview |
+| 36 | PDF export uses stored per-application theme | `[x]` | Passed from DB record to exportResumePDF(markdown, theme) |
+| 37 | Update .gitignore to exclude user/ | `[x]` | |
+| 38 | Update README with Getting Started for New Users | `[x]` | |
+
+---
+
 ## Component Reference
 
 ### tailor.js logic
@@ -92,28 +109,34 @@
 
 ### API endpoints
 ```
-POST /analyze        { job_title, company, jd, url, source } → { id, fit_score, stack, detected_skills, bolded_skills }
-GET  /applications/:id/pdf?type=resume|coverletter → PDF download (generated on demand from stored markdown)
-POST /preview        { markdown, type } → { html }
+POST /analyze        { job_title, company, jd, url, source, theme? } → { id, fit_score, stack, detected_skills, bolded_skills, theme }
+GET  /applications/:id/pdf?type=resume|coverletter → PDF using stored theme
+POST /preview        { markdown, type, theme? } → { html }
 GET  /prompts        → { tailor, coverletter }
 PUT  /prompts        { tailor, coverletter } → { ok }
 GET  /applications   → all records
 GET  /applications/:id → single record
-PATCH /applications/:id → partial update
+PATCH /applications/:id → partial update (includes theme)
 DELETE /applications/:id → delete
+GET  /style          → { theme, css }
+PUT  /style          { css, theme? } → { ok }
+GET  /style/themes   → [{ name, label, css }]
+POST /style/preview  { css } → { html }
 GET  /health         → { status: "ok" }
 ```
 
 ### SQLite table: `applications`
-`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status`
+`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status, theme`
 
 ### renderer.js
-- `renderResume(markdown)` — parses Oh My CV `~` syntax + YAML front matter → full HTML string (with inlined CSS from `resumes/resume.css`)
+- `renderResume(markdown, theme?)` — parses `~` syntax + YAML front matter → full HTML string (CSS from `themes/${theme || userConfig.theme}.css`)
+- `renderResumeWithCss(markdown, css)` — same but with explicit CSS (used by Style page preview)
 - `renderCoverLetter(markdown)` — simple markdown → HTML
+- `loadThemeCss(theme?)` — reads CSS from `themes/` for the given theme
 
 ### exporter.js
-- `exportResumePDF(markdown)` — calls `renderResume` → `page.setContent()` → `page.pdf()` via Puppeteer
-- `exportCoverLetterPDF(markdown)` — calls `renderCoverLetter` → same pipeline
+- `exportResumePDF(markdown, theme?)` — loads theme CSS, calls `renderResume(markdown, theme)` → Puppeteer PDF
+- `exportCoverLetterPDF(markdown)` — calls `renderCoverLetter` → Puppeteer PDF
 - No external dev server dependency
 
 ### package.json dependencies
@@ -122,8 +145,14 @@ GET  /health         → { status: "ok" }
 ### .env keys
 ```
 GEMINI_API_KEY   — Gemini API key
-GEMINI_MODEL     — model name (e.g. gemini-2.5-flash) — change here to switch models
+GEMINI_MODEL     — model name (overrides user.config.js geminiModel if set)
 OUTPUT_DIR       — output folder relative to backend/ (default: ../output)
+```
+
+### user.config.js keys
+```
+theme       — active theme name (must match a file in themes/)
+geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 ```
 
 ---

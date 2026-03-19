@@ -12,10 +12,11 @@ const { renderResume, renderCoverLetter } = require('./renderer');
 /**
  * Render a resume markdown string to a PDF Buffer.
  * @param {string} markdown - Filled resume markdown (base.md format)
+ * @param {string} [theme]  - Theme name (e.g. 'classic'). Defaults to user.config.js theme.
  * @returns {Promise<Buffer>}
  */
-async function exportResumePDF(markdown) {
-  const html = renderResume(markdown);
+async function exportResumePDF(markdown, theme) {
+  const html = renderResume(markdown, theme);
   return _renderPDF(html, {
     format: 'A4',
     printBackground: true,

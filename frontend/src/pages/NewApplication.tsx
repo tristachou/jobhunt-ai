@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, type AnalyzeResult } from '@/lib/api'
+import { api, type AnalyzeResult, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -24,6 +24,7 @@ export default function NewApplication() {
     source: 'linkedin',
     url: '',
     jd: '',
+    theme: 'classic',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -61,8 +62,8 @@ export default function NewApplication() {
         </p>
 
         <div className="space-y-4">
-          {/* Row 1 — 3 cols on md+, stacked on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Row 1 — 4 cols on md+, stacked on mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="job_title">Job Title</Label>
               <Input
@@ -91,6 +92,19 @@ export default function NewApplication() {
                   <SelectItem value="linkedin">LinkedIn</SelectItem>
                   <SelectItem value="seek">Seek</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Theme</Label>
+              <Select value={form.theme} onValueChange={set('theme')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {THEMES.map(t => (
+                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

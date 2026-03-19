@@ -4,6 +4,7 @@ import NewApplication from './pages/NewApplication'
 import History from './pages/History'
 import Settings from './pages/Settings'
 import Editor from './pages/Editor'
+import Style from './pages/Style'
 import { Menu, X } from 'lucide-react'
 
 // ─── Nav links config ──────────────────────────────────────────────────────────
@@ -11,6 +12,7 @@ import { Menu, X } from 'lucide-react'
 const NAV = [
   { to: '/',         label: 'New Application', end: true },
   { to: '/history',  label: 'History' },
+  { to: '/style',    label: 'Style' },
   { to: '/settings', label: 'Settings' },
 ]
 
@@ -90,8 +92,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Editor is full-screen, no layout wrapper */}
+        {/* Full-screen pages — no layout wrapper */}
         <Route path="/editor/:id" element={<Editor />} />
+        <Route path="/style" element={<Style />} />
         <Route path="*" element={
           <Layout>
             <Routes>
