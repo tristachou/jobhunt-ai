@@ -1,0 +1,29 @@
+# Dependencies
+backend/node_modules/
+oh-my-cv-main/node_modules/
+oh-my-cv-main/site/.nuxt/
+oh-my-cv-main/site/.output/
+
+# Environment & secrets
+backend/.env
+
+# Database (production)
+backend/applications.db
+backend/applications.db-shm
+backend/applications.db-wal
+
+# Generated output (PDFs, job-specific files)
+output/*/
+
+# Keep the output directory itself
+!output/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

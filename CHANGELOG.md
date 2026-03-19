@@ -1,3 +1,10 @@
+## 2026-03-19 — Add .gitignore, untrack sensitive files
+
+- Add `.gitignore`: exclude `backend/.env`, `backend/applications.db`, `output/*/`, `node_modules/`, OS/editor junk
+- Untrack `backend/.env` and `backend/applications.db` via `git rm --cached` (files kept locally)
+
+---
+
 ## 2026-03-19 — Name per stack, settings error fix, remove Oh My CV
 
 - Add `{{name}}` placeholder to `base.md` so the resume name is driven by config instead of hardcoded
