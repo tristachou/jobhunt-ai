@@ -6,7 +6,7 @@ const axios = require('axios');
 
 const BASE_MD      = path.join(__dirname, '../user/base.md');
 const CONFIG_JSON  = path.join(__dirname, '../user/config.json');
-const PROMPTS_JSON = path.join(__dirname, '../resumes/prompts.json');
+const PROMPTS_JSON = path.join(__dirname, '../user/prompts.json');
 
 async function geminiJSON(prompt) {
   const res = await axios.post(
@@ -50,6 +50,17 @@ function injectSoftSkillBullets(markdown, bullets, jobTitle) {
   return `${before}\n\n${bulletsStr}\n${after}`;
 }
 
+/**
+ * Resolve a bullet key, preferring the Django variant when applicable.
+ */
+function resolveBulletKey(key, bullets, stack, python_framework) {
+  if (stack === 'python' && python_framework === 'django') {
+    const djangoKey = `${key}_django`;
+    if (bullets[djangoKey]) return bullets[djangoKey];
+  }
+  return bullets[key];
+}
+
 async function tailorResume({ jd }) {
   const baseMd = fs.readFileSync(BASE_MD, 'utf8');
   const config = JSON.parse(fs.readFileSync(CONFIG_JSON, 'utf8'));
@@ -62,16 +73,18 @@ async function tailorResume({ jd }) {
     ])
   )];
 
-  // Step 1: Gemini picks stack + detected skills + fit score
+  // Step 1: Gemini picks job_role + stack + detected skills + fit score
   const prompts = JSON.parse(fs.readFileSync(PROMPTS_JSON, 'utf8'));
   const prompt  = prompts.tailor
     .replace('{{STACKS}}', JSON.stringify(allSkills))
     .replace('{{JD}}', jd);
   const step1 = await geminiJSON(prompt);
 
-  const { stack, detected_skills, fit_score } = step1;
+  const { job_role, stack, python_framework, detected_skills, fit_score } = step1;
   const stackConfig = config.stacks[stack];
   if (!stackConfig) throw new Error(`Unknown stack returned by Gemini: ${stack}`);
+  const roleConfig = config.job_roles[job_role];
+  if (!roleConfig) throw new Error(`Unknown job_role returned by Gemini: ${job_role}`);
 
   const detectedLower = new Set(detected_skills.map(s => s.toLowerCase()));
 
@@ -84,31 +97,53 @@ async function tailorResume({ jd }) {
     cloud_skills:    formatSkillList(stackConfig.cloud_skills,    detectedLower),
   };
 
-  // Step 3: Soft skill matching (≤2 bullets, keyword in JD)
+  // Step 3: Resolve summary (Django variant uses "Python (Django)" as primary_stack label)
+  const primaryStackLabel = (stack === 'python' && python_framework === 'django')
+    ? 'Python (Django)'
+    : stackConfig.primary_stack;
+  const summary = roleConfig.summary.replace('{{primary_stack}}', primaryStackLabel);
+
+  // Step 4: Resolve positional bullets from role bullet sets (with Django variant support)
+  const orefoxBullets = roleConfig.orefox_bullet_set.map(
+    key => resolveBulletKey(key, stackConfig.bullets, stack, python_framework)
+  );
+  const phygitalkerBullets = roleConfig.phygitalker_bullet_set.map(
+    key => resolveBulletKey(key, stackConfig.bullets, stack, python_framework)
+  );
+
+  // Step 5: AI skills section (only for ai_engineer role)
+  const aiSkillsSection = roleConfig.include_ai_skills
+    ? `AI & LLM: ${stackConfig.ai_skills.join(', ')}`
+    : '';
+
+  // Step 6: Soft skill matching (≤2 bullets, keyword in JD)
   const jdLower = jd.toLowerCase();
   const softBullets = config.soft_skills.pool
     .filter(s => jdLower.includes(s.keyword.toLowerCase()))
     .slice(0, 2)
     .map(s => s.bullet);
 
-  // Step 4: Fill all placeholders
+  // Step 7: Fill all placeholders
   const replacements = {
-    '{{name}}':                       stackConfig.name,
-    '{{primary_stack}}':              stackConfig.primary_stack,
-    '{{job_title_display}}':          stackConfig.job_title_display,
-    '{{lang_skills}}':                skillLines.lang_skills,
-    '{{frontend_skills}}':            skillLines.frontend_skills,
-    '{{backend_skills}}':             skillLines.backend_skills,
-    '{{database_skills}}':            skillLines.database_skills,
-    '{{cloud_skills}}':               skillLines.cloud_skills,
-    '{{orefox_technologies}}':        stackConfig.bullets.orefox_technologies,
-    '{{orefox_backend_bullet}}':      stackConfig.bullets.orefox_backend_bullet,
-    '{{orefox_realtime_bullet}}':     stackConfig.bullets.orefox_realtime_bullet,
-    '{{orefox_test_bullet}}':         stackConfig.bullets.orefox_test_bullet,
-    '{{phygitalker_technologies}}':   stackConfig.bullets.phygitalker_technologies,
-    '{{phygitalker_backend_bullet}}': stackConfig.bullets.phygitalker_backend_bullet,
-    '{{phygitalker_auth_bullet}}':    stackConfig.bullets.phygitalker_auth_bullet,
-    '{{phygitalker_test_bullet}}':    stackConfig.bullets.phygitalker_test_bullet,
+    '{{name}}':                stackConfig.name,
+    '{{summary}}':             summary,
+    '{{job_title_display}}':   stackConfig.job_title_display,
+    '{{lang_skills}}':         skillLines.lang_skills,
+    '{{frontend_skills}}':     skillLines.frontend_skills,
+    '{{backend_skills}}':      skillLines.backend_skills,
+    '{{database_skills}}':     skillLines.database_skills,
+    '{{cloud_skills}}':        skillLines.cloud_skills,
+    '{{ai_skills_section}}':   aiSkillsSection,
+    '{{orefox_technologies}}': resolveBulletKey('orefox_technologies', stackConfig.bullets, stack, python_framework),
+    '{{orefox_bullet_1}}':     orefoxBullets[0],
+    '{{orefox_bullet_2}}':     orefoxBullets[1],
+    '{{orefox_bullet_3}}':     orefoxBullets[2],
+    '{{orefox_bullet_4}}':     orefoxBullets[3],
+    '{{orefox_bullet_5}}':     orefoxBullets[4],
+    '{{phygitalker_technologies}}': resolveBulletKey('phygitalker_technologies', stackConfig.bullets, stack, python_framework),
+    '{{phygitalker_bullet_1}}': phygitalkerBullets[0],
+    '{{phygitalker_bullet_2}}': phygitalkerBullets[1],
+    '{{phygitalker_bullet_3}}': phygitalkerBullets[2],
   };
 
   let filled = baseMd;
@@ -116,10 +151,10 @@ async function tailorResume({ jd }) {
     filled = filled.replaceAll(key, value);
   }
 
-  // Step 5: Inject soft skill bullets before Phygitalker section
+  // Step 8: Inject soft skill bullets before Phygitalker section
   filled = injectSoftSkillBullets(filled, softBullets, stackConfig.job_title_display);
 
-  // Collect skills that ended up bolded (detected skills that are in the stack)
+  // Collect skills that ended up bolded (detected skills present in this stack)
   const allStackSkills = new Set([
     ...stackConfig.lang_skills, ...stackConfig.frontend_skills,
     ...stackConfig.backend_skills, ...stackConfig.database_skills,
@@ -127,7 +162,7 @@ async function tailorResume({ jd }) {
   ]);
   const bolded_skills = detected_skills.filter(s => allStackSkills.has(s));
 
-  return { markdown: filled, stack, detected_skills, bolded_skills, fit_score };
+  return { markdown: filled, job_role, stack, python_framework, detected_skills, bolded_skills, fit_score };
 }
 
 module.exports = { tailorResume, formatSkillList, injectSoftSkillBullets };

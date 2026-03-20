@@ -5,7 +5,7 @@ const path = require('path');
 const axios = require('axios');
 
 const TEMPLATE_PATH = path.join(__dirname, '../user/cover-letter/template.md');
-const PROMPTS_JSON  = path.join(__dirname, '../resumes/prompts.json');
+const PROMPTS_JSON  = path.join(__dirname, '../user/prompts.json');
 
 async function geminiJSON(prompt) {
   const res = await axios.post(

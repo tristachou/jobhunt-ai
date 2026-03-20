@@ -1,506 +1,643 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume Tailor</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Tailor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap');
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  :root {
-    --bg: #0e0e0f;
-    --surface: #161618;
-    --surface2: #1e1e21;
-    --border: #2a2a2e;
-    --border2: #3a3a3f;
-    --text: #e8e8ea;
-    --text2: #9090a0;
-    --text3: #55555f;
-    --accent: #7c6aff;
-    --accent2: #a594ff;
-    --green: #4ade80;
-    --red: #f87171;
-    --amber: #fbbf24;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-  }
+    :root {
+      --bg: #0e0e0f;
+      --surface: #161618;
+      --surface2: #1e1e21;
+      --border: #2a2a2e;
+      --border2: #3a3a3f;
+      --text: #e8e8ea;
+      --text2: #9090a0;
+      --text3: #55555f;
+      --accent: #7c6aff;
+      --accent2: #a594ff;
+      --green: #4ade80;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
 
-  /* Layout */
-  .app { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; }
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 16px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--surface);
-  }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+    }
 
-  .logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent2);
-    letter-spacing: 0.05em;
-  }
+    .logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent2);
+      letter-spacing: 0.05em;
+    }
 
-  .logo span { color: var(--text3); }
+    .logo span {
+      color: var(--text3);
+    }
 
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text3);
-    margin-left: auto;
-    transition: background 0.3s;
-  }
-  .status-dot.ready { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .status-dot.loading { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation: pulse 1s infinite; }
-  .status-dot.error { background: var(--red); }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text3);
+      margin-left: auto;
+      transition: background 0.3s;
+    }
 
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .status-dot.ready {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
 
-  .status-label { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+    .status-dot.loading {
+      background: var(--amber);
+      box-shadow: 0 0 6px var(--amber);
+      animation: pulse 1s infinite;
+    }
 
-  main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    height: calc(100vh - 57px);
-    overflow: hidden;
-  }
+    .status-dot.error {
+      background: var(--red);
+    }
 
-  /* Panels */
-  .panel {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .panel:last-child { border-right: none; }
+    @keyframes pulse {
 
-  .panel-header {
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text3);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+      50% {
+        opacity: 0.4
+      }
+    }
 
-  .panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border2) transparent;
-  }
+    .status-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+    }
 
-  /* Input section */
-  .field { margin-bottom: 16px; }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
 
-  .field label {
-    display: block;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text3);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
+    /* Panels */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
 
-  .field input, .field textarea {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    padding: 10px 12px;
-    outline: none;
-    transition: border-color 0.15s;
-    resize: none;
-  }
+    .panel:last-child {
+      border-right: none;
+    }
 
-  .field input:focus, .field textarea:focus {
-    border-color: var(--accent);
-  }
+    .panel-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
 
-  .field textarea {
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.7;
-    min-height: 220px;
-  }
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
-  /* API Key row */
-  .key-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
 
-  .key-row input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 8px 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .key-row input:focus { border-color: var(--accent); }
+    /* Input section */
+    .field {
+      margin-bottom: 16px;
+    }
 
-  .key-badge {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text3);
-    white-space: nowrap;
-  }
-  .key-badge.set { border-color: var(--green); color: var(--green); }
+    .field label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
 
-  /* Buttons */
-  .btn {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.04em;
-    padding: 10px 20px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
+    .field input,
+    .field textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      resize: none;
+    }
 
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    width: 100%;
-    justify-content: center;
-    font-size: 13px;
-    padding: 12px;
-  }
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
 
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text2);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:hover { border-color: var(--border2); color: var(--text); }
+    .field textarea {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      min-height: 220px;
+    }
 
-  /* Output area */
-  .output-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 12px;
-    color: var(--text3);
-  }
+    /* API Key row */
+    .key-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
 
-  .output-placeholder .icon {
-    font-size: 32px;
-    opacity: 0.3;
-  }
+    .key-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
 
-  .output-placeholder p {
-    font-family: var(--mono);
-    font-size: 12px;
-    text-align: center;
-    line-height: 1.8;
-  }
+    .key-row input:focus {
+      border-color: var(--accent);
+    }
 
-  .output-content { display: none; flex-direction: column; gap: 16px; height: 100%; }
-  .output-content.visible { display: flex; }
+    .key-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text3);
+      white-space: nowrap;
+    }
 
-  /* Result card */
-  .result-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
+    .key-badge.set {
+      border-color: var(--green);
+      color: var(--green);
+    }
 
-  .result-card-header {
-    padding: 10px 14px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+    /* Buttons */
+    .btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-  .result-card-header span {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text3);
-  }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      justify-content: center;
+      font-size: 13px;
+      padding: 12px;
+    }
 
-  .result-card-body {
-    padding: 14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--text2);
-    max-height: 140px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
 
-  /* Tag pills */
-  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
 
-  .tag {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 100px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text2);
-  }
-  .tag.highlight {
-    background: rgba(124,106,255,0.12);
-    border-color: rgba(124,106,255,0.4);
-    color: var(--accent2);
-  }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
 
-  /* Version badge */
-  .version-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    border: 1px solid;
-  }
-  .version-badge.csharp { border-color: rgba(124,106,255,0.5); color: var(--accent2); background: rgba(124,106,255,0.08); }
-  .version-badge.python { border-color: rgba(74,222,128,0.5); color: var(--green); background: rgba(74,222,128,0.08); }
-  .version-badge.java { border-color: rgba(251,191,36,0.5); color: var(--amber); background: rgba(251,191,36,0.08); }
+    .btn-secondary:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
 
-  /* Download section */
-  .download-section {
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 8px;
-  }
+    /* Output area */
+    .output-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--text3);
+    }
 
-  .btn-download {
-    flex: 1;
-    background: rgba(74,222,128,0.1);
-    border: 1px solid rgba(74,222,128,0.3);
-    color: var(--green);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .btn-download:hover { background: rgba(74,222,128,0.18); transform: translateY(-1px); }
-  .btn-download:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .output-placeholder .icon {
+      font-size: 32px;
+      opacity: 0.3;
+    }
 
-  /* Loading spinner */
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    .output-placeholder p {
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.8;
+    }
 
-  /* Error/info messages */
-  .msg {
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 10px 14px;
-    border-radius: 6px;
-    margin-top: 12px;
-    line-height: 1.6;
-  }
-  .msg.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
-  .msg.info { background: rgba(124,106,255,0.1); border: 1px solid rgba(124,106,255,0.3); color: var(--accent2); }
+    .output-content {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+    }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .output-content.visible {
+      display: flex;
+    }
 
-  /* Analysis section */
-  .analysis-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .analysis-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text3);
-    min-width: 80px;
-    padding-top: 2px;
-  }
-  .analysis-value { flex: 1; }
-</style>
+    /* Result card */
+    .result-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .result-card-header {
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .result-card-header span {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .result-card-body {
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.7;
+      color: var(--text2);
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Tag pills */
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .tag.highlight {
+      background: rgba(124, 106, 255, 0.12);
+      border-color: rgba(124, 106, 255, 0.4);
+      color: var(--accent2);
+    }
+
+    /* Version badge */
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+
+    .version-badge.csharp {
+      border-color: rgba(124, 106, 255, 0.5);
+      color: var(--accent2);
+      background: rgba(124, 106, 255, 0.08);
+    }
+
+    .version-badge.python {
+      border-color: rgba(74, 222, 128, 0.5);
+      color: var(--green);
+      background: rgba(74, 222, 128, 0.08);
+    }
+
+    .version-badge.java {
+      border-color: rgba(251, 191, 36, 0.5);
+      color: var(--amber);
+      background: rgba(251, 191, 36, 0.08);
+    }
+
+    /* Download section */
+    .download-section {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-download {
+      flex: 1;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-download:hover {
+      background: rgba(74, 222, 128, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .btn-download:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Error/info messages */
+    .msg {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    .msg.error {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: var(--red);
+    }
+
+    .msg.info {
+      background: rgba(124, 106, 255, 0.1);
+      border: 1px solid rgba(124, 106, 255, 0.3);
+      color: var(--accent2);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    /* Analysis section */
+    .analysis-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .analysis-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      min-width: 80px;
+      padding-top: 2px;
+    }
+
+    .analysis-value {
+      flex: 1;
+    }
+  </style>
 </head>
+
 <body>
-<div class="app">
-  <header>
-    <div class="logo">resume<span>/</span>tailor</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:8px;">× oh-my-cv</div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-      <span class="status-label" id="statusLabel">waiting</span>
-      <div class="status-dot" id="statusDot"></div>
-    </div>
-  </header>
-
-  <main>
-    <!-- LEFT: Input -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-label">input</span>
+  <div class="app">
+    <header>
+      <div class="logo">resume<span>/</span>tailor</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:8px;">× oh-my-cv</div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <span class="status-label" id="statusLabel">waiting</span>
+        <div class="status-dot" id="statusDot"></div>
       </div>
-      <div class="panel-body">
+    </header>
 
-        <!-- API Key -->
-        <div class="key-row">
-          <input type="password" id="apiKey" placeholder="Gemini API key  (AIza...)" oninput="checkKey()">
-          <span class="key-badge" id="keyBadge">no key</span>
+    <main>
+      <!-- LEFT: Input -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-label">input</span>
         </div>
+        <div class="panel-body">
 
-        <div class="field">
-          <label>Job Title</label>
-          <input type="text" id="jobTitle" placeholder="e.g. Full-Stack Developer">
+          <!-- API Key -->
+          <div class="key-row">
+            <input type="password" id="apiKey" placeholder="Gemini API key  (AIza...)" oninput="checkKey()">
+            <span class="key-badge" id="keyBadge">no key</span>
+          </div>
+
+          <div class="field">
+            <label>Job Title</label>
+            <input type="text" id="jobTitle" placeholder="e.g. Software Engineer">
+          </div>
+
+          <div class="field">
+            <label>Company</label>
+            <input type="text" id="company" placeholder="e.g. Atlassian">
+          </div>
+
+          <div class="field">
+            <label>Job Description</label>
+            <textarea id="jd" placeholder="Paste the full JD here..."></textarea>
+          </div>
+
+          <button class="btn btn-primary" id="runBtn" onclick="runTailor()" disabled>
+            <span id="btnText">tailor resume</span>
+          </button>
+
+          <div id="errorMsg"></div>
         </div>
-
-        <div class="field">
-          <label>Company</label>
-          <input type="text" id="company" placeholder="e.g. Atlassian">
-        </div>
-
-        <div class="field">
-          <label>Job Description</label>
-          <textarea id="jd" placeholder="Paste the full JD here..."></textarea>
-        </div>
-
-        <button class="btn btn-primary" id="runBtn" onclick="runTailor()" disabled>
-          <span id="btnText">tailor resume</span>
-        </button>
-
-        <div id="errorMsg"></div>
       </div>
-    </div>
 
-    <!-- RIGHT: Output -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-label">output</span>
-        <span id="outputMeta" style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto;"></span>
-      </div>
-      <div class="panel-body" style="display:flex;flex-direction:column;">
-
-        <div class="output-placeholder" id="placeholder">
-          <div class="icon">◈</div>
-          <p>paste a JD on the left<br>and hit tailor resume</p>
+      <!-- RIGHT: Output -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-label">output</span>
+          <span id="outputMeta"
+            style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto;"></span>
         </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;">
 
-        <div class="output-content" id="outputContent">
-
-          <div class="analysis-row">
-            <span class="analysis-label">version</span>
-            <div class="analysis-value">
-              <span class="version-badge" id="versionBadge">—</span>
-            </div>
+          <div class="output-placeholder" id="placeholder">
+            <div class="icon">◈</div>
+            <p>paste a JD on the left<br>and hit tailor resume</p>
           </div>
 
-          <div class="analysis-row">
-            <span class="analysis-label">detected</span>
-            <div class="analysis-value">
-              <div class="tag-list" id="detectedTags"></div>
-            </div>
-          </div>
+          <div class="output-content" id="outputContent">
 
-          <div class="analysis-row">
-            <span class="analysis-label">bolded</span>
-            <div class="analysis-value">
-              <div class="tag-list" id="boldedTags"></div>
+            <div class="analysis-row">
+              <span class="analysis-label">version</span>
+              <div class="analysis-value">
+                <span class="version-badge" id="versionBadge">—</span>
+              </div>
             </div>
-          </div>
 
-          <div class="result-card">
-            <div class="result-card-header">
-              <span>markdown preview</span>
-              <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="copyMarkdown()">copy md</button>
+            <div class="analysis-row">
+              <span class="analysis-label">detected</span>
+              <div class="analysis-value">
+                <div class="tag-list" id="detectedTags"></div>
+              </div>
             </div>
-            <div class="result-card-body" id="mdPreview"></div>
-          </div>
 
-          <div class="download-section">
-            <button class="btn-download" id="dlBtn" onclick="downloadJSON()">
-              ↓ download  oh-my-cv .json
-            </button>
+            <div class="analysis-row">
+              <span class="analysis-label">bolded</span>
+              <div class="analysis-value">
+                <div class="tag-list" id="boldedTags"></div>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-card-header">
+                <span>markdown preview</span>
+                <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="copyMarkdown()">copy
+                  md</button>
+              </div>
+              <div class="result-card-body" id="mdPreview"></div>
+            </div>
+
+            <div class="download-section">
+              <button class="btn-download" id="dlBtn" onclick="downloadJSON()">
+                ↓ download oh-my-cv .json
+              </button>
+            </div>
+
           </div>
 
         </div>
-
       </div>
-    </div>
-  </main>
-</div>
+    </main>
+  </div>
 
-<script>
-// ── Templates (embedded from your exported JSON) ──────────────────────────
-const TEMPLATES = {
-  csharp: {
-    name: "Template (C#)",
-    css: `/* Backbone CSS for Resume Template 1 */\n\n/* Basic */\n\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: white;\n  color: black;\n  text-align: justify;\n  -moz-hyphens: auto;\n  -ms-hyphens: auto;\n  -webkit-hyphens: auto;\n  hyphens: auto;\n}\n\n#resume-preview p,\n#resume-preview li,\n#resume-preview dl {\n  margin: 0;\n}\n\n#resume-preview h1,\n#resume-preview h2,\n#resume-preview h3 {\n  font-weight: bold;\n}\n\n#resume-preview h1 {\n  font-size: 2.13em;\n}\n\n#resume-preview h2,\n#resume-preview h3 {\n  margin-bottom: 5px;\n  font-size: 1.2em;\n}\n\n#resume-preview h2 {\n  border-bottom-style: solid;\n  border-bottom-width: 1px;\n}\n\n#resume-preview ul,\n#resume-preview ol {\n  padding-left: 1.5em;\n  margin: 0.2em 0;\n}\n\n#resume-preview ul {\n  list-style-type: circle;\n}\n\n#resume-preview dl {\n  display: flex;\n}\n\n#resume-preview dl dt,\n#resume-preview dl dd:not(:last-child) {\n  flex: 1;\n}\n\n#resume-preview .resume-header {\n  text-align: center;\n}\n\n#resume-preview .resume-header h1 {\n  text-align: center;\n  line-height: 1;\n  width: 100%;\n  margin-bottom: 5px;\n}\n\n#resume-preview .resume-header > div:last-child,\n#resume-preview .resume-header {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n  width: 100%;\n  margin-top: 10px;\n}\n\n#resume-preview .resume-header-item {\n  flex: 0 0 50%;\n  margin-bottom: 5px;\n  font-size: 1em;\n}\n\n#resume-preview .resume-header-item:nth-child(odd) {\n  text-align: right;\n}\n\n#resume-preview .resume-header-item:nth-child(even) {\n  text-align: left;\n}\n\n.dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: hsl(213, 12%, 15%);\n  color: hsl(216, 12%, 84%);\n}\n\n@media print {\n  .dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n    background-color: white;\n    color: black;\n  }\n}\n`,
-    styles: {"marginV":50,"marginH":50,"lineHeight":1.3,"paragraphSpace":6,"themeColor":"#000000","fontCJK":{"name":"华康宋体","fontFamily":"HKST"},"fontEN":{"name":"Times New Roman","fontFamily":"Times New Roman"},"fontSize":16,"paper":"A4"},
-    markdown: `---
+  <script>
+    // ── Templates (embedded from your exported JSON) ──────────────────────────
+    const TEMPLATES = {
+      csharp: {
+        name: "Template (C#)",
+        css: `/* Backbone CSS for Resume Template 1 */\n\n/* Basic */\n\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: white;\n  color: black;\n  text-align: justify;\n  -moz-hyphens: auto;\n  -ms-hyphens: auto;\n  -webkit-hyphens: auto;\n  hyphens: auto;\n}\n\n#resume-preview p,\n#resume-preview li,\n#resume-preview dl {\n  margin: 0;\n}\n\n#resume-preview h1,\n#resume-preview h2,\n#resume-preview h3 {\n  font-weight: bold;\n}\n\n#resume-preview h1 {\n  font-size: 2.13em;\n}\n\n#resume-preview h2,\n#resume-preview h3 {\n  margin-bottom: 5px;\n  font-size: 1.2em;\n}\n\n#resume-preview h2 {\n  border-bottom-style: solid;\n  border-bottom-width: 1px;\n}\n\n#resume-preview ul,\n#resume-preview ol {\n  padding-left: 1.5em;\n  margin: 0.2em 0;\n}\n\n#resume-preview ul {\n  list-style-type: circle;\n}\n\n#resume-preview dl {\n  display: flex;\n}\n\n#resume-preview dl dt,\n#resume-preview dl dd:not(:last-child) {\n  flex: 1;\n}\n\n#resume-preview .resume-header {\n  text-align: center;\n}\n\n#resume-preview .resume-header h1 {\n  text-align: center;\n  line-height: 1;\n  width: 100%;\n  margin-bottom: 5px;\n}\n\n#resume-preview .resume-header > div:last-child,\n#resume-preview .resume-header {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n  width: 100%;\n  margin-top: 10px;\n}\n\n#resume-preview .resume-header-item {\n  flex: 0 0 50%;\n  margin-bottom: 5px;\n  font-size: 1em;\n}\n\n#resume-preview .resume-header-item:nth-child(odd) {\n  text-align: right;\n}\n\n#resume-preview .resume-header-item:nth-child(even) {\n  text-align: left;\n}\n\n.dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: hsl(213, 12%, 15%);\n  color: hsl(216, 12%, 84%);\n}\n\n@media print {\n  .dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n    background-color: white;\n    color: black;\n  }\n}\n`,
+        styles: { "marginV": 50, "marginH": 50, "lineHeight": 1.3, "paragraphSpace": 6, "themeColor": "#000000", "fontCJK": { "name": "华康宋体", "fontFamily": "HKST" }, "fontEN": { "name": "Times New Roman", "fontFamily": "Times New Roman" }, "fontSize": 16, "paper": "A4" },
+        markdown: `---
 name: Hsin-Yu Chou
 header:
   - text: "mobile: 0401321635"
@@ -532,7 +669,7 @@ Cloud & Tools: AWS, **Docker**, Git & GitHub Actions, xUnit
 
 ## Experience
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Brisbane, Australia
 
 Orefox Ai Limited
@@ -558,7 +695,7 @@ Technologies: C#, ASP.NET Core, React, TypeScript, SQL Server, RESTful API, Enti
 
 
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Taiwan
 
 Phygitalker Co., Ltd.
@@ -606,12 +743,12 @@ M.Sc. in Information Technology major in Computer Science
 
 B.Sc. in Computer Science and Information Engineering
   ~ Sep 2019 - Jun 2023`
-  },
-  python: {
-    name: "Template (Python)",
-    css: `/* Backbone CSS for Resume Template 1 */\n\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: white;\n  color: black;\n  text-align: justify;\n  hyphens: auto;\n}\n\n#resume-preview p, #resume-preview li, #resume-preview dl { margin: 0; }\n\n#resume-preview h1, #resume-preview h2, #resume-preview h3 { font-weight: bold; }\n#resume-preview h1 { font-size: 2.13em; }\n#resume-preview h2, #resume-preview h3 { margin-bottom: 5px; font-size: 1.2em; }\n#resume-preview h2 { border-bottom-style: solid; border-bottom-width: 1px; }\n\n#resume-preview ul, #resume-preview ol { padding-left: 1.5em; margin: 0.2em 0; }\n#resume-preview ul { list-style-type: circle; }\n\n#resume-preview dl { display: flex; }\n#resume-preview dl dt, #resume-preview dl dd:not(:last-child) { flex: 1; }\n\n#resume-preview .resume-header { text-align: center; }\n#resume-preview .resume-header h1 { text-align: center; line-height: 1; width: 100%; margin-bottom: 5px; }\n#resume-preview .resume-header > div:last-child, #resume-preview .resume-header { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; margin-top: 10px; }\n#resume-preview .resume-header-item { flex: 0 0 50%; margin-bottom: 5px; font-size: 1em; }\n#resume-preview .resume-header-item:nth-child(odd) { text-align: right; }\n#resume-preview .resume-header-item:nth-child(even) { text-align: left; }\n\n.dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: hsl(213, 12%, 15%); color: hsl(216, 12%, 84%); }\n@media print { .dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: white; color: black; } }\n`,
-    styles: {"marginV":50,"marginH":50,"lineHeight":1.3,"paragraphSpace":6,"themeColor":"#000000","fontCJK":{"name":"华康宋体","fontFamily":"HKST"},"fontEN":{"name":"Times New Roman","fontFamily":"Times New Roman"},"fontSize":16,"paper":"A4"},
-    markdown: `---
+      },
+      python: {
+        name: "Template (Python)",
+        css: `/* Backbone CSS for Resume Template 1 */\n\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] {\n  background-color: white;\n  color: black;\n  text-align: justify;\n  hyphens: auto;\n}\n\n#resume-preview p, #resume-preview li, #resume-preview dl { margin: 0; }\n\n#resume-preview h1, #resume-preview h2, #resume-preview h3 { font-weight: bold; }\n#resume-preview h1 { font-size: 2.13em; }\n#resume-preview h2, #resume-preview h3 { margin-bottom: 5px; font-size: 1.2em; }\n#resume-preview h2 { border-bottom-style: solid; border-bottom-width: 1px; }\n\n#resume-preview ul, #resume-preview ol { padding-left: 1.5em; margin: 0.2em 0; }\n#resume-preview ul { list-style-type: circle; }\n\n#resume-preview dl { display: flex; }\n#resume-preview dl dt, #resume-preview dl dd:not(:last-child) { flex: 1; }\n\n#resume-preview .resume-header { text-align: center; }\n#resume-preview .resume-header h1 { text-align: center; line-height: 1; width: 100%; margin-bottom: 5px; }\n#resume-preview .resume-header > div:last-child, #resume-preview .resume-header { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; margin-top: 10px; }\n#resume-preview .resume-header-item { flex: 0 0 50%; margin-bottom: 5px; font-size: 1em; }\n#resume-preview .resume-header-item:nth-child(odd) { text-align: right; }\n#resume-preview .resume-header-item:nth-child(even) { text-align: left; }\n\n.dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: hsl(213, 12%, 15%); color: hsl(216, 12%, 84%); }\n@media print { .dark #resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: white; color: black; } }\n`,
+        styles: { "marginV": 50, "marginH": 50, "lineHeight": 1.3, "paragraphSpace": 6, "themeColor": "#000000", "fontCJK": { "name": "华康宋体", "fontFamily": "HKST" }, "fontEN": { "name": "Times New Roman", "fontFamily": "Times New Roman" }, "fontSize": 16, "paper": "A4" },
+        markdown: `---
 name: Trista Chou
 header:
   - text: "mobile: 0401321635"
@@ -717,12 +854,12 @@ M.Sc. in Information Technology major in Computer Science
 
 B.Sc. in Computer Science and Information Engineering
   ~ Sep 2019 - Jun 2023`
-  },
-  java: {
-    name: "Template (Java)",
-    css: `/* same backbone */\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: white; color: black; text-align: justify; hyphens: auto; }\n#resume-preview p, #resume-preview li, #resume-preview dl { margin: 0; }\n#resume-preview h1, #resume-preview h2, #resume-preview h3 { font-weight: bold; }\n#resume-preview h1 { font-size: 2.13em; }\n#resume-preview h2, #resume-preview h3 { margin-bottom: 5px; font-size: 1.2em; }\n#resume-preview h2 { border-bottom-style: solid; border-bottom-width: 1px; }\n#resume-preview ul, #resume-preview ol { padding-left: 1.5em; margin: 0.2em 0; }\n#resume-preview ul { list-style-type: circle; }\n#resume-preview dl { display: flex; }\n#resume-preview dl dt, #resume-preview dl dd:not(:last-child) { flex: 1; }\n#resume-preview .resume-header { text-align: center; }\n#resume-preview .resume-header h1 { text-align: center; line-height: 1; width: 100%; margin-bottom: 5px; }\n#resume-preview .resume-header > div:last-child, #resume-preview .resume-header { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; margin-top: 10px; }\n#resume-preview .resume-header-item { flex: 0 0 50%; margin-bottom: 5px; font-size: 1em; }\n#resume-preview .resume-header-item:nth-child(odd) { text-align: right; }\n#resume-preview .resume-header-item:nth-child(even) { text-align: left; }\n`,
-    styles: {"marginV":50,"marginH":50,"lineHeight":1.3,"paragraphSpace":6,"themeColor":"#000000","fontCJK":{"name":"华康宋体","fontFamily":"HKST"},"fontEN":{"name":"Times New Roman","fontFamily":"Times New Roman"},"fontSize":16,"paper":"A4"},
-    markdown: `---
+      },
+      java: {
+        name: "Template (Java)",
+        css: `/* same backbone */\n#resume-preview [data-scope="vue-smart-pages"][data-part="page"] { background-color: white; color: black; text-align: justify; hyphens: auto; }\n#resume-preview p, #resume-preview li, #resume-preview dl { margin: 0; }\n#resume-preview h1, #resume-preview h2, #resume-preview h3 { font-weight: bold; }\n#resume-preview h1 { font-size: 2.13em; }\n#resume-preview h2, #resume-preview h3 { margin-bottom: 5px; font-size: 1.2em; }\n#resume-preview h2 { border-bottom-style: solid; border-bottom-width: 1px; }\n#resume-preview ul, #resume-preview ol { padding-left: 1.5em; margin: 0.2em 0; }\n#resume-preview ul { list-style-type: circle; }\n#resume-preview dl { display: flex; }\n#resume-preview dl dt, #resume-preview dl dd:not(:last-child) { flex: 1; }\n#resume-preview .resume-header { text-align: center; }\n#resume-preview .resume-header h1 { text-align: center; line-height: 1; width: 100%; margin-bottom: 5px; }\n#resume-preview .resume-header > div:last-child, #resume-preview .resume-header { display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; margin-top: 10px; }\n#resume-preview .resume-header-item { flex: 0 0 50%; margin-bottom: 5px; font-size: 1em; }\n#resume-preview .resume-header-item:nth-child(odd) { text-align: right; }\n#resume-preview .resume-header-item:nth-child(even) { text-align: left; }\n`,
+        styles: { "marginV": 50, "marginH": 50, "lineHeight": 1.3, "paragraphSpace": 6, "themeColor": "#000000", "fontCJK": { "name": "华康宋体", "fontFamily": "HKST" }, "fontEN": { "name": "Times New Roman", "fontFamily": "Times New Roman" }, "fontSize": 16, "paper": "A4" },
+        markdown: `---
 name: Hsin-Yu Chou
 header:
   - text: "mobile: 0401321635"
@@ -754,7 +891,7 @@ Cloud & Tools: AWS, **Docker**, Git & GitHub Actions, JUnit, Maven
 
 ## Experience
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Brisbane, Australia
 
 Orefox Ai Limited
@@ -780,7 +917,7 @@ Technologies: Java, Spring Boot, React, TypeScript, PostgreSQL, RESTful API, Spr
 
 
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Taiwan
 
 Phygitalker Co., Ltd.
@@ -828,61 +965,61 @@ M.Sc. in Information Technology major in Computer Science
 
 B.Sc. in Computer Science and Information Engineering
   ~ Sep 2019 - Jun 2023`
-  }
-};
+      }
+    };
 
-// ── State ─────────────────────────────────────────────────────────────────
-let resultData = null;
+    // ── State ─────────────────────────────────────────────────────────────────
+    let resultData = null;
 
-function checkKey() {
-  const key = document.getElementById('apiKey').value.trim();
-  const badge = document.getElementById('keyBadge');
-  const btn = document.getElementById('runBtn');
-  if (key.startsWith('AIza') && key.length > 20) {
-    badge.textContent = 'set ✓';
-    badge.className = 'key-badge set';
-    btn.disabled = false;
-    setStatus('ready', 'ready');
-  } else {
-    badge.textContent = 'no key';
-    badge.className = 'key-badge';
-    btn.disabled = true;
-    setStatus('', 'waiting');
-  }
-}
+    function checkKey() {
+      const key = document.getElementById('apiKey').value.trim();
+      const badge = document.getElementById('keyBadge');
+      const btn = document.getElementById('runBtn');
+      if (key.startsWith('AIza') && key.length > 20) {
+        badge.textContent = 'set ✓';
+        badge.className = 'key-badge set';
+        btn.disabled = false;
+        setStatus('ready', 'ready');
+      } else {
+        badge.textContent = 'no key';
+        badge.className = 'key-badge';
+        btn.disabled = true;
+        setStatus('', 'waiting');
+      }
+    }
 
-function setStatus(state, label) {
-  const dot = document.getElementById('statusDot');
-  const lbl = document.getElementById('statusLabel');
-  dot.className = 'status-dot' + (state ? ' ' + state : '');
-  lbl.textContent = label;
-}
+    function setStatus(state, label) {
+      const dot = document.getElementById('statusDot');
+      const lbl = document.getElementById('statusLabel');
+      dot.className = 'status-dot' + (state ? ' ' + state : '');
+      lbl.textContent = label;
+    }
 
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.innerHTML = `<div class="msg error">${msg}</div>`;
-}
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.innerHTML = `<div class="msg error">${msg}</div>`;
+    }
 
-function clearError() {
-  document.getElementById('errorMsg').innerHTML = '';
-}
+    function clearError() {
+      document.getElementById('errorMsg').innerHTML = '';
+    }
 
-async function runTailor() {
-  const key = document.getElementById('apiKey').value.trim();
-  const title = document.getElementById('jobTitle').value.trim();
-  const company = document.getElementById('company').value.trim();
-  const jd = document.getElementById('jd').value.trim();
+    async function runTailor() {
+      const key = document.getElementById('apiKey').value.trim();
+      const title = document.getElementById('jobTitle').value.trim();
+      const company = document.getElementById('company').value.trim();
+      const jd = document.getElementById('jd').value.trim();
 
-  if (!jd) { showError('Please paste a job description.'); return; }
-  clearError();
+      if (!jd) { showError('Please paste a job description.'); return; }
+      clearError();
 
-  const btn = document.getElementById('runBtn');
-  const btnText = document.getElementById('btnText');
-  btn.disabled = true;
-  btnText.innerHTML = '<div class="spinner"></div> analysing...';
-  setStatus('loading', 'processing');
+      const btn = document.getElementById('runBtn');
+      const btnText = document.getElementById('btnText');
+      btn.disabled = true;
+      btnText.innerHTML = '<div class="spinner"></div> analysing...';
+      setStatus('loading', 'processing');
 
-  const prompt = `You are a resume tailoring assistant. Given a job description, you must:
+      const prompt = `You are a resume tailoring assistant. Given a job description, you must:
 
 1. Decide which resume template to use: "csharp", "python", or "java" — based on what the JD primarily requires for backend.
 2. Extract all technical skills/tools mentioned in the JD.
@@ -905,114 +1042,115 @@ Company: ${company || 'Not specified'}
 Job Description:
 ${jd}`;
 
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
-        })
-      }
-    );
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
+            })
+          }
+        );
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || `API error ${res.status}`);
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message || `API error ${res.status}`);
+        }
+
+        const data = await res.json();
+        let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        raw = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        const parsed = JSON.parse(raw);
+        const tmpl = TEMPLATES[parsed.template] || TEMPLATES.csharp;
+
+        // Build new markdown
+        const newMarkdown = parsed.updated_markdown || tmpl.markdown;
+
+        resultData = {
+          template: parsed.template,
+          detected: parsed.detected_skills || [],
+          bolded: parsed.bolded_skills || [],
+          markdown: newMarkdown,
+          templateObj: tmpl,
+          company: company || 'company',
+          title: title || 'role'
+        };
+
+        showOutput(resultData);
+        setStatus('ready', 'done');
+
+      } catch (e) {
+        showError(e.message || 'Something went wrong.');
+        setStatus('error', 'error');
+      }
+
+      btn.disabled = false;
+      btnText.textContent = 'tailor resume';
+      checkKey();
     }
 
-    const data = await res.json();
-    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    raw = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    function showOutput(d) {
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('outputContent').classList.add('visible');
 
-    const parsed = JSON.parse(raw);
-    const tmpl = TEMPLATES[parsed.template] || TEMPLATES.csharp;
+      // Version badge
+      const badge = document.getElementById('versionBadge');
+      badge.textContent = d.template;
+      badge.className = 'version-badge ' + d.template;
 
-    // Build new markdown
-    const newMarkdown = parsed.updated_markdown || tmpl.markdown;
+      // Detected skills
+      const det = document.getElementById('detectedTags');
+      det.innerHTML = d.detected.map(s => `<span class="tag">${s}</span>`).join('');
 
-    resultData = {
-      template: parsed.template,
-      detected: parsed.detected_skills || [],
-      bolded: parsed.bolded_skills || [],
-      markdown: newMarkdown,
-      templateObj: tmpl,
-      company: company || 'company',
-      title: title || 'role'
-    };
+      // Bolded skills
+      const bold = document.getElementById('boldedTags');
+      bold.innerHTML = d.bolded.map(s => `<span class="tag highlight">**${s}**</span>`).join('');
 
-    showOutput(resultData);
-    setStatus('ready', 'done');
+      // MD preview
+      document.getElementById('mdPreview').textContent = d.markdown;
 
-  } catch (e) {
-    showError(e.message || 'Something went wrong.');
-    setStatus('error', 'error');
-  }
-
-  btn.disabled = false;
-  btnText.textContent = 'tailor resume';
-  checkKey();
-}
-
-function showOutput(d) {
-  document.getElementById('placeholder').style.display = 'none';
-  document.getElementById('outputContent').classList.add('visible');
-
-  // Version badge
-  const badge = document.getElementById('versionBadge');
-  badge.textContent = d.template;
-  badge.className = 'version-badge ' + d.template;
-
-  // Detected skills
-  const det = document.getElementById('detectedTags');
-  det.innerHTML = d.detected.map(s => `<span class="tag">${s}</span>`).join('');
-
-  // Bolded skills
-  const bold = document.getElementById('boldedTags');
-  bold.innerHTML = d.bolded.map(s => `<span class="tag highlight">**${s}**</span>`).join('');
-
-  // MD preview
-  document.getElementById('mdPreview').textContent = d.markdown;
-
-  // Meta
-  document.getElementById('outputMeta').textContent =
-    d.company ? `${d.company} · ${d.title}` : '';
-}
-
-function copyMarkdown() {
-  if (!resultData) return;
-  navigator.clipboard.writeText(resultData.markdown);
-}
-
-function downloadJSON() {
-  if (!resultData) return;
-  const ts = Date.now().toString();
-  const name = `${resultData.company} (${resultData.title})`.replace(/[^\w\s()-]/g, '');
-
-  const output = {
-    version: "v1",
-    data: {
-      [ts]: {
-        updated_at: ts,
-        created_at: ts,
-        name: name,
-        markdown: resultData.markdown,
-        css: resultData.templateObj.css,
-        styles: resultData.templateObj.styles
-      }
+      // Meta
+      document.getElementById('outputMeta').textContent =
+        d.company ? `${d.company} · ${d.title}` : '';
     }
-  };
 
-  const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `resume-${name.replace(/\s+/g, '-').toLowerCase()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-</script>
+    function copyMarkdown() {
+      if (!resultData) return;
+      navigator.clipboard.writeText(resultData.markdown);
+    }
+
+    function downloadJSON() {
+      if (!resultData) return;
+      const ts = Date.now().toString();
+      const name = `${resultData.company} (${resultData.title})`.replace(/[^\w\s()-]/g, '');
+
+      const output = {
+        version: "v1",
+        data: {
+          [ts]: {
+            updated_at: ts,
+            created_at: ts,
+            name: name,
+            markdown: resultData.markdown,
+            css: resultData.templateObj.css,
+            styles: resultData.templateObj.styles
+          }
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume-${name.replace(/\s+/g, '-').toLowerCase()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
 </body>
+
 </html>

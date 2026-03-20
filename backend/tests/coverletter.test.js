@@ -22,7 +22,7 @@ Hsin-Yu Chou`;
 test('fillTemplate: replaces all 6 placeholders', () => {
   const values = {
     company:            'Atlassian',
-    job_title:          'Full-Stack Developer',
+    job_title:          'Software Engineer',
     why_company:        'Atlassian builds tools used by millions of developers worldwide.',
     matching_skills:    'C#, React, ASP.NET Core',
     specific_project:   'Built real-time monitoring dashboard using SignalR and Redis.',
@@ -31,7 +31,7 @@ test('fillTemplate: replaces all 6 placeholders', () => {
   const result = fillTemplate(TEMPLATE, values);
   assert.ok(!result.includes('{{'), 'All placeholders should be replaced');
   assert.ok(result.includes('Atlassian'), 'company should be filled');
-  assert.ok(result.includes('Full-Stack Developer'), 'job_title should be filled');
+  assert.ok(result.includes('Software Engineer'), 'job_title should be filled');
   assert.ok(result.includes('C#, React, ASP.NET Core'), 'matching_skills should be filled');
 });
 

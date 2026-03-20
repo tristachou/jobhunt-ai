@@ -148,7 +148,7 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
   "stacks": {
     "csharp": {
       "primary_stack": "C# (ASP.NET Core)",
-      "job_title_display": "Full-Stack Developer",
+      "job_title_display": "Software Engineer",
       "lang_skills":     ["C#", "Python", "JavaScript", "TypeScript", "PHP"],
       "frontend_skills": ["React", "Next.js", "Tailwind CSS", "Redux", "HTML5", "CSS3"],
       "backend_skills":  ["ASP.NET Core", "RESTful API", "Entity Framework Core", "Node.js", "OpenAPI", "Middleware"],

@@ -40,8 +40,8 @@ test('renderBlock: paired row → .row div', () => {
 });
 
 test('renderBlock: paired row with bold title', () => {
-  const result = renderBlock('**Full-Stack Developer**\n  ~ Brisbane, Australia');
-  assert.ok(result.includes('<strong>Full-Stack Developer</strong>'));
+  const result = renderBlock('**Software Engineer**\n  ~ Brisbane, Australia');
+  assert.ok(result.includes('<strong>Software Engineer</strong>'));
   assert.ok(result.includes('Brisbane, Australia'));
 });
 

@@ -16,10 +16,10 @@ const { insertApplication, getAllApplications, updateApplication, deleteApplicat
 const SAMPLE = {
   created_at: '2026-03-18T10:00:00.000Z',
   company:    'Atlassian',
-  job_title:  'Full-Stack Developer',
+  job_title:  'Software Engineer',
   url:        'https://atlassian.com/jobs/123',
   source:     'linkedin',
-  jd_text:    'We are looking for a full-stack developer...',
+  jd_text:    'We are looking for a Software Engineer...',
   stack_used: 'csharp',
   fit_score:  87,
   resume_md:  '## Summary\n\nSample resume.',

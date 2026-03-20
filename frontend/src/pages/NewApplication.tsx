@@ -68,7 +68,7 @@ export default function NewApplication() {
               <Label htmlFor="job_title">Job Title</Label>
               <Input
                 id="job_title"
-                placeholder="Full-Stack Developer"
+                placeholder="Software Engineer"
                 value={form.job_title}
                 onChange={e => set('job_title')(e.target.value)}
               />

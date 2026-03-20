@@ -46,7 +46,7 @@ test('formatSkillList: single skill list', () => {
 
 const SAMPLE_MD = `## Experience
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Brisbane, Australia
 
 Orefox Ai Limited
@@ -54,7 +54,7 @@ Orefox Ai Limited
 
 - Built something cool
 
-**Full-Stack Developer**
+**Software Engineer**
   ~ Taiwan
 
 Phygitalker Co., Ltd.
@@ -64,21 +64,21 @@ Phygitalker Co., Ltd.
 
 test('injectSoftSkillBullets: injects bullets before Phygitalker block', () => {
   const bullets = ['Communicated clearly with stakeholders', 'Worked autonomously'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Full-Stack Developer');
+  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Software Engineer');
   assert.ok(result.includes('- Communicated clearly with stakeholders'), 'First bullet missing');
   assert.ok(result.includes('- Worked autonomously'), 'Second bullet missing');
 });
 
 test('injectSoftSkillBullets: bullets appear BEFORE Phygitalker header', () => {
   const bullets = ['Some soft skill'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Full-Stack Developer');
+  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Software Engineer');
   const bulletIdx = result.indexOf('- Some soft skill');
   const phygIdx   = result.indexOf('Phygitalker Co., Ltd.');
   assert.ok(bulletIdx < phygIdx, 'Bullet must appear before Phygitalker block');
 });
 
 test('injectSoftSkillBullets: no injection when bullets array is empty', () => {
-  const result = injectSoftSkillBullets(SAMPLE_MD, [], 'Full-Stack Developer');
+  const result = injectSoftSkillBullets(SAMPLE_MD, [], 'Software Engineer');
   assert.equal(result, SAMPLE_MD);
 });
 
@@ -89,7 +89,7 @@ test('injectSoftSkillBullets: no injection when marker not found', () => {
 
 test('injectSoftSkillBullets: injects at most what is passed (caller limits to 2)', () => {
   const bullets = ['Bullet A', 'Bullet B'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Full-Stack Developer');
+  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets, 'Software Engineer');
   const count   = (result.match(/- Bullet/g) || []).length;
   assert.equal(count, 2);
 });

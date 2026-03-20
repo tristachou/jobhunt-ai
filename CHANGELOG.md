@@ -1,3 +1,12 @@
+## 2026-03-20 — Add job_role + stack dual-dimension resume tailoring
+
+- Update `tailor.js` to read `job_role` and `python_framework` from Gemini response alongside `stack`
+- Resolve summary, orefox bullets (×5), and phygitalker bullets (×3) from `config.job_roles[job_role]` bullet sets
+- Add `resolveBulletKey` helper for Django variant support (`_django` suffix on bullet keys when `stack=python` and `python_framework=django`)
+- Fill `{{ai_skills_section}}` from `stackConfig.ai_skills` when `roleConfig.include_ai_skills` is true, empty string otherwise
+- Return `job_role` and `python_framework` alongside existing `stack`, `detected_skills`, `bolded_skills`, `fit_score`
+- Move `prompts.json` from `resumes/` to `user/`; update path references in `tailor.js`, `coverletter.js`, `server.js`
+
 ## 2026-03-19 — Separate user data from tool logic (open source prep)
 
 - Create `user/` (base.md, config.json, cover-letter/template.md) as the single folder new users edit; add to .gitignore so personal data is never committed
@@ -101,7 +110,7 @@
 ## 2026-03-19 — Name per stack, settings error fix, remove Oh My CV
 
 - Add `{{name}}` placeholder to `base.md` so the resume name is driven by config instead of hardcoded
-- Add `name` field to each stack in `config.json`: `python` → "Trista", `csharp`/`java` → "Hsin-Yu Chou"
+- Add `name` field to each stack in `config.json`: `python` → "Trista Chou", `csharp`/`java` → "Hsin-Yu Chou"
 - Wire `{{name}}` replacement into `tailor.js` replacements map
 - Update CLAUDE.md placeholder count from 15 → 16
 - Improve `loadPrompts()` error message: detect non-JSON response and tell user to check backend port instead of showing cryptic JSON parse error

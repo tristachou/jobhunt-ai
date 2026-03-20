@@ -9,7 +9,7 @@ const fs      = require('fs');
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 
 const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
-const PROMPTS_PATH     = path.resolve(__dirname, '../resumes/prompts.json');
+const PROMPTS_PATH     = path.resolve(__dirname, '../user/prompts.json');
 const THEMES_DIR       = path.resolve(__dirname, '../themes');
 const BASE_MD_PATH     = path.resolve(__dirname, '../user/base.md');
 
