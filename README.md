@@ -1,4 +1,4 @@
-# Job Apply Bot
+# Job Application Tracking System
 
 Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 seconds.
 

@@ -1,3 +1,27 @@
+## 2026-03-22 — Apply Swiss International Style (Brutalist) design system
+
+- Rewrite `index.css`: canvas background `#F0F0E8`, black borders, blue-700 primary, zero border-radius, serif headings via CSS
+- Rewrite all shadcn primitives (button, badge, card, input, label, textarea, select) with hard shadows, `rounded-none`, mono uppercase, brutalist variants
+- Rewrite `AppSidebar`: serif logo, mono nav labels, black active state inversion, `border-r-2 border-black`
+- Rewrite all pages (NewApplication, History, Settings, Editor, Style): serif page titles, mono metadata/labels, colored-dot panel headers, retro bracket syntax for empty states
+- Status badges redesigned: filled color backgrounds (blue=applied, green=interview, red=rejected)
+- Score bar: square `rounded-none` progress bar with black border
+
+## 2026-03-21 — Unify sidebar across all pages
+
+- Extract sidebar into shared `AppSidebar.tsx` with a reusable `SidebarLayout` wrapper
+- Style page now uses `SidebarLayout` instead of its own full-screen layout — sidebar is consistent across all pages
+- Remove `ArrowLeft` back button and custom black header from Style page; replace toolbar with standard white bar using primary-colored active state
+- Style page template selector buttons now use `bg-primary` for active state to match app color theme
+
+## 2026-03-21 — Redesign layout: top nav → sidebar, add blue primary color
+
+- Replace top navigation bar with a left sidebar layout (standard SaaS pattern)
+- Add icon + label nav items grouped into main (New Application, History) and bottom (Style, Settings)
+- Switch primary color from black to blue (`221 83% 53%`) with matching ring, border, and muted token updates
+- Mobile: sidebar becomes a slide-in overlay triggered by hamburger button
+- Editor and Style pages remain full-screen (no sidebar)
+
 ## 2026-03-20 — Add job_role + stack dual-dimension resume tailoring
 
 - Update `tailor.js` to read `job_role` and `python_framework` from Gemini response alongside `stack`

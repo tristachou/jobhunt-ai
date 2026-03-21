@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, ArrowRight } from 'lucide-react'
 
 const scoreColor = (s: number) =>
-  s >= 70 ? 'text-emerald-600' : s >= 50 ? 'text-amber-500' : 'text-red-500'
+  s >= 70 ? 'text-green-700' : s >= 50 ? 'text-orange-500' : 'text-red-600'
 
 const scoreLabel = (s: number) =>
-  s >= 70 ? 'Strong match' : s >= 50 ? 'Moderate match' : 'Weak match'
+  s >= 70 ? 'STRONG MATCH' : s >= 50 ? 'MODERATE MATCH' : 'WEAK MATCH'
 
 export default function NewApplication() {
   const navigate = useNavigate()
@@ -52,155 +52,160 @@ export default function NewApplication() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-2xl mx-auto space-y-8">
+
+      {/* Page header */}
+      <div className="border-b-2 border-black pb-4">
+        <h1 className="font-serif text-3xl font-bold">New Application</h1>
+        <p className="font-sans text-sm text-[#4B5563] mt-1">
+          Paste a job description — AI tailors your resume and cover letter automatically.
+        </p>
+      </div>
 
       {/* Form */}
-      <div>
-        <h2 className="text-lg font-semibold mb-1">New Application</h2>
-        <p className="text-sm text-neutral-500 mb-6">
-          Paste a job description and we'll tailor your resume and cover letter automatically.
-        </p>
+      <div className="space-y-5">
 
-        <div className="space-y-4">
-          {/* Row 1 — 4 cols on md+, stacked on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="job_title">Job Title</Label>
-              <Input
-                id="job_title"
-                placeholder="Software Engineer"
-                value={form.job_title}
-                onChange={e => set('job_title')(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                placeholder="Atlassian"
-                value={form.company}
-                onChange={e => set('company')(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Source</Label>
-              <Select value={form.source} onValueChange={set('source')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="linkedin">LinkedIn</SelectItem>
-                  <SelectItem value="seek">Seek</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Theme</Label>
-              <Select value={form.theme} onValueChange={set('theme')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {THEMES.map(t => (
-                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* URL */}
+        {/* Row 1 — 4 cols */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="url">
-              Job URL <span className="text-neutral-400 font-normal normal-case">(optional)</span>
-            </Label>
+            <Label htmlFor="job_title">Job Title</Label>
             <Input
-              id="url"
-              placeholder="https://..."
-              value={form.url}
-              onChange={e => set('url')(e.target.value)}
+              id="job_title"
+              placeholder="Software Engineer"
+              value={form.job_title}
+              onChange={e => set('job_title')(e.target.value)}
             />
           </div>
-
-          {/* JD */}
           <div className="space-y-1.5">
-            <Label htmlFor="jd">Job Description</Label>
-            <Textarea
-              id="jd"
-              placeholder="Paste the full job description here…"
-              className="min-h-44 resize-y"
-              value={form.jd}
-              onChange={e => set('jd')(e.target.value)}
+            <Label htmlFor="company">Company</Label>
+            <Input
+              id="company"
+              placeholder="Atlassian"
+              value={form.company}
+              onChange={e => set('company')(e.target.value)}
             />
           </div>
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-end pt-1">
-            <Button onClick={handleSubmit} disabled={loading} className="gap-2">
-              {loading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Analysing…</>
-                : <>Generate <ArrowRight className="h-4 w-4" /></>
-              }
-            </Button>
+          <div className="space-y-1.5">
+            <Label>Source</Label>
+            <Select value={form.source} onValueChange={set('source')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
+                <SelectItem value="seek">Seek</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label>Theme</Label>
+            <Select value={form.theme} onValueChange={set('theme')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {THEMES.map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* URL */}
+        <div className="space-y-1.5">
+          <Label htmlFor="url">
+            Job URL <span className="text-[#4B5563] normal-case font-sans text-xs">(optional)</span>
+          </Label>
+          <Input
+            id="url"
+            placeholder="https://..."
+            value={form.url}
+            onChange={e => set('url')(e.target.value)}
+          />
+        </div>
+
+        {/* JD */}
+        <div className="space-y-1.5">
+          <Label htmlFor="jd">Job Description</Label>
+          <Textarea
+            id="jd"
+            placeholder="Paste the full job description here…"
+            className="min-h-44 resize-y"
+            value={form.jd}
+            onChange={e => set('jd')(e.target.value)}
+          />
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="border-2 border-red-600 bg-red-100 px-3 py-2 flex items-start gap-2">
+            <div className="w-3 h-3 bg-red-600 flex-shrink-0 mt-0.5" />
+            <p className="font-mono text-xs text-red-600 uppercase tracking-wider">{error}</p>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-1">
+          <Button onClick={handleSubmit} disabled={loading} className="gap-2">
+            {loading
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Analysing…</>
+              : <>Generate <ArrowRight className="h-4 w-4" /></>
+            }
+          </Button>
         </div>
       </div>
 
-      {/* Divider */}
-      {result && <div className="border-t" />}
-
       {/* Result */}
       {result && (
-        <div className="space-y-5">
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Result</h2>
-            <p className="text-sm text-neutral-500">Review your tailored resume and cover letter in the editor.</p>
-          </div>
+        <>
+          <div className="border-t-2 border-black" />
 
-          {/* Score */}
-          <div className="flex items-baseline gap-3">
-            <span className={`text-4xl font-bold tabular-nums ${scoreColor(result.fit_score)}`}>
-              {result.fit_score}
-            </span>
-            <div>
-              <p className="text-sm font-medium text-neutral-700">Fit Score</p>
-              <p className={`text-xs ${scoreColor(result.fit_score)}`}>{scoreLabel(result.fit_score)}</p>
+          <div className="space-y-5">
+            <div className="border-b-2 border-black pb-4">
+              <h2 className="font-serif text-2xl font-bold">Analysis Result</h2>
             </div>
-            <span className="ml-auto text-sm text-neutral-400">Stack: <span className="text-neutral-700 font-medium">{result.stack}</span></span>
-          </div>
 
-          {/* Skills */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Detected Skills
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {result.detected_skills.map(s => (
-                <Badge
-                  key={s}
-                  variant={result.bolded_skills.includes(s) ? 'applied' : 'secondary'}
-                  className={result.bolded_skills.includes(s) ? 'font-semibold' : ''}
-                >
-                  {s}
-                </Badge>
-              ))}
+            {/* Score card */}
+            <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000000] p-4">
+              <div className="flex items-baseline gap-4">
+                <span className={`font-serif text-5xl font-bold tabular-nums ${scoreColor(result.fit_score)}`}>
+                  {result.fit_score}
+                </span>
+                <div>
+                  <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Fit Score</p>
+                  <p className={`font-mono text-xs font-bold ${scoreColor(result.fit_score)}`}>
+                    {scoreLabel(result.fit_score)}
+                  </p>
+                </div>
+                <span className="ml-auto font-mono text-xs text-[#4B5563] uppercase tracking-wider">
+                  Stack: <span className="text-black font-bold">{result.stack}</span>
+                </span>
+              </div>
             </div>
-            <p className="text-xs text-neutral-400">
-              Highlighted skills are bolded in your resume
-            </p>
-          </div>
 
-          <Button onClick={() => navigate(`/editor/${result.id}`)} className="w-full sm:w-auto">
-            Open Editor & Export PDFs
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+            {/* Detected skills */}
+            <div className="space-y-2">
+              <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">
+                Detected Skills
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {result.detected_skills.map(s => (
+                  <Badge
+                    key={s}
+                    variant={result.bolded_skills.includes(s) ? 'applied' : 'secondary'}
+                  >
+                    {s}
+                  </Badge>
+                ))}
+              </div>
+              <p className="font-mono text-xs text-[#4B5563]">
+                [ Blue badges are bolded in your resume ]
+              </p>
+            </div>
+
+            <Button onClick={() => navigate(`/editor/${result.id}`)} className="gap-2 w-full sm:w-auto">
+              Open Editor &amp; Export PDFs
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </>
       )}
     </div>
   )

@@ -58,7 +58,6 @@ export default function Editor() {
     refreshPreview(markdown, tab, newTheme)
   }
 
-  // When tab changes, update markdown AND preview together using the new values directly
   useEffect(() => {
     if (!app) return
     const newMd = tab === 'resume' ? app.resume_md || '' : app.cover_md || ''
@@ -80,42 +79,48 @@ export default function Editor() {
 
   if (loadingApp) {
     return (
-      <div className="flex h-dvh items-center justify-center text-neutral-400">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading…
+      <div className="flex h-dvh items-center justify-center bg-[#F0F0E8]">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-700" />
+          <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">[ Loading… ]</span>
+        </div>
       </div>
     )
   }
 
   if (error && !app) {
     return (
-      <div className="flex h-dvh items-center justify-center text-red-500 text-sm">
-        {error || 'Application not found.'}
+      <div className="flex h-dvh items-center justify-center bg-[#F0F0E8]">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-red-600" />
+          <span className="font-mono text-xs uppercase tracking-wider text-red-600">[ {error || 'Application not found'} ]</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-white">
+    <div className="flex flex-col h-dvh bg-[#F0F0E8]">
 
       {/* ── Header ── */}
-      <header className="bg-black text-white px-4 sm:px-6 h-14 flex items-center justify-between flex-shrink-0">
+      <header className="bg-white border-b-2 border-black px-4 sm:px-6 h-12 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate('/')}
-            className="text-neutral-500 hover:text-white transition-colors flex-shrink-0"
+            className="text-[#4B5563] hover:text-black transition-colors flex-shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           {app && (
             <div className="min-w-0">
-              <p className="font-medium text-sm truncate">
+              <p className="font-sans font-semibold text-sm truncate">
                 {app.company} — {app.job_title}
               </p>
-              <p className="text-xs text-neutral-500 hidden sm:block">{app.created_at.slice(0, 10)}</p>
+              <p className="font-mono text-xs text-[#4B5563] hidden sm:block">{app.created_at.slice(0, 10)}</p>
             </div>
           )}
           {app && (
-            <Badge variant={STATUS_VARIANT[app.status]} className="capitalize hidden sm:inline-flex flex-shrink-0">
+            <Badge variant={STATUS_VARIANT[app.status]} className="hidden sm:inline-flex flex-shrink-0">
               {app.status}
             </Badge>
           )}
@@ -123,36 +128,34 @@ export default function Editor() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {saving && (
-            <span className="text-xs text-neutral-500 hidden sm:flex items-center gap-1">
+            <span className="font-mono text-xs text-[#4B5563] hidden sm:flex items-center gap-1 uppercase">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving
             </span>
           )}
-          {/* Theme selector — only shown while viewing resume tab */}
           {tab === 'resume' && app && (
             <Select value={app.theme || 'classic'} onValueChange={handleThemeChange}>
-              <SelectTrigger className="h-8 text-xs w-28 bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white">
+              <SelectTrigger className="h-7 text-xs w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {THEMES.map(t => (
-                  <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
           <a href={api.getPdfUrl(appId, 'resume')} download>
-            <Button size="sm" variant="outline" className="h-8 text-xs bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hidden sm:flex">
+            <Button size="sm" variant="outline" className="h-7 text-xs hidden sm:flex">
               <Download className="h-3.5 w-3.5" /> Resume
             </Button>
           </a>
           <a href={api.getPdfUrl(appId, 'coverletter')} download>
-            <Button size="sm" variant="outline" className="h-8 text-xs bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white hidden sm:flex">
+            <Button size="sm" variant="outline" className="h-7 text-xs hidden sm:flex">
               <Download className="h-3.5 w-3.5" /> Cover Letter
             </Button>
           </a>
-          {/* Mobile download */}
           <a href={api.getPdfUrl(appId, tab === 'resume' ? 'resume' : 'coverletter')} download className="sm:hidden">
-            <Button size="sm" variant="outline" className="h-8 text-xs bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white">
+            <Button size="sm" variant="outline" className="h-7 text-xs">
               <Download className="h-3.5 w-3.5" /> PDF
             </Button>
           </a>
@@ -160,15 +163,15 @@ export default function Editor() {
       </header>
 
       {/* ── Document tabs ── */}
-      <div className="flex border-b border-neutral-200 bg-white flex-shrink-0">
+      <div className="flex border-b-2 border-black bg-white flex-shrink-0">
         {(['resume', 'coverletter'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            className={`px-5 py-2 font-mono text-xs uppercase tracking-wider border-b-2 -mb-px transition-colors ${
               tab === t
                 ? 'border-black text-black'
-                : 'border-transparent text-neutral-400 hover:text-neutral-700'
+                : 'border-transparent text-[#4B5563] hover:text-black'
             }`}
           >
             {t === 'coverletter' ? 'Cover Letter' : 'Resume'}
@@ -177,13 +180,13 @@ export default function Editor() {
       </div>
 
       {/* ── Mobile panel toggle ── */}
-      <div className="sm:hidden flex border-b border-neutral-200 bg-neutral-50 flex-shrink-0">
+      <div className="sm:hidden flex border-b-2 border-black bg-[#F0F0E8] flex-shrink-0">
         {(['editor', 'preview'] as PanelTab[]).map(p => (
           <button
             key={p}
             onClick={() => { setPanelTab(p); if (p === 'preview') refreshPreview(markdown, tab) }}
-            className={`flex-1 py-2 text-xs font-medium capitalize transition-colors ${
-              panelTab === p ? 'text-black bg-white border-b-2 border-black -mb-px' : 'text-neutral-400'
+            className={`flex-1 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
+              panelTab === p ? 'bg-white text-black border-b-2 border-black -mb-px' : 'text-[#4B5563]'
             }`}
           >
             {p}
@@ -195,15 +198,18 @@ export default function Editor() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Editor panel */}
-        <div className={`flex flex-col border-r border-neutral-200 ${
+        <div className={`flex flex-col border-r-2 border-black bg-white ${
           panelTab === 'editor' ? 'flex-1' : 'hidden'
         } sm:flex sm:flex-1`}>
-          <div className="px-4 py-2 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between flex-shrink-0">
-            <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Markdown</span>
-            {saving && <span className="text-xs text-neutral-400 sm:hidden">Saving…</span>}
+          <div className="px-4 py-2 border-b border-black bg-[#F0F0E8] flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-blue-700" />
+              <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Markdown</span>
+            </div>
+            {saving && <span className="font-mono text-xs text-[#4B5563] sm:hidden uppercase">Saving…</span>}
           </div>
           <textarea
-            className="flex-1 resize-none px-4 py-3 text-sm font-mono leading-relaxed bg-white focus:outline-none"
+            className="flex-1 resize-none px-4 py-3 font-mono text-xs leading-relaxed bg-white focus:outline-none"
             value={markdown}
             onChange={e => handleMarkdownChange(e.target.value)}
             spellCheck={false}
@@ -212,14 +218,17 @@ export default function Editor() {
         </div>
 
         {/* Preview panel */}
-        <div className={`flex flex-col bg-neutral-50 ${
+        <div className={`flex flex-col bg-[#F0F0E8] ${
           panelTab === 'preview' ? 'flex-1' : 'hidden'
         } sm:flex sm:flex-1`}>
-          <div className="px-4 py-2 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between flex-shrink-0">
-            <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Preview</span>
+          <div className="px-4 py-2 border-b border-black bg-[#F0F0E8] flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-green-700" />
+              <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Preview</span>
+            </div>
             <button
               onClick={() => refreshPreview(markdown, tab)}
-              className="text-neutral-400 hover:text-black transition-colors"
+              className="text-[#4B5563] hover:text-black transition-colors"
               title="Refresh"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loadingPreview ? 'animate-spin' : ''}`} />
@@ -227,8 +236,8 @@ export default function Editor() {
           </div>
           <div className="flex-1 overflow-auto p-4">
             {preview
-              ? <iframe srcDoc={preview} className="w-full h-full rounded border border-neutral-200 bg-white" title="Preview" />
-              : <div className="flex h-full items-center justify-center text-neutral-400 text-sm">No preview yet</div>
+              ? <iframe srcDoc={preview} className="w-full h-full border-2 border-black shadow-[4px_4px_0px_0px_#000000] bg-white" title="Preview" />
+              : <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-wider text-[#4B5563]">[ No preview yet ]</div>
             }
           </div>
         </div>

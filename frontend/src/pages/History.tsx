@@ -32,12 +32,12 @@ const FILTERS: { label: string; value: Filter }[] = [
 // ─── Score bar ─────────────────────────────────────────────────────────────────
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 70 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-400' : 'bg-red-400'
+  const color = score >= 70 ? 'bg-green-700' : score >= 50 ? 'bg-orange-500' : 'bg-red-600'
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm tabular-nums w-6 text-right">{score}</span>
-      <div className="w-12 h-1 rounded-full bg-neutral-100">
-        <div className={`h-1 rounded-full ${color}`} style={{ width: `${score}%` }} />
+      <span className="font-mono text-xs tabular-nums w-6 text-right">{score}</span>
+      <div className="w-12 h-1.5 bg-gray-200 border border-black">
+        <div className={`h-full ${color}`} style={{ width: `${score}%` }} />
       </div>
     </div>
   )
@@ -61,10 +61,10 @@ function EditableCell({
   if (!editing) {
     return (
       <span
-        className="cursor-text hover:opacity-60 transition-opacity"
+        className="cursor-text hover:opacity-60 transition-opacity font-sans"
         onClick={() => { setDraft(value); setEditing(true) }}
       >
-        {value || <span className="text-neutral-300">—</span>}
+        {value || <span className="text-gray-300">—</span>}
       </span>
     )
   }
@@ -72,7 +72,7 @@ function EditableCell({
     return (
       <select
         autoFocus
-        className="border border-neutral-300 rounded px-1.5 py-0.5 text-sm bg-white outline-none focus:ring-1 focus:ring-black"
+        className="border border-black rounded-none px-1.5 py-0.5 font-mono text-xs uppercase bg-white outline-none focus:ring-1 focus:ring-blue-700"
         value={draft}
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
@@ -84,7 +84,7 @@ function EditableCell({
   return (
     <input
       autoFocus type={type}
-      className="border border-neutral-300 rounded px-1.5 py-0.5 text-sm bg-white w-full min-w-[80px] outline-none focus:ring-1 focus:ring-black"
+      className="border border-black rounded-none px-1.5 py-0.5 font-sans text-sm bg-white w-full min-w-[80px] outline-none focus:ring-1 focus:ring-blue-700"
       value={draft}
       onChange={e => setDraft(e.target.value)}
       onBlur={commit}
@@ -100,11 +100,19 @@ function EditableCell({
 
 function StatusCell({ app, onUpdate }: { app: Application; onUpdate: (s: Status) => void }) {
   const [open, setOpen] = useState(false)
+  const dotColor: Record<Status, string> = {
+    generated: 'bg-gray-400',
+    analyzed:  'bg-gray-600',
+    exported:  'bg-blue-700',
+    applied:   'bg-blue-700',
+    interview: 'bg-green-700',
+    rejected:  'bg-red-600',
+  }
   return (
     <div className="relative inline-block">
       <Badge
         variant={STATUS_VARIANT[app.status]}
-        className="cursor-pointer capitalize select-none"
+        className="cursor-pointer select-none"
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
       >
         {app.status}
@@ -112,19 +120,14 @@ function StatusCell({ app, onUpdate }: { app: Application; onUpdate: (s: Status)
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 z-20 w-36 rounded-md border border-neutral-200 bg-white shadow-lg overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-20 w-36 border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden">
             {STATUSES.map(s => (
               <button
                 key={s}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-neutral-50 capitalize transition-colors"
+                className="flex w-full items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
                 onClick={() => { onUpdate(s); setOpen(false) }}
               >
-                <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-                  s === 'interview' ? 'bg-emerald-500' :
-                  s === 'applied'   ? 'bg-indigo-500' :
-                  s === 'rejected'  ? 'bg-red-400' :
-                  s === 'exported'  ? 'bg-blue-400' : 'bg-neutral-400'
-                }`} />
+                <span className={`h-2 w-2 flex-shrink-0 ${dotColor[s]}`} />
                 {s}
               </button>
             ))}
@@ -146,28 +149,28 @@ function DesktopRow({
 
   return (
     <>
-      <tr className="group hover:bg-neutral-50 transition-colors">
+      <tr className="group hover:bg-black/5 transition-colors border-b border-black">
         <td className="pl-4 pr-2 py-3 w-7">
           <button
-            className="text-neutral-300 hover:text-neutral-600 transition-colors"
+            className="text-[#4B5563] hover:text-black transition-colors"
             onClick={() => setOpen(o => !o)}
           >
             {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           </button>
         </td>
-        <td className="px-3 py-3 text-xs text-neutral-400 whitespace-nowrap">{app.created_at.slice(0, 10)}</td>
-        <td className="px-3 py-3 font-medium text-sm"><EditableCell value={app.company} onSave={v => patch({ company: v })} /></td>
-        <td className="px-3 py-3 text-sm text-neutral-600"><EditableCell value={app.job_title} onSave={v => patch({ job_title: v })} /></td>
-        <td className="px-3 py-3 text-sm text-neutral-500 capitalize"><EditableCell value={app.source} onSave={v => patch({ source: v })} options={['linkedin','seek','other']} /></td>
+        <td className="px-3 py-3 font-mono text-xs text-[#4B5563] whitespace-nowrap">{app.created_at.slice(0, 10)}</td>
+        <td className="px-3 py-3 font-sans font-semibold text-sm"><EditableCell value={app.company} onSave={v => patch({ company: v })} /></td>
+        <td className="px-3 py-3 font-sans text-sm text-[#4B5563]"><EditableCell value={app.job_title} onSave={v => patch({ job_title: v })} /></td>
+        <td className="px-3 py-3 font-mono text-xs uppercase"><EditableCell value={app.source} onSave={v => patch({ source: v })} options={['linkedin','seek','other']} /></td>
         <td className="px-3 py-3"><ScoreBar score={app.fit_score ?? 0} /></td>
-        <td className="px-3 py-3 text-xs text-neutral-400">{app.stack_used || '—'}</td>
+        <td className="px-3 py-3 font-mono text-xs text-[#4B5563]">{app.stack_used || '—'}</td>
         <td className="px-3 py-3">
           <StatusCell app={app} onUpdate={s => patch({ status: s })} />
         </td>
         <td className="px-3 py-3">
           {app.url
-            ? <a href={app.url} target="_blank" rel="noreferrer" className="text-xs text-neutral-500 hover:text-black hover:underline transition-colors">↗ Link</a>
-            : <span className="text-neutral-300 text-xs">—</span>}
+            ? <a href={app.url} target="_blank" rel="noreferrer" className="font-mono text-xs text-blue-700 hover:underline">↗ Link</a>
+            : <span className="text-gray-300 font-mono text-xs">—</span>}
         </td>
         <td className="px-3 py-3 pr-4">
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -180,7 +183,7 @@ function DesktopRow({
               <Pencil className="h-3.5 w-3.5" />
             </Button>
             <Button
-              variant="ghost" size="icon" className="h-7 w-7 hover:text-red-500 transition-colors" title="Delete"
+              variant="ghost" size="icon" className="h-7 w-7 hover:text-red-600 transition-colors" title="Delete"
               onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?`)) onDelete(app.id) }}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -190,20 +193,20 @@ function DesktopRow({
       </tr>
 
       {open && (
-        <tr>
-          <td colSpan={10} className="bg-neutral-50 border-b px-6 py-4">
+        <tr className="border-b border-black">
+          <td colSpan={10} className="bg-[#F0F0E8] border-b border-black px-6 py-4">
             <div className="grid grid-cols-2 gap-6 max-w-3xl">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-2">Job Description</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] mb-2">Job Description</p>
                 <textarea
-                  className="w-full min-h-36 text-sm border border-neutral-200 rounded-md px-3 py-2 resize-y bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                  className="w-full min-h-36 font-sans text-sm border border-black bg-white px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
                   defaultValue={app.jd_text}
                   onBlur={e => { if (e.target.value !== app.jd_text) patch({ jd_text: e.target.value }) }}
                 />
-                <p className="text-xs text-neutral-400 mt-1">Saves on blur</p>
+                <p className="font-mono text-xs text-[#4B5563] mt-1">[ Saves on blur ]</p>
               </div>
-              <div className="text-sm space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-2">Details</p>
+              <div className="space-y-1.5">
+                <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] mb-2">Details</p>
                 {[
                   ['ID', app.id],
                   ['Created', app.created_at.slice(0, 10)],
@@ -211,11 +214,17 @@ function DesktopRow({
                   ['Stack', app.stack_used || '—'],
                   ['Source', app.source || '—'],
                 ].map(([k, v]) => (
-                  <p key={String(k)}><span className="text-neutral-400">{k}: </span>{v}</p>
+                  <p key={String(k)} className="font-mono text-xs">
+                    <span className="text-[#4B5563] uppercase">{k}: </span>
+                    <span className="text-black">{v}</span>
+                  </p>
                 ))}
-                {app.url && <p><span className="text-neutral-400">URL: </span>
-                  <a href={app.url} target="_blank" rel="noreferrer" className="text-black hover:underline break-all">{app.url}</a>
-                </p>}
+                {app.url && (
+                  <p className="font-mono text-xs">
+                    <span className="text-[#4B5563] uppercase">URL: </span>
+                    <a href={app.url} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline break-all">{app.url}</a>
+                  </p>
+                )}
               </div>
             </div>
           </td>
@@ -234,21 +243,21 @@ function MobileCard({
   const patch    = useCallback((d: Partial<Application>) => onUpdate(app.id, d), [app.id, onUpdate])
 
   return (
-    <div className="bg-white border border-neutral-200 rounded-lg p-4 space-y-3">
+    <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000000] p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold text-sm truncate">{app.company}</p>
-          <p className="text-xs text-neutral-500 truncate">{app.job_title}</p>
+          <p className="font-sans font-semibold text-sm truncate">{app.company}</p>
+          <p className="font-mono text-xs text-[#4B5563] truncate uppercase">{app.job_title}</p>
         </div>
         <StatusCell app={app} onUpdate={s => patch({ status: s })} />
       </div>
 
-      <div className="flex items-center justify-between text-xs text-neutral-400">
-        <span>{app.created_at.slice(0, 10)}</span>
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-xs text-[#4B5563]">{app.created_at.slice(0, 10)}</span>
         <ScoreBar score={app.fit_score ?? 0} />
       </div>
 
-      <div className="flex items-center gap-2 pt-1 border-t border-neutral-100">
+      <div className="flex items-center gap-2 pt-2 border-t-2 border-black">
         {app.resume_md && (
           <a href={api.getPdfUrl(app.id, 'resume')} download>
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
@@ -260,7 +269,7 @@ function MobileCard({
           <Pencil className="h-3 w-3" /> Edit
         </Button>
         <Button
-          variant="ghost" size="sm" className="h-7 text-xs text-red-500 ml-auto"
+          variant="ghost" size="sm" className="h-7 text-xs text-red-600 ml-auto"
           onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?`)) onDelete(app.id) }}
         >
           <Trash2 className="h-3 w-3" />
@@ -300,12 +309,13 @@ export default function History() {
     })
 
   return (
-    <div className="space-y-5">
-      {/* Header row */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Application History</h2>
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div className="border-b-2 border-black pb-4 flex items-end justify-between">
+        <h1 className="font-serif text-3xl font-bold">History</h1>
         <button
-          className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-black transition-colors"
+          className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[#4B5563] hover:text-black transition-colors"
           onClick={() => setSortAsc(a => !a)}
         >
           <ArrowUpDown className="h-3.5 w-3.5" />
@@ -319,10 +329,10 @@ export default function History() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+            className={`px-3 py-1 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
               filter === f.value
-                ? 'bg-black text-white border-black'
-                : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400 hover:text-black'
+                ? 'bg-black text-[#F0F0E8] border-black'
+                : 'bg-white text-[#4B5563] border-black hover:bg-black hover:text-[#F0F0E8]'
             }`}
           >
             {f.label}
@@ -331,25 +341,25 @@ export default function History() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden sm:block rounded-lg border border-neutral-200 bg-white overflow-hidden">
+      <div className="hidden sm:block border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000]">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-neutral-100">
+              <tr className="border-b-2 border-black bg-[#F0F0E8]">
                 <th className="w-7" />
                 {['Date','Company','Title','Source','Score','Stack','Status','URL',''].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400 whitespace-nowrap">
+                  <th key={h} className="px-3 py-2.5 text-left font-mono text-xs uppercase tracking-wider text-[#4B5563] whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody>
               {loading && (
-                <tr><td colSpan={10} className="px-4 py-10 text-center text-neutral-400 text-sm">Loading…</td></tr>
+                <tr><td colSpan={10} className="px-4 py-10 text-center font-mono text-xs uppercase tracking-wider text-[#4B5563]">[ Loading… ]</td></tr>
               )}
               {!loading && visible.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-10 text-center text-neutral-400 text-sm">No applications yet.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-10 text-center font-mono text-xs uppercase tracking-wider text-[#4B5563]">[ No applications yet ]</td></tr>
               )}
               {visible.map(app => (
                 <DesktopRow key={app.id} app={app} onUpdate={handleUpdate} onDelete={handleDelete} />
@@ -361,9 +371,9 @@ export default function History() {
 
       {/* Mobile cards */}
       <div className="sm:hidden space-y-3">
-        {loading && <p className="text-sm text-neutral-400 text-center py-8">Loading…</p>}
+        {loading && <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] text-center py-8">[ Loading… ]</p>}
         {!loading && visible.length === 0 && (
-          <p className="text-sm text-neutral-400 text-center py-8">No applications yet.</p>
+          <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] text-center py-8">[ No applications yet ]</p>
         )}
         {visible.map(app => (
           <MobileCard key={app.id} app={app} onUpdate={handleUpdate} onDelete={handleDelete} />

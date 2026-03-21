@@ -1,7 +1,7 @@
 /**
  * user.config.js — User-facing configuration
  *
- * Edit this file to customise your Job Apply Bot instance.
+ * Edit this file to customise your Job Application Tracking System instance.
  * All personal data (resume, config, cover letter) lives in user/.
  */
 module.exports = {

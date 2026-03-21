@@ -1,27 +1,24 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
+import { SidebarLayout } from '@/components/AppSidebar'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check, RefreshCw, ArrowLeft } from 'lucide-react'
+import { Loader2, Check, RefreshCw } from 'lucide-react'
 
 // ─── Scaled iframe preview ─────────────────────────────────────────────────────
-// The resume HTML is rendered at A4 width (~816px). This component measures
-// the container and applies a CSS transform to scale the iframe to fit,
-// so the user never needs to scroll horizontally.
 
-const A4_W = 816   // px — approximate A4 width at 96 dpi
+const A4_W = 816
 
 function ScaledPreview({ html, loading }: { html: string; loading: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const iframeRef    = useRef<HTMLIFrameElement>(null)
-  const [scale, setScale]       = useState(1)
-  const [iframeH, setIframeH]   = useState(1155)
+  const [scale, setScale]     = useState(1)
+  const [iframeH, setIframeH] = useState(1155)
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const measure = () => {
-      const w = el.clientWidth - 32 // subtract horizontal padding
+      const w = el.clientWidth - 32
       setScale(Math.min(1, w / A4_W))
     }
     measure()
@@ -33,43 +30,38 @@ function ScaledPreview({ html, loading }: { html: string; loading: boolean }) {
   function handleIframeLoad() {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    // Measure the actual rendered content height so multi-page resumes scroll correctly
     const h = doc.documentElement.scrollHeight || doc.body.scrollHeight
     if (h > 0) setIframeH(h)
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 overflow-y-auto overflow-x-hidden bg-neutral-100 p-4"
-    >
+    <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F0F0E8] p-4">
       {loading && (
-        <div className="flex justify-center py-6 text-neutral-400">
+        <div className="flex justify-center py-6 text-[#4B5563]">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
       )}
       {!loading && html && (
-        // Outer div height = scaled iframe height so the scrollbar is sized correctly
         <div style={{ height: Math.ceil(iframeH * scale) }}>
           <iframe
             ref={iframeRef}
             srcDoc={html}
             title="Style Preview"
             onLoad={handleIframeLoad}
-            className="bg-white shadow-sm rounded border border-neutral-200 origin-top-left"
+            className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_#000000] origin-top-left"
             style={{
-              width:            A4_W,
-              height:           iframeH,
-              transform:        `scale(${scale})`,
-              transformOrigin:  'top left',
-              pointerEvents:    'none',
+              width:           A4_W,
+              height:          iframeH,
+              transform:       `scale(${scale})`,
+              transformOrigin: 'top left',
+              pointerEvents:   'none',
             }}
           />
         </div>
       )}
       {!loading && !html && (
-        <div className="flex h-full items-center justify-center text-neutral-400 text-sm">
-          No preview yet
+        <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-wider text-[#4B5563]">
+          [ No preview yet ]
         </div>
       )}
     </div>
@@ -81,8 +73,6 @@ function ScaledPreview({ html, loading }: { html: string; loading: boolean }) {
 type PanelTab = 'editor' | 'preview'
 
 export default function Style() {
-  const navigate = useNavigate()
-
   const [templates, setTemplates]     = useState<{ name: string; label: string; css: string }[]>([])
   const [css, setCss]                 = useState('')
   const [activeName, setActiveName]   = useState<string | null>(null)
@@ -148,119 +138,114 @@ export default function Style() {
 
   if (loadingInit) {
     return (
-      <div className="flex h-dvh items-center justify-center text-neutral-400">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading…
-      </div>
+      <SidebarLayout>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-700" />
+            <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">[ Loading… ]</span>
+          </div>
+        </div>
+      </SidebarLayout>
     )
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-white">
+    <SidebarLayout>
+      <div className="flex flex-col flex-1 overflow-hidden">
 
-      {/* ── Header ── */}
-      <header className="bg-black text-white px-4 sm:px-6 h-14 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="text-neutral-500 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-
-          {/* Template selector */}
+        {/* ── Toolbar ── */}
+        <div className="border-b-2 border-black bg-white px-4 h-12 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-neutral-500 mr-1 hidden sm:inline">Template</span>
+            <span className="font-mono text-xs text-[#4B5563] mr-2 hidden sm:inline uppercase tracking-wider">Template:</span>
             {templates.map(t => (
               <button
                 key={t.name}
                 onClick={() => handleSelectTemplate(t)}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                className={`px-3 py-1 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
                   activeName === t.name
-                    ? 'bg-white text-black'
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                    ? 'bg-black text-[#F0F0E8] border-black'
+                    : 'bg-transparent text-[#4B5563] border-black hover:bg-black hover:text-[#F0F0E8]'
                 }`}
               >
                 {t.label}
               </button>
             ))}
             {activeName === null && css && (
-              <span className="text-xs text-neutral-500 italic ml-1">Custom</span>
+              <span className="font-mono text-xs text-[#4B5563] italic ml-2">Custom</span>
             )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          {error && <span className="text-xs text-red-400 hidden sm:inline">{error}</span>}
-          {saved && (
-            <span className="flex items-center gap-1 text-xs text-emerald-400">
-              <Check className="h-3.5 w-3.5" /> Saved
-            </span>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSave}
-            disabled={saving}
-            className="h-8 text-xs bg-transparent border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white"
-          >
-            {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Save
-          </Button>
-        </div>
-      </header>
-
-      {/* ── Mobile panel toggle ── */}
-      <div className="sm:hidden flex border-b border-neutral-200 bg-neutral-50 flex-shrink-0">
-        {(['editor', 'preview'] as PanelTab[]).map(p => (
-          <button
-            key={p}
-            onClick={() => { setPanelTab(p); if (p === 'preview') loadPreview(css) }}
-            className={`flex-1 py-2 text-xs font-medium capitalize transition-colors ${
-              panelTab === p
-                ? 'bg-white text-black border-b-2 border-black -mb-px'
-                : 'text-neutral-400'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Split view ── */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* CSS editor */}
-        <div className={`flex flex-col border-r border-neutral-200 ${
-          panelTab === 'preview' ? 'hidden' : 'flex-1'
-        } sm:flex sm:flex-1`}>
-          <div className="px-4 py-2 border-b border-neutral-100 bg-neutral-50 flex-shrink-0">
-            <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">CSS</span>
+          <div className="flex items-center gap-3">
+            {error && <span className="font-mono text-xs text-red-600 hidden sm:inline uppercase">{error}</span>}
+            {saved && (
+              <span className="flex items-center gap-1 font-mono text-xs text-green-700 uppercase tracking-wider">
+                <Check className="h-3.5 w-3.5" /> Saved
+              </span>
+            )}
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Save
+            </Button>
           </div>
-          <textarea
-            className="flex-1 resize-none px-4 py-3 text-xs font-mono leading-relaxed bg-white focus:outline-none"
-            spellCheck={false}
-            value={css}
-            onChange={e => handleCssChange(e.target.value)}
-          />
         </div>
 
-        {/* Scaled preview */}
-        <div className={`flex flex-col ${
-          panelTab === 'editor' ? 'hidden' : 'flex-1'
-        } sm:flex sm:flex-1`}>
-          <div className="px-4 py-2 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between flex-shrink-0">
-            <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Preview</span>
+        {/* ── Mobile panel toggle ── */}
+        <div className="sm:hidden flex border-b-2 border-black bg-[#F0F0E8] flex-shrink-0">
+          {(['editor', 'preview'] as PanelTab[]).map(p => (
             <button
-              onClick={() => loadPreview(css)}
-              className="text-neutral-400 hover:text-black transition-colors"
-              title="Refresh"
+              key={p}
+              onClick={() => { setPanelTab(p); if (p === 'preview') loadPreview(css) }}
+              className={`flex-1 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
+                panelTab === p
+                  ? 'bg-white text-black border-b-2 border-black -mb-px'
+                  : 'text-[#4B5563]'
+              }`}
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loadingPreview ? 'animate-spin' : ''}`} />
+              {p}
             </button>
+          ))}
+        </div>
+
+        {/* ── Split view ── */}
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* CSS editor */}
+          <div className={`flex flex-col border-r-2 border-black bg-white ${
+            panelTab === 'preview' ? 'hidden' : 'flex-1'
+          } sm:flex sm:flex-1`}>
+            <div className="px-4 py-2 border-b border-black bg-[#F0F0E8] flex items-center gap-2 flex-shrink-0">
+              <div className="w-2.5 h-2.5 bg-blue-700" />
+              <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">CSS</span>
+            </div>
+            <textarea
+              className="flex-1 resize-none px-4 py-3 font-mono text-xs leading-relaxed bg-white focus:outline-none"
+              spellCheck={false}
+              value={css}
+              onChange={e => handleCssChange(e.target.value)}
+            />
           </div>
-          <ScaledPreview html={preview} loading={loadingPreview} />
+
+          {/* Scaled preview */}
+          <div className={`flex flex-col ${
+            panelTab === 'editor' ? 'hidden' : 'flex-1'
+          } sm:flex sm:flex-1`}>
+            <div className="px-4 py-2 border-b border-black bg-[#F0F0E8] flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-green-700" />
+                <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Preview</span>
+              </div>
+              <button
+                onClick={() => loadPreview(css)}
+                className="text-[#4B5563] hover:text-black transition-colors"
+                title="Refresh"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingPreview ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            <ScaledPreview html={preview} loading={loadingPreview} />
+          </div>
         </div>
       </div>
-    </div>
+    </SidebarLayout>
   )
 }

@@ -1,4 +1,4 @@
-# Job Apply Bot — Claude Code Instructions
+# Job Application Tracking System — Claude Code Instructions
 
 > These rules apply to every conversation. Follow them automatically without being asked.
 

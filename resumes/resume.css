@@ -16,7 +16,13 @@
  *   strong           — bolded skills
  */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: "Times New Roman", Georgia, serif;
@@ -65,13 +71,22 @@ body {
 }
 
 /* Odd items (1st, 3rd…) → left-aligned, in left column */
-.resume-contact > *:nth-child(odd)  { text-align: left;  padding-right: 10px; }
+.resume-contact>*:nth-child(odd) {
+  text-align: left;
+  padding-right: 10px;
+}
+
 /* Even items (2nd, 4th…) → right-aligned, in right column */
-.resume-contact > *:nth-child(even) { text-align: right; padding-left:  10px; }
+.resume-contact>*:nth-child(even) {
+  text-align: right;
+  padding-left: 10px;
+}
 
 /* ── Section wrappers (added by renderer.js) ─── */
 
-.resume-section { display: block; }
+.resume-section {
+  display: block;
+}
 
 /* ── Section headings ─────────────────────────── */
 
@@ -95,7 +110,7 @@ h2 {
   margin-bottom: 1px;
 }
 
-.row-main { /* inherits body font */ }
+
 
 .row-meta {
   font-size: 9.5pt;
@@ -118,18 +133,31 @@ ul {
   list-style-type: circle;
 }
 
-ul + ul { margin-top: 0; }   /* no gap between consecutive single-bullet blocks */
+ul+ul {
+  margin-top: 0;
+}
 
-li { margin-bottom: 1px; }
+/* no gap between consecutive single-bullet blocks */
+
+li {
+  margin-bottom: 1px;
+}
 
 /* ── Inline ───────────────────────────────────── */
 
-strong { font-weight: 700; }
+strong {
+  font-weight: 700;
+}
 
-a { color: #000; text-decoration: none; }
+a {
+  color: #000;
+  text-decoration: none;
+}
 
 /* ── Print ────────────────────────────────────── */
 
 @media print {
-  body { background: white; }
+  body {
+    background: white;
+  }
 }

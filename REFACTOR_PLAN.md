@@ -1,4 +1,4 @@
-# Refactoring Plan — Job Apply Bot v2
+# Refactoring Plan — Job Application Tracking System v2
 
 > 狀態：草稿，討論中。未定案前不動手實作。
 > 最後更新：2026-03-18

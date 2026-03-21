@@ -34,38 +34,47 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-neutral-400 text-sm py-8">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading prompts…
+      <div className="max-w-2xl mx-auto flex items-center gap-2 text-[#4B5563] text-sm py-8">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="font-mono text-xs uppercase tracking-wider">[ Loading prompts… ]</span>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl space-y-8">
-      <div>
-        <h2 className="text-lg font-semibold mb-1">Prompt Settings</h2>
-        <p className="text-sm text-neutral-500">
-          Customise the AI prompts used for tailoring your resume and generating cover letters.
+    <div className="max-w-2xl mx-auto space-y-8">
+
+      {/* Page header */}
+      <div className="border-b-2 border-black pb-4">
+        <h1 className="font-serif text-3xl font-bold">Settings</h1>
+        <p className="font-sans text-sm text-[#4B5563] mt-1">
+          Customise the AI prompts used to tailor your resume and generate cover letters.
         </p>
       </div>
 
       <div className="space-y-6">
+        {/* Tailor prompt */}
         <div className="space-y-2">
           <Label>Tailor Prompt</Label>
-          <p className="text-xs text-neutral-400">Used to analyse the job description and fill in resume placeholders.</p>
+          <p className="font-mono text-xs text-[#4B5563]">
+            Used to analyse the job description and fill in resume placeholders.
+          </p>
           <textarea
-            className="w-full min-h-52 rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-sm font-mono leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-black transition-shadow"
+            className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
             spellCheck={false}
             value={tailor}
             onChange={e => setTailor(e.target.value)}
           />
         </div>
 
+        {/* Cover letter prompt */}
         <div className="space-y-2">
           <Label>Cover Letter Prompt</Label>
-          <p className="text-xs text-neutral-400">Used to generate a personalised cover letter.</p>
+          <p className="font-mono text-xs text-[#4B5563]">
+            Used to generate a personalised cover letter.
+          </p>
           <textarea
-            className="w-full min-h-52 rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-sm font-mono leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-black transition-shadow"
+            className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
             spellCheck={false}
             value={coverletter}
             onChange={e => setCoverletter(e.target.value)}
@@ -74,9 +83,10 @@ export default function Settings() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-          {error}
-        </p>
+        <div className="border-2 border-red-600 bg-red-100 px-3 py-2 flex items-start gap-2">
+          <div className="w-3 h-3 bg-red-600 flex-shrink-0 mt-0.5" />
+          <p className="font-mono text-xs text-red-600 uppercase tracking-wider">{error}</p>
+        </div>
       )}
 
       <div className="flex items-center gap-3">
@@ -85,7 +95,7 @@ export default function Settings() {
           Save Prompts
         </Button>
         {saved && (
-          <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+          <span className="flex items-center gap-1.5 font-mono text-xs text-green-700 uppercase tracking-wider">
             <Check className="h-4 w-4" /> Saved
           </span>
         )}

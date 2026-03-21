@@ -1,4 +1,4 @@
-# Job Apply Bot — Implementation Plan
+# Job Application Tracking System — Implementation Plan
 
 > Extension removed from scope — LinkedIn blocks content scripts.
 > Input: manual paste via local web UI at localhost:3000.
