@@ -1,3 +1,11 @@
+## 2026-03-23 — Fix heatmap to fill container width
+
+- Rewrite HeatmapChart to use CSS grid (`gridTemplateColumns: auto repeat(N, minmax(8px, 1fr))`) so week columns expand to fill available width
+- Replace fixed `w-3 h-3` cells with `aspect-square` so cell height auto-matches dynamic width
+- Restructure DOM from column-major flex to row-major flat grid items (corner + month labels in row 0, day label + cells per row 1–7)
+- Update title to "Last 52 Weeks" to match actual 52-week range in `buildHeatmapGrid`
+- Add React import (needed for `React.Fragment` with key)
+
 ## 2026-03-22 — Add two-column layout support to renderer + modern theme
 
 - Add `LEFT_SECTION_SLUGS` (Set) and `TWO_COLUMN_THEMES` (Set) constants to `renderer.js`

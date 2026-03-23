@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { FilePlus, Clock, Palette, Settings, Menu } from 'lucide-react'
+import { LayoutDashboard, FilePlus, Clock, Palette, Settings, Menu } from 'lucide-react'
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
 
 const NAV_MAIN = [
-  { to: '/',        label: 'New Application', icon: FilePlus, end: true },
-  { to: '/history', label: 'History',          icon: Clock },
+  { to: '/',        label: 'Dashboard',       icon: LayoutDashboard, end: true },
+  { to: '/new',     label: 'New Application', icon: FilePlus },
+  { to: '/history', label: 'History',         icon: Clock },
 ]
 
 const NAV_BOTTOM = [

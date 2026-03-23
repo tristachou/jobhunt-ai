@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { SidebarLayout } from './components/AppSidebar'
+import Dashboard from './pages/Dashboard'
 import NewApplication from './pages/NewApplication'
 import History from './pages/History'
 import Settings from './pages/Settings'
@@ -11,7 +12,7 @@ import Style from './pages/Style'
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarLayout>
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto" style={{ padding: '1.5rem 10rem' }}>
         {children}
       </main>
     </SidebarLayout>
@@ -34,7 +35,8 @@ export default function App() {
         <Route path="*" element={
           <Layout>
             <Routes>
-              <Route path="/" element={<NewApplication />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/new" element={<NewApplication />} />
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>

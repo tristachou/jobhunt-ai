@@ -34,7 +34,7 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto flex items-center gap-2 text-[#4B5563] text-sm py-8">
+      <div className="flex items-center gap-2 text-[#4B5563] text-sm py-8">
         <Loader2 className="h-4 w-4 animate-spin" />
         <span className="font-mono text-xs uppercase tracking-wider">[ Loading prompts… ]</span>
       </div>
@@ -42,7 +42,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="space-y-8">
 
       {/* Page header */}
       <div className="border-b-2 border-black pb-4">

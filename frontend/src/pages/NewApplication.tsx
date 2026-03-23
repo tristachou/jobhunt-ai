@@ -52,7 +52,7 @@ export default function NewApplication() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="space-y-8">
 
       {/* Page header */}
       <div className="border-b-2 border-black pb-4">

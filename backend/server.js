@@ -72,7 +72,7 @@ api.post('/analyze', async (req, res) => {
       fit_score:  tailor.fit_score,
       resume_md:  tailor.markdown,
       cover_md:   coverMd || '',
-      status:     'analyzed',
+      status:     'not_started',
       theme:      resolvedTheme,
     });
 

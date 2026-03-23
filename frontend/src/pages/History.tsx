@@ -3,30 +3,30 @@ import { useNavigate } from 'react-router-dom'
 import { api, type Application } from '@/lib/api'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight, Bookmark } from 'lucide-react'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 type Status = Application['status']
 type Filter = 'all' | Status
 
-const STATUSES: Status[] = ['analyzed', 'exported', 'applied', 'interview', 'rejected']
+const STATUSES: Status[] = ['not_started', 'applied', 'followed_up', 'interviewed', 'rejected']
 
 const STATUS_VARIANT: Record<Status, BadgeProps['variant']> = {
-  generated: 'secondary',
-  analyzed:  'analyzed',
-  exported:  'exported',
-  applied:   'applied',
-  interview: 'interview',
-  rejected:  'rejected',
+  not_started:  'not_started',
+  applied:      'applied',
+  followed_up:  'followed_up',
+  interviewed:  'interviewed',
+  rejected:     'rejected',
 }
 
 const FILTERS: { label: string; value: Filter }[] = [
-  { label: 'All',       value: 'all' },
-  { label: 'Analyzed',  value: 'analyzed' },
-  { label: 'Applied',   value: 'applied' },
-  { label: 'Interview', value: 'interview' },
-  { label: 'Rejected',  value: 'rejected' },
+  { label: 'All',         value: 'all' },
+  { label: 'Not Started', value: 'not_started' },
+  { label: 'Applied',     value: 'applied' },
+  { label: 'Followed Up', value: 'followed_up' },
+  { label: 'Interviewed', value: 'interviewed' },
+  { label: 'Rejected',    value: 'rejected' },
 ]
 
 // ─── Score bar ─────────────────────────────────────────────────────────────────
@@ -96,18 +96,19 @@ function EditableCell({
   )
 }
 
+const DOT_COLOR: Record<Status, string> = {
+  not_started:  'bg-gray-400',
+  applied:      'bg-blue-700',
+  followed_up:  'bg-yellow-400',
+  interviewed:  'bg-green-700',
+  rejected:     'bg-red-600',
+}
+
 // ─── Status dropdown ───────────────────────────────────────────────────────────
 
 function StatusCell({ app, onUpdate }: { app: Application; onUpdate: (s: Status) => void }) {
   const [open, setOpen] = useState(false)
-  const dotColor: Record<Status, string> = {
-    generated: 'bg-gray-400',
-    analyzed:  'bg-gray-600',
-    exported:  'bg-blue-700',
-    applied:   'bg-blue-700',
-    interview: 'bg-green-700',
-    rejected:  'bg-red-600',
-  }
+  const dotColor = DOT_COLOR
   return (
     <div className="relative inline-block">
       <Badge
@@ -174,6 +175,13 @@ function DesktopRow({
         </td>
         <td className="px-3 py-3 pr-4">
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost" size="icon" className={`h-7 w-7 transition-colors ${app.follow_up ? 'text-orange-500 opacity-100' : 'hover:text-orange-500'}`}
+              title={app.follow_up ? 'Remove from Follow-up' : 'Add to Follow-up'}
+              onClick={() => patch({ follow_up: app.follow_up ? 0 : 1 })}
+            >
+              <Bookmark className={`h-3.5 w-3.5 ${app.follow_up ? 'fill-orange-500' : ''}`} />
+            </Button>
             {app.resume_md && (
               <a href={api.getPdfUrl(app.id, 'resume')} download title="Download Resume PDF">
                 <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
@@ -225,6 +233,34 @@ function DesktopRow({
                     <a href={app.url} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline break-all">{app.url}</a>
                   </p>
                 )}
+
+                {/* Status history */}
+                {(() => {
+                  const log: { status: string; changed_at: string }[] = JSON.parse(app.status_log || '[]')
+                  if (!log.length) return null
+                  return (
+                    <div className="mt-3 pt-3 border-t border-[#E5E5DC]">
+                      <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] mb-2">Status History</p>
+                      <div className="flex flex-col gap-1">
+                        {log.map((entry, i) => (
+                          <div key={i} className="flex items-center gap-2 group/entry">
+                            <span className={`w-1.5 h-1.5 flex-shrink-0 ${DOT_COLOR[entry.status as Status] ?? 'bg-gray-400'}`} />
+                            <span className="font-mono text-xs uppercase tracking-wider text-black">{entry.status.replace(/_/g, ' ')}</span>
+                            <span className="font-mono text-[10px] text-[#4B5563] ml-auto">{entry.changed_at.slice(0, 16).replace('T', ' ')}</span>
+                            <button
+                              className="opacity-0 group-hover/entry:opacity-100 font-mono text-[10px] text-[#4B5563] hover:text-red-600 transition-all ml-1"
+                              title="Remove this entry"
+                              onClick={() => {
+                                const updated = log.filter((_, j) => j !== i)
+                                onUpdate(app.id, { status_log: JSON.stringify(updated) })
+                              }}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </td>

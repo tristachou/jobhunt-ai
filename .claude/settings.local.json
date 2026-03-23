@@ -14,7 +14,8 @@
       "Bash(THEMES=/c/Users/User/Documents/project/Job-Apply-Bot/themes)",
       "Bash(cp \"$CLASSIC\" \"$THEMES/classic.css\")",
       "Bash(cp \"$CLASSIC\" \"$THEMES/modern.css\")",
-      "Bash(cp \"$CLASSIC\" \"$THEMES/minimal.css\")"
+      "Bash(cp \"$CLASSIC\" \"$THEMES/minimal.css\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -25,7 +25,9 @@ export interface Application {
   resume_md: string
   cover_md: string
   theme: string
-  status: 'generated' | 'analyzed' | 'exported' | 'applied' | 'interview' | 'rejected'
+  status: 'not_started' | 'applied' | 'followed_up' | 'interviewed' | 'rejected'
+  status_log: string  // JSON: [{status, changed_at}]
+  follow_up: number   // 0 | 1
 }
 
 export interface AnalyzeResult {

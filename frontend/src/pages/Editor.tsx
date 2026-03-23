@@ -10,8 +10,8 @@ type Tab = 'resume' | 'coverletter'
 type PanelTab = 'editor' | 'preview'
 
 const STATUS_VARIANT: Record<string, any> = {
-  analyzed: 'analyzed', exported: 'exported', applied: 'applied',
-  interview: 'interview', rejected: 'rejected',
+  not_started: 'not_started', applied: 'applied',
+  followed_up: 'followed_up', interviewed: 'interviewed', rejected: 'rejected',
 }
 
 export default function Editor() {
