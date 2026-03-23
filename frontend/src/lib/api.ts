@@ -100,7 +100,7 @@ export const api = {
     return request('/style/themes')
   },
 
-  previewStyle(css: string): Promise<{ html: string }> {
-    return request('/style/preview', { method: 'POST', body: JSON.stringify({ css }) })
+  previewStyle(css: string, theme?: string): Promise<{ html: string }> {
+    return request('/style/preview', { method: 'POST', body: JSON.stringify({ css, theme }) })
   },
 }

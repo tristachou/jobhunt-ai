@@ -113,7 +113,7 @@ async function tailorResume({ jd }) {
 
   // Step 5: AI skills section (only for ai_engineer role)
   const aiSkillsSection = roleConfig.include_ai_skills
-    ? `AI & LLM: ${stackConfig.ai_skills.join(', ')}`
+    ? `AI & LLM\n  ~ ${stackConfig.ai_skills.join(', ')}`
     : '';
 
   // Step 6: Soft skill matching (≤2 bullets, keyword in JD)

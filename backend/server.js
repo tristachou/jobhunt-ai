@@ -205,7 +205,7 @@ api.get('/style/themes', (_req, res) => {
 
 // POST /api/style/preview — render resume HTML with a given CSS string
 api.post('/style/preview', (req, res) => {
-  const { css } = req.body;
+  const { css, theme } = req.body;
   if (typeof css !== 'string') return res.status(400).json({ error: 'css must be a string' });
   try {
     const { renderResumeWithCss } = require('./renderer');
@@ -214,7 +214,7 @@ api.post('/style/preview', (req, res) => {
     const markdown = latest
       ? latest.resume_md
       : fs.readFileSync(BASE_MD_PATH, 'utf8');
-    res.json({ html: renderResumeWithCss(markdown, css) });
+    res.json({ html: renderResumeWithCss(markdown, css, theme || undefined) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

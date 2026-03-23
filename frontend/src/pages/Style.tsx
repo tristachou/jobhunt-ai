@@ -85,10 +85,10 @@ export default function Style() {
   const [panelTab, setPanelTab]       = useState<PanelTab>('editor')
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const loadPreview = useCallback(async (cssStr: string) => {
+  const loadPreview = useCallback(async (cssStr: string, theme?: string) => {
     setLoadingPreview(true)
     try {
-      const { html } = await api.previewStyle(cssStr)
+      const { html } = await api.previewStyle(cssStr, theme)
       setPreview(html)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Preview failed')
@@ -104,7 +104,7 @@ export default function Style() {
         setTemplates(templateList)
         const match = templateList.find(t => t.css.trim() === styleData.css.trim())
         setActiveName(match?.name ?? null)
-        loadPreview(styleData.css)
+        loadPreview(styleData.css, match?.name)
       })
       .catch(e => setError(e.message))
       .finally(() => setLoadingInit(false))
@@ -120,7 +120,7 @@ export default function Style() {
   function handleSelectTemplate(t: { name: string; css: string }) {
     setCss(t.css)
     setActiveName(t.name)
-    loadPreview(t.css)
+    loadPreview(t.css, t.name)
   }
 
   async function handleSave() {
@@ -194,7 +194,7 @@ export default function Style() {
           {(['editor', 'preview'] as PanelTab[]).map(p => (
             <button
               key={p}
-              onClick={() => { setPanelTab(p); if (p === 'preview') loadPreview(css) }}
+              onClick={() => { setPanelTab(p); if (p === 'preview') loadPreview(css, activeName ?? undefined) }}
               className={`flex-1 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
                 panelTab === p
                   ? 'bg-white text-black border-b-2 border-black -mb-px'
@@ -235,7 +235,7 @@ export default function Style() {
                 <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Preview</span>
               </div>
               <button
-                onClick={() => loadPreview(css)}
+                onClick={() => loadPreview(css, activeName ?? undefined)}
                 className="text-[#4B5563] hover:text-black transition-colors"
                 title="Refresh"
               >

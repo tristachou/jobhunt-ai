@@ -18,6 +18,15 @@ const path = require('path');
 const THEMES_DIR      = path.resolve(__dirname, '../themes');
 const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
 
+/** Slugs that belong in the left column for two-column themes. */
+const LEFT_SECTION_SLUGS = new Set([
+  'summary', 'skills', 'education', 'certification', 'certifications',
+  'languages', 'interests', 'about',
+]);
+
+/** Theme names that use two-column HTML layout (resume-left / resume-right). */
+const TWO_COLUMN_THEMES = new Set(['modern']);
+
 /** Load CSS for the given theme name (or the default from user.config.js). */
 function loadThemeCss(theme) {
   const resolved = theme || (require(USER_CONFIG_PATH).theme) || 'classic';
@@ -34,18 +43,19 @@ function loadThemeCss(theme) {
  * @returns {string}
  */
 function renderResume(markdown, theme) {
-  return renderResumeWithCss(markdown, loadThemeCss(theme));
+  return renderResumeWithCss(markdown, loadThemeCss(theme), theme);
 }
 
 /**
  * Render resume markdown with an explicit CSS string (used for style previews).
  * @param {string} markdown
  * @param {string} css
+ * @param {string} [theme] - optional theme name, used to select layout mode
  * @returns {string}
  */
-function renderResumeWithCss(markdown, css) {
+function renderResumeWithCss(markdown, css, theme) {
   const { name, headerItems, body } = parseFrontMatter(markdown);
-  const bodyHtml = renderBody(body);
+  const bodyHtml = renderBody(body, theme);
   return buildHTML(name, headerItems, bodyHtml, css);
 }
 
@@ -109,7 +119,7 @@ function parseFrontMatter(markdown) {
  * <section class="resume-section section-[slug]"> so CSS can target them by name.
  * This enables both single-column and multi-column CSS layouts.
  */
-function renderBody(body) {
+function renderBody(body, theme) {
   const allBlocks = body
     .split(/\n{2,}/)
     .map(b => b.trim())
@@ -135,10 +145,27 @@ function renderBody(body) {
     return allBlocks.map(renderBlock).join('\n');
   }
 
-  return sections.map(({ heading, slug, blocks }) => {
+  const renderSection = ({ heading, slug, blocks }) => {
     const inner = blocks.map(renderBlock).join('\n');
     return `<section class="resume-section section-${slug}">\n<h2>${inlineMd(heading)}</h2>\n${inner}\n</section>`;
-  }).join('\n');
+  };
+
+  // Two-column layout: split sections into left and right divs
+  if (theme && TWO_COLUMN_THEMES.has(theme)) {
+    const leftSections  = sections.filter(s => LEFT_SECTION_SLUGS.has(s.slug));
+    const rightSections = sections.filter(s => !LEFT_SECTION_SLUGS.has(s.slug));
+    return [
+      '<div class="resume-left">',
+      leftSections.map(renderSection).join('\n'),
+      '</div>',
+      '<div class="resume-right">',
+      rightSections.map(renderSection).join('\n'),
+      '</div>',
+    ].join('\n');
+  }
+
+  // Single-column (all existing themes)
+  return sections.map(renderSection).join('\n');
 }
 
 function renderBlock(block) {

@@ -1,3 +1,11 @@
+## 2026-03-22 — Add two-column layout support to renderer + modern theme
+
+- Add `LEFT_SECTION_SLUGS` (Set) and `TWO_COLUMN_THEMES` (Set) constants to `renderer.js`
+- Update `renderBody(body, theme)` to emit `<div class="resume-left">` / `<div class="resume-right">` when theme is in `TWO_COLUMN_THEMES`; single-column output unchanged for all other themes
+- Update `renderResume` and `renderResumeWithCss` to thread `theme` through to `renderBody`; all existing call signatures remain backward-compatible
+- Replace `themes/modern.css` with flexbox-based white two-column layout targeting `.resume-left` / `.resume-right`; left column 62mm with `border-right: 1px solid #ddd`, right column `flex: 1`
+- All 39 existing tests pass
+
 ## 2026-03-22 — Apply Swiss International Style (Brutalist) design system
 
 - Rewrite `index.css`: canvas background `#F0F0E8`, black borders, blue-700 primary, zero border-radius, serif headings via CSS

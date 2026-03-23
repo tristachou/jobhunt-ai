@@ -32,7 +32,7 @@ job-apply-bot/
 │   ├── server.js                  # Express server (port 3000) — all routes under /api
 │   ├── tailor.js                  # Resume tailoring (Gemini + programmatic)
 │   ├── coverletter.js             # Cover letter generation (Gemini)
-│   ├── renderer.js                # Markdown → HTML (reads CSS from themes/)
+│   ├── renderer.js                # Markdown → HTML (reads CSS from themes/); supports two-column layout for modern theme
 │   ├── exporter.js                # HTML → PDF via Puppeteer
 │   ├── db.js                      # SQLite CRUD via node:sqlite
 │   ├── package.json

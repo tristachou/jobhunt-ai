@@ -1,21 +1,24 @@
 /*
- * Resume CSS — custom renderer
+ * Resume CSS — Modern Two-Column (white)
+ * Requires renderer two-column mode (theme="modern").
  *
- * Root element: #resume
- * Edit freely — changes apply on next PDF export (no server restart needed).
+ * HTML structure produced by renderer:
  *
- * Key selectors:
- *   .resume-header   — top section (name + contact)
- *   .resume-name     — h1 name
- *   .resume-contact  — contact links row
- *   h2               — section headings (Summary, Skills, Experience…)
- *   .row             — paired line (e.g. Job Title  ~  Location)
- *   .row-main        — left side of paired line
- *   .row-meta        — right side of paired line (date / location)
- *   ul, li           — bullet points
- *   strong           — bolded skills
+ *   <div id="resume">
+ *     <header class="resume-header">...</header>
+ *     <main class="resume-body">
+ *       <div class="resume-left">
+ *         <section class="resume-section section-summary">...</section>
+ *         <section class="resume-section section-skills">...</section>
+ *         ...
+ *       </div>
+ *       <div class="resume-right">
+ *         <section class="resume-section section-experience">...</section>
+ *         ...
+ *       </div>
+ *     </main>
+ *   </div>
  */
-
 
 *,
 *::before,
@@ -33,161 +36,156 @@ body {
   background: #fff;
 }
 
+/* ── Page ─────────────────────────────────────────────── */
+
 #resume {
   width: 210mm;
   min-height: 297mm;
   margin: 0 auto;
+  background: #fff;
   display: flex;
   flex-direction: column;
 }
 
-/* ── Top name banner ─────────────────────────────────── */
+/* ── Header — full-width with bottom border ───────────── */
 
-.resume-banner {
-  background: #111;
-  color: #fff;
-  padding: 14mm 18mm 10mm;
+.resume-header {
+  border-bottom: 2px solid #000;
+  padding: 10mm 14mm 7mm;
 }
 
 .resume-name {
-  font-size: 22pt;
+  font-size: 20pt;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-
-.resume-title {
-  font-size: 10pt;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #aaa;
-}
-
-/* ── Two-column layout ───────────────────────────────── */
-
-.resume-layout {
-  display: flex;
-  flex: 1;
-}
-
-/* ── Left sidebar ────────────────────────────────────── */
-
-.resume-sidebar {
-  width: 68mm;
-  background: #1e1e1e;
-  color: #d0d0d0;
-  padding: 10mm 8mm 14mm;
-  flex-shrink: 0;
-}
-
-.sidebar-section {
-  margin-bottom: 10mm;
-}
-
-.sidebar-heading {
-  font-size: 7.5pt;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #fff;
-  border-bottom: 1px solid #444;
-  padding-bottom: 3px;
-  margin-bottom: 6px;
-}
-
-/* Contact items */
-.sidebar-item {
-  font-size: 8.5pt;
-  color: #bbb;
+  letter-spacing: 0.04em;
+  color: #000;
   margin-bottom: 4px;
-  word-break: break-all;
 }
 
-.sidebar-item a {
-  color: #bbb;
+.resume-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  font-size: 8.5pt;
+}
+
+.resume-contact a,
+.resume-contact span {
+  flex: 0 0 50%;
+  color: #444;
   text-decoration: none;
 }
 
-/* Skill bars */
-.skill-entry {
-  margin-bottom: 5px;
+.resume-contact>*:nth-child(odd) {
+  text-align: left;
 }
 
-.skill-label {
-  font-size: 8.5pt;
-  color: #ccc;
-  margin-bottom: 2px;
+.resume-contact>*:nth-child(even) {
+  text-align: right;
 }
 
-.skill-track {
-  width: 100%;
-  height: 3px;
-  background: #444;
-  border-radius: 2px;
-}
+/* ── Body — flex two-column ───────────────────────────── */
 
-.skill-fill {
-  height: 3px;
-  background: #fff;
-  border-radius: 2px;
-}
-
-/* Language / other plain list */
-.sidebar-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-list li {
-  font-size: 8.5pt;
-  color: #bbb;
-  margin-bottom: 3px;
-  padding-left: 10px;
-  position: relative;
-}
-
-.sidebar-list li::before {
-  content: "–";
-  position: absolute;
-  left: 0;
-  color: #555;
-}
-
-/* ── Right main column ───────────────────────────────── */
-
-.resume-main {
+.resume-body {
+  display: flex;
+  align-items: flex-start;
   flex: 1;
-  padding: 10mm 14mm 14mm 10mm;
+}
+
+/* ── Left column ──────────────────────────────────────── */
+
+.resume-left {
+  flex: 0 0 85mm;
+  border-right: 1px solid #ddd;
+  padding: 5mm 5mm 5mm 5mm;
   background: #fff;
 }
 
-.resume-section {
-  display: block;
-  margin-bottom: 2mm;
+/* ── Right column ─────────────────────────────────────── */
+
+.resume-right {
+  flex: 1;
+  min-width: 0;
+  padding: 5mm 5mm 5mm 5mm;
+  background: #fff;
 }
 
-/* ── Section headings ────────────────────────────────── */
+/* ── Section headings ─────────────────────────────────── */
 
 h2 {
-  font-size: 9pt;
+  font-size: 8.5pt;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #000;
   border-bottom: 1.5px solid #000;
   padding-bottom: 2px;
-  margin-top: 8mm;
-  margin-bottom: 4px;
+  margin-top: 6mm;
+  margin-bottom: 5px;
 }
 
-h2:first-of-type {
+/* Left column h2 — same style as right column */
+
+.resume-left .resume-section:first-child h2,
+.resume-right .resume-section:first-child h2 {
   margin-top: 0;
 }
 
-/* ── Paired rows ─────────────────────────────────────── */
+/* ── Paragraphs ───────────────────────────────────────── */
+
+.resume-left p {
+  font-size: 8.5pt;
+  color: #222;
+  text-align: left;
+  margin-bottom: 3px;
+}
+
+.resume-right p {
+  font-size: 9pt;
+  color: #222;
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  margin-bottom: 3px;
+}
+
+/* ── Bullet lists ─────────────────────────────────────── */
+
+.resume-left ul {
+  list-style: none;
+  margin-left: 0;
+}
+
+.resume-left li {
+  font-size: 8.5pt;
+  color: #222;
+  padding: 3px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.resume-left li:last-child {
+  border-bottom: none;
+}
+
+.resume-right ul {
+  list-style-type: square;
+  margin: 3px 0 3px 14px;
+}
+
+.resume-right li {
+  font-size: 9pt;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+/* ── Strong ───────────────────────────────────────────── */
+
+strong {
+  font-weight: 700;
+  color: #000;
+}
+
+/* ── Paired rows — right column (horizontal) ─────────── */
 
 .row {
   display: flex;
@@ -199,63 +197,104 @@ h2:first-of-type {
 .row-main {
   font-weight: 700;
   font-size: 9.5pt;
+  color: #000;
 }
 
 .row-meta {
   font-size: 8.5pt;
   color: #555;
+  white-space: nowrap;
+  margin-left: 8px;
 }
 
-/* ── Paragraphs ──────────────────────────────────────── */
+/* ── Paired rows — left column (Skills: stacked) ─────────*/
+/* label on top, value below                              */
 
-p {
-  margin-bottom: 3px;
+.resume-left .row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  margin-bottom: 7px;
+  white-space: normal;
+}
+
+/* Label — muted signpost above value */
+.resume-left .row-main {
+  font-size: 7.5pt;
+  font-weight: 400;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  min-width: unset;
+  flex-shrink: unset;
+}
+
+/* Value — the primary content */
+.resume-left .row-meta {
+  font-size: 8.5pt;
+  color: #111;
+  white-space: normal;
+  margin-left: 0;
+  line-height: 1.4;
+}
+
+/* ── Education / Certification — vertical, 3-level hierarchy */
+
+.section-education .row,
+.section-certification .row,
+.section-certifications .row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  margin-bottom: 10px;
+}
+
+/* Institution name — most prominent */
+.section-education .row-main,
+.section-certification .row-main,
+.section-certifications .row-main {
   font-size: 9pt;
-  text-align: justify;
-  -webkit-hyphens: auto;
-  hyphens: auto;
-  color: #222;
-}
-
-/* ── Bullet lists ────────────────────────────────────── */
-
-ul {
-  margin: 3px 0 3px 14px;
-  list-style-type: square;
-}
-
-li {
-  font-size: 9pt;
-  color: #222;
-  margin-bottom: 2px;
-}
-
-/* ── Inline ──────────────────────────────────────────── */
-
-strong {
-  font-weight: 700;
+  font-weight: 600;
   color: #000;
+  text-transform: none;
+  letter-spacing: 0;
+  min-width: unset;
 }
+
+/* Date — muted, sits directly under institution name */
+.section-education .row-meta,
+.section-certification .row-meta,
+.section-certifications .row-meta {
+  font-size: 7.5pt;
+  color: #888;
+  white-space: normal;
+}
+
+/* Degree / cert name — italic secondary, with spacing before next entry */
+.section-education p,
+.section-certification p,
+.section-certifications p {
+  font-size: 8pt;
+  font-style: italic;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+/* ── Links ────────────────────────────────────────────── */
 
 a {
   color: #000;
   text-decoration: none;
 }
 
-/* ── Print ───────────────────────────────────────────── */
+/* ── Print ────────────────────────────────────────────── */
 
 @media print {
-  body {
+
+  body,
+  #resume,
+  .resume-left,
+  .resume-right {
     background: white;
-  }
-
-  .resume-sidebar {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .resume-banner {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 }
