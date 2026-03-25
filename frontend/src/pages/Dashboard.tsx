@@ -91,8 +91,8 @@ function KpiCards({ apps }: { apps: Application[] }) {
         { label: 'Avg Score', value: avg !== null ? `${avg}` : '—', color: avg !== null ? (avg >= 70 ? 'text-green-700' : avg >= 50 ? 'text-yellow-600' : 'text-red-600') : 'text-[#4B5563]' },
         { label: 'Follow-up', value: followUp, color: followUp > 0 ? 'text-orange-600' : 'text-black' },
       ].map(k => (
-        <div key={k.label} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000000] px-4 py-3">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563]">{k.label}</p>
+        <div key={k.label} className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000000] px-5 py-4">
+          <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">{k.label}</p>
           <p className={`font-serif text-3xl font-bold mt-0.5 ${k.color}`}>{k.value}</p>
         </div>
       ))}
@@ -122,7 +122,7 @@ function FunnelPanel({ counts, total }: { counts: Record<string, number>; total:
   )
 }
 
-function FollowUpPanel({ apps }: { apps: Application[] }) {
+function FollowUpPanel({ apps, onUnflag }: { apps: Application[]; onUnflag: (id: number) => void }) {
   const navigate = useNavigate()
   const flagged = needsFollowUp(apps)
 
@@ -136,20 +136,26 @@ function FollowUpPanel({ apps }: { apps: Application[] }) {
       ) : (
         <div className="flex flex-col divide-y divide-[#E5E5DC] overflow-y-auto">
           {flagged.map(a => (
-            <button
-              key={a.id}
-              onClick={() => navigate(`/editor/${a.id}`)}
-              className="flex items-center gap-2 py-2.5 text-left hover:bg-[#F0F0E8] transition-colors -mx-1 px-1"
-            >
+            <div key={a.id} className="group flex items-center gap-2 py-2.5 -mx-1 px-1 hover:bg-[#F0F0E8] transition-colors">
               <div className={`w-1.5 h-1.5 flex-shrink-0 ${STATUS_DOT[a.status] ?? 'bg-gray-400'}`} />
-              <div className="min-w-0 flex-1">
+              <button
+                className="min-w-0 flex-1 text-left"
+                onClick={() => navigate(`/editor/${a.id}`)}
+              >
                 <p className="font-mono text-xs font-medium text-black truncate">{a.company}</p>
                 <p className="font-mono text-[10px] text-[#4B5563] truncate">{a.job_title}</p>
-              </div>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563] flex-shrink-0">
+              </button>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#4B5563] flex-shrink-0 group-hover:hidden">
                 {a.status.replace(/_/g, ' ')}
               </span>
-            </button>
+              <button
+                className="hidden group-hover:flex items-center justify-center w-5 h-5 flex-shrink-0 text-[#4B5563] hover:text-red-600 hover:bg-red-50 transition-colors"
+                title="Remove from follow-up"
+                onClick={() => onUnflag(a.id)}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -181,7 +187,7 @@ function WeeklyActivity({ apps }: { apps: Application[] }) {
           return (
             <div key={d.date} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative">
               {count > 0 && (
-                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-black text-white font-mono text-[9px] px-1 py-0.5 opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-black text-white font-mono text-[10px] px-1 py-0.5 opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
                   {count}
                 </div>
               )}
@@ -189,7 +195,7 @@ function WeeklyActivity({ apps }: { apps: Application[] }) {
                 className={`w-full ${d.isToday ? 'bg-blue-700' : 'bg-blue-300'} ${count === 0 ? 'opacity-30' : ''}`}
                 style={{ height: `${heightPct}%` }}
               />
-              <span className={`font-mono text-[9px] uppercase ${d.isToday ? 'text-black font-bold' : 'text-[#4B5563]'}`}>
+              <span className={`font-mono text-[10px] uppercase ${d.isToday ? 'text-black font-bold' : 'text-[#4B5563]'}`}>
                 {d.label}
               </span>
             </div>
@@ -243,7 +249,7 @@ function HeatmapChart({ apps }: { apps: Application[] }) {
           {grid.map((_, wi) => (
             <div key={`m-${wi}`} className="h-4 flex items-end pb-0.5">
               {monthLabels[wi] && (
-                <span className="font-mono text-[9px] text-[#4B5563]">{monthLabels[wi]}</span>
+                <span className="font-mono text-[10px] text-[#4B5563]">{monthLabels[wi]}</span>
               )}
             </div>
           ))}
@@ -270,11 +276,11 @@ function HeatmapChart({ apps }: { apps: Application[] }) {
 
         {/* Legend */}
         <div className="flex flex-col justify-end gap-1 flex-shrink-0">
-          <span className="font-mono text-[9px] text-[#4B5563]">Less</span>
+          <span className="font-mono text-[10px] text-[#4B5563]">Less</span>
           {['bg-[#E5E5DC]', 'bg-blue-200', 'bg-blue-400', 'bg-blue-600', 'bg-blue-800'].map(c => (
             <div key={c} className={`w-3 h-3 ${c} border border-black/10`} />
           ))}
-          <span className="font-mono text-[9px] text-[#4B5563]">More</span>
+          <span className="font-mono text-[10px] text-[#4B5563]">More</span>
         </div>
       </div>
     </div>
@@ -320,13 +326,18 @@ export default function Dashboard() {
     )
   }
 
+  async function handleUnflag(id: number) {
+    setApps(prev => prev.map(a => a.id === id ? { ...a, follow_up: 0 } : a))
+    await api.patchApplication(id, { follow_up: 0 })
+  }
+
   const counts = countByStatus(apps)
 
   return (
     <div className="flex flex-col gap-4 overflow-auto pb-6 w-full">
-      <h1 className="font-serif text-2xl font-bold flex-shrink-0">Dashboard</h1>
+      <h1 className="font-serif text-3xl font-bold flex-shrink-0">Dashboard</h1>
 
-      <div className="flex flex-col sm:flex-row gap-3 items-start">
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-start">
 
         {/* Left col — KPI + Pipeline + Weekly Activity */}
         <div ref={leftRef} className="flex-[2] flex flex-col gap-3 min-w-0">
@@ -337,7 +348,7 @@ export default function Dashboard() {
 
         {/* Right col — fixed to left col height, scrolls if overflow */}
         <div className="flex-1 min-w-0" style={{ height: leftH, maxHeight: leftH, overflowY: 'auto' }}>
-          <FollowUpPanel apps={apps} />
+          <FollowUpPanel apps={apps} onUnflag={handleUnflag} />
         </div>
 
       </div>

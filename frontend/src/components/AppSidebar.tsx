@@ -19,7 +19,7 @@ const NAV_BOTTOM = [
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
+    `flex items-center gap-3 px-3 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors ${
       isActive
         ? 'bg-black text-[#F0F0E8]'
         : 'text-[#4B5563] hover:bg-black/5 hover:text-black'

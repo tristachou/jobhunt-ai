@@ -203,11 +203,11 @@ function DesktopRow({
       {open && (
         <tr className="border-b border-black">
           <td colSpan={10} className="bg-[#F0F0E8] border-b border-black px-6 py-4">
-            <div className="grid grid-cols-2 gap-6 max-w-3xl">
+            <div className="grid grid-cols-[3fr_1fr] gap-6">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563] mb-2">Job Description</p>
                 <textarea
-                  className="w-full min-h-36 font-sans text-sm border border-black bg-white px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
+                  className="w-full min-h-48 font-sans text-sm border border-black bg-white px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
                   defaultValue={app.jd_text}
                   onBlur={e => { if (e.target.value !== app.jd_text) patch({ jd_text: e.target.value }) }}
                 />
@@ -365,7 +365,7 @@ export default function History() {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3 py-1 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
+            className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
               filter === f.value
                 ? 'bg-black text-[#F0F0E8] border-black'
                 : 'bg-white text-[#4B5563] border-black hover:bg-black hover:text-[#F0F0E8]'

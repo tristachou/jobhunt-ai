@@ -1,3 +1,15 @@
+## 2026-03-24 — Improve frontend spacing, padding, and text legibility
+
+- Replace hardcoded `padding: '1.5rem 10rem'` in App layout with responsive Tailwind (`px-6 py-6 md:px-10 lg:px-14`) and add `max-w-6xl mx-auto` content wrapper to prevent over-stretching on wide screens
+- Unify page heading size: Dashboard `h1` changed from `text-2xl` to `text-3xl` to match History, NewApplication, and Settings
+- Increase KPI card padding from `px-4 py-3` to `px-5 py-4` and bump label font from `text-[10px]` to `text-xs` for legibility
+- Raise all `text-[9px]` instances in Dashboard (bar chart, heatmap, tooltip) to `text-[10px]` to meet minimum readable size
+- Increase History filter tab height from `py-1` to `py-1.5` for better touch targets
+- Increase Sidebar nav link row height from `py-2` to `py-2.5` for improved breathing room
+- Fix Dashboard mobile layout: change `items-start` to `sm:items-start` so columns stretch to full width on mobile instead of shrinking to content width
+- Widen Job Description in History detail panel: change layout from `grid-cols-2 max-w-3xl` to `grid-cols-[3fr_1fr]` (no width cap), giving JD 75% and metadata 25%; increase textarea min-height from `min-h-36` to `min-h-48`
+- Add quick-unflag to Dashboard Follow-up panel: hover a row to reveal × button that immediately removes the follow-up flag via API patch and updates local state; status label hides on hover to make room
+
 ## 2026-03-23 — Fix heatmap to fill container width
 
 - Rewrite HeatmapChart to use CSS grid (`gridTemplateColumns: auto repeat(N, minmax(8px, 1fr))`) so week columns expand to fill available width

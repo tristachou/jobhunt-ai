@@ -12,8 +12,10 @@ import Style from './pages/Style'
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarLayout>
-      <main className="flex-1 overflow-auto" style={{ padding: '1.5rem 10rem' }}>
-        {children}
+      <main className="flex-1 overflow-auto px-6 py-6 md:px-10 lg:px-14">
+        <div className="max-w-6xl mx-auto w-full">
+          {children}
+        </div>
       </main>
     </SidebarLayout>
   )
