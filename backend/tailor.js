@@ -74,11 +74,16 @@ function resolveBulletKey(key, bullets, stack, python_framework) {
   return bullets[key];
 }
 
-async function tailorResume({ jd }) {
-  if (!fs.existsSync(BASE_MD)) throw new Error('Missing user config: `user/base.md` not found. Copy `user/base.example.md` to get started.');
+async function tailorResume({ jd, baseMd: externalBaseMd }) {
   if (!fs.existsSync(CONFIG_JSON)) throw new Error('Missing user config: `user/config.json` not found. Copy `user/config.example.json` to get started.');
 
-  const baseMd = fs.readFileSync(BASE_MD, 'utf8');
+  let baseMd;
+  if (externalBaseMd) {
+    baseMd = externalBaseMd;
+  } else {
+    if (!fs.existsSync(BASE_MD)) throw new Error('Missing user config: `user/base.md` not found. Copy `user/base.example.md` to get started.');
+    baseMd = fs.readFileSync(BASE_MD, 'utf8');
+  }
   const config = JSON.parse(fs.readFileSync(CONFIG_JSON, 'utf8'));
 
   // Collect all unique skills across all stacks for detection

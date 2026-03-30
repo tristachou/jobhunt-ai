@@ -35,6 +35,13 @@ const {
   getApplicationById,
   updateApplication,
   deleteApplication,
+  getAllTemplates,
+  getTemplateById,
+  getDefaultTemplate,
+  insertTemplate,
+  updateTemplate,
+  deleteTemplate,
+  setDefaultTemplate,
 } = require('./db');
 
 const app = express();
@@ -50,7 +57,7 @@ api.get('/health', (_req, res) => res.json({ status: 'ok' }));
 // ─── Analyze — Stage 1 ────────────────────────────────────────────────────────
 
 api.post('/analyze', async (req, res) => {
-  const { job_title, company, jd, url, source, theme } = req.body;
+  const { job_title, company, jd, url, source, theme, resume_template_id, generate_cover_letter } = req.body;
 
   if (!job_title || !company || !jd) {
     return res.status(400).json({ error: 'job_title, company, and jd are required' });
@@ -63,37 +70,58 @@ api.post('/analyze', async (req, res) => {
   // Theme: explicit in request → user.config.js default → 'classic'
   const resolvedTheme = (theme && isValidTheme(theme)) ? theme : (getUserConfig().theme || 'classic');
 
+  // Resolve base markdown: from template if specified, else tailor.js reads user/base.md
+  let baseMd;
+  let resolvedTemplateId = resume_template_id || null;
+  if (resume_template_id) {
+    const tpl = getTemplateById(resume_template_id);
+    if (!tpl) return res.status(404).json({ error: 'Resume template not found' });
+    baseMd = tpl.markdown;
+  } else {
+    const defaultTpl = getDefaultTemplate();
+    if (defaultTpl) { baseMd = defaultTpl.markdown; resolvedTemplateId = defaultTpl.id; }
+  }
+
+  // Skip AI if template has no placeholders
+  if (baseMd && !baseMd.includes('{{')) {
+    return res.status(400).json({ error: 'Selected template has no {{placeholders}} — use Save & Track instead' });
+  }
+
   try {
     const { tailorResume }        = require('./tailor');
     const { generateCoverLetter } = require('./coverletter');
 
-    const tailor      = await tailorResume({ jd });
-    const coverResult = await generateCoverLetter({ company, job_title, jd });
+    const tailor      = await tailorResume({ jd, baseMd });
+    const doCoverLetter = generate_cover_letter !== false;
+    const coverResult = doCoverLetter
+      ? await generateCoverLetter({ company, job_title, jd })
+      : { markdown: '', available: true };
 
     const id = insertApplication({
-      created_at: new Date().toISOString(),
+      created_at:         new Date().toISOString(),
       company,
       job_title,
-      url:        url    || '',
-      source:     source || 'other',
-      jd_text:    jd,
-      stack_used: tailor.stack,
-      fit_score:  tailor.fit_score,
-      resume_md:  tailor.markdown,
-      cover_md:   coverResult.markdown || '',
-      status:     'not_started',
-      theme:      resolvedTheme,
+      url:                url    || '',
+      source:             source || 'other',
+      jd_text:            jd,
+      stack_used:         tailor.stack,
+      fit_score:          tailor.fit_score,
+      resume_md:          tailor.markdown,
+      cover_md:           coverResult.markdown || '',
+      status:             'not_started',
+      theme:              resolvedTheme,
+      resume_template_id: resolvedTemplateId,
     });
 
     res.json({
       id,
-      fit_score:             tailor.fit_score,
-      stack:                 tailor.stack,
-      detected_skills:       tailor.detected_skills,
-      bolded_skills:         tailor.bolded_skills,
-      soft_skills_injected:  tailor.soft_skills_injected,
-      cover_letter_available: coverResult.available,
-      theme:                 resolvedTheme,
+      fit_score:              tailor.fit_score,
+      stack:                  tailor.stack,
+      detected_skills:        tailor.detected_skills,
+      bolded_skills:          tailor.bolded_skills,
+      soft_skills_injected:   tailor.soft_skills_injected,
+      cover_letter_available: doCoverLetter ? coverResult.available : false,
+      theme:                  resolvedTheme,
     });
   } catch (err) {
     console.error('[/api/analyze error]', err);
@@ -247,6 +275,100 @@ api.post('/style/preview', (req, res) => {
 function formatThemeLabel(name) {
   return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
+
+// ─── Applications — direct save (Persona A, no AI) ────────────────────────────
+
+api.post('/applications', (req, res) => {
+  const { job_title, company, resume_template_id, source, url, jd } = req.body;
+  if (!job_title || !company) {
+    return res.status(400).json({ error: 'job_title and company are required' });
+  }
+
+  // Resolve template markdown
+  let resume_md = '';
+  let resolvedTemplateId = resume_template_id || null;
+  if (resume_template_id) {
+    const tpl = getTemplateById(resume_template_id);
+    if (!tpl) return res.status(404).json({ error: 'Resume template not found' });
+    resume_md = tpl.markdown;
+  } else {
+    const tpl = getDefaultTemplate();
+    if (tpl) { resume_md = tpl.markdown; resolvedTemplateId = tpl.id; }
+  }
+
+  const id = insertApplication({
+    created_at:         new Date().toISOString(),
+    company,
+    job_title,
+    url:                url    || '',
+    source:             source || 'other',
+    jd_text:            jd     || '',
+    stack_used:         '',
+    fit_score:          null,
+    resume_md,
+    cover_md:           '',
+    status:             'not_started',
+    theme:              getUserConfig().theme || 'classic',
+    resume_template_id: resolvedTemplateId,
+  });
+
+  res.json({ id });
+});
+
+// ─── Resume Templates ──────────────────────────────────────────────────────────
+
+api.get('/resume-templates', (_req, res) => {
+  try { res.json(getAllTemplates()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+api.post('/resume-templates', (req, res) => {
+  const { name, markdown } = req.body;
+  if (!name || typeof markdown !== 'string') {
+    return res.status(400).json({ error: 'name and markdown are required' });
+  }
+  try {
+    const id = insertTemplate({ name, markdown });
+    res.json({ id });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+api.get('/resume-templates/:id', (req, res) => {
+  const tpl = getTemplateById(Number(req.params.id));
+  tpl ? res.json(tpl) : res.status(404).json({ error: 'Not found' });
+});
+
+api.put('/resume-templates/:id', (req, res) => {
+  const { name, markdown } = req.body;
+  const ok = updateTemplate(Number(req.params.id), { name, markdown });
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
+});
+
+api.delete('/resume-templates/:id', (req, res) => {
+  const result = deleteTemplate(Number(req.params.id));
+  if (result === false) {
+    const tpl = getTemplateById(Number(req.params.id));
+    if (!tpl) return res.status(404).json({ error: 'Not found' });
+    return res.status(400).json({ error: 'Cannot delete the last template' });
+  }
+  res.json({ ok: true });
+});
+
+api.patch('/resume-templates/:id/default', (req, res) => {
+  const ok = setDefaultTemplate(Number(req.params.id));
+  ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
+});
+
+// ─── Stacks ────────────────────────────────────────────────────────────────────
+
+api.get('/stacks', (_req, res) => {
+  try {
+    const config = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../user/config.json'), 'utf8'));
+    res.json({ stacks: Object.keys(config.stacks) });
+  } catch {
+    res.json({ stacks: [] }); // graceful fallback if config.json missing
+  }
+});
 
 // ─── Applications CRUD ─────────────────────────────────────────────────────────
 

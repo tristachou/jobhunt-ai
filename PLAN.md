@@ -190,14 +190,14 @@ geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 55 | Add `user/base.example.md` — format demo with no personal data | `[ ]` | |
-| 56 | Add `user/config.example.json` — stack structure demo | `[ ]` | |
-| 57 | Add `user/cover-letter/template.example.md` | `[ ]` | |
-| 58 | Add `user/base.md`, `user/config.json`, `user/cover-letter/template.md` to `.gitignore` | `[ ]` | Remove personal data from repo |
-| 59 | C2: Rename "Stack" label to "Resume variant" + add tooltip | `[ ]` | |
-| 60 | C3: Show available AI variants near the AI toggle on New Application form | `[ ]` | |
-| 61 | C4: Add placeholder hint text to JD textarea | `[ ]` | "Paste the full job description. Leave blank to skip AI analysis." |
-| 62 | C5: Add "Available tokens" docs to Settings prompt textareas | `[ ]` | Collapsible, per prompt |
+| 55 | Add `user/base.example.md` — format demo with no personal data | `[x]` | Generic structure with all 16 placeholders and fictional data |
+| 56 | Add `user/config.example.json` — stack structure demo | `[x]` | One "typescript" stack + one job role + soft_skills pool |
+| 57 | Add `user/cover-letter/template.example.md` | `[x]` | Generic template with all 6 placeholders |
+| 58 | Add `user/base.md`, `user/config.json`, `user/cover-letter/template.md` to `.gitignore` | `[x]` | Changed from `user/` whole-dir to specific personal files only |
+| 59 | C2: Rename "Stack" label to "Resume variant" | `[x]` | Updated in result card in NewApplication.tsx |
+| 60 | C3: Show available AI variants near the AI toggle on New Application form | `[x]` | `GET /api/stacks` endpoint; shown inline above JD textarea |
+| 61 | C4: Add placeholder hint text to JD textarea | `[x]` | "Paste the full job description. Leave blank to skip AI analysis." |
+| 62 | C5: Add "Available tokens" docs to Settings prompt textareas | `[x]` | Collapsible `<details>` under each textarea with token descriptions |
 
 ---
 
@@ -207,18 +207,18 @@ geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 63 | DB: add `resume_templates` table + migration | `[ ]` | On first run: import `user/base.md` as default template |
-| 64 | DB: add `resume_template_id` column to `applications` | `[ ]` | Nullable — old records unaffected |
-| 65 | API: `GET/POST/PUT/DELETE /api/resume-templates` | `[ ]` | List excludes markdown; GET single includes it |
-| 66 | API: `PATCH /api/resume-templates/:id/default` | `[ ]` | |
-| 67 | API: `/api/analyze` — add optional `resume_template_id` + `generate_cover_letter` params | `[ ]` | |
-| 68 | API: `POST /api/applications` — Persona A direct save (no AI); takes `resume_template_id`, copies template markdown to `resume_md`, status = `not_started` | `[ ]` | Separate from `/api/analyze`; redirect to Editor on success |
-| 69 | Backend: detect `{{placeholder}}` presence in template → auto-disable AI if none found | `[ ]` | |
-| 70 | New Application form redesign — template selector + optional JD + AI checkboxes | `[ ]` | See `UX_FIX_PLAN.md` E.1 for layout |
-| 71 | Resumes management page — list, create, set default | `[ ]` | Add to sidebar |
-| 72 | Resume template edit page — split view, reuse Editor layout | `[ ]` | |
-| 73 | Editor: add "Save as template" button | `[ ]` | Modal with name input → `POST /api/resume-templates` |
-| 74 | New Application form: add "Preview template" panel | `[ ]` | Renders selected template via `POST /api/preview` |
+| 63 | DB: add `resume_templates` table + migration | `[x]` | Seeds `user/base.md` as default on first run |
+| 64 | DB: add `resume_template_id` column to `applications` | `[x]` | Nullable; old records unaffected |
+| 65 | API: `GET/POST/PUT/DELETE /api/resume-templates` | `[x]` | List excludes markdown; GET single includes it; DELETE blocks last template |
+| 66 | API: `PATCH /api/resume-templates/:id/default` | `[x]` | Clears all others, sets one default |
+| 67 | API: `/api/analyze` — add optional `resume_template_id` + `generate_cover_letter` params | `[x]` | Also passes baseMd to tailor.js; skips AI if template has no `{{placeholders}}` |
+| 68 | API: `POST /api/applications` — Persona A direct save (no AI); takes `resume_template_id`, copies template markdown to `resume_md`, status = `not_started` | `[x]` | Separate from `/api/analyze`; frontend redirects to Editor |
+| 69 | Backend: detect `{{placeholder}}` presence in template → auto-disable AI if none found | `[x]` | Returns 400 in /api/analyze if no placeholders found |
+| 70 | New Application form redesign — template selector + optional JD + AI checkboxes | `[x]` | JD optional; AI checkboxes appear when JD has content; single smart button |
+| 71 | Resumes management page — list, create, set default | `[x]` | `/resumes` page + sidebar nav; "···" dropdown with Set default / Duplicate / Delete |
+| 72 | Resume template edit page — split view, reuse Editor layout | `[x]` | `/resumes/:id` — full-screen split view, name input, Set as default button, autosave |
+| 73 | Editor: add "Save as template" button | `[x]` | Modal with name input (pre-filled with company+title) → `POST /api/resume-templates` |
+| 74 | New Application form: add "Preview template" panel | `[x]` | "Preview →" link → modal overlay with rendered iframe |
 
 ---
 

@@ -65,6 +65,15 @@ export default function Settings() {
             value={tailor}
             onChange={e => setTailor(e.target.value)}
           />
+          <details className="group">
+            <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
+              Available tokens ▸
+            </summary>
+            <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
+              <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text <span className="text-red-600">(required)</span></p>
+              <p><code className="text-blue-700">{'{{STACKS}}'}</code> — JSON array of all skill keywords from <code>user/config.json</code></p>
+            </div>
+          </details>
         </div>
 
         {/* Cover letter prompt */}
@@ -79,6 +88,17 @@ export default function Settings() {
             value={coverletter}
             onChange={e => setCoverletter(e.target.value)}
           />
+          <details className="group">
+            <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
+              Available tokens ▸
+            </summary>
+            <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
+              <p><code className="text-blue-700">{'{{TEMPLATE}}'}</code> — the full cover letter template from <code>user/cover-letter/template.md</code> <span className="text-red-600">(required)</span></p>
+              <p><code className="text-blue-700">{'{{COMPANY}}'}</code> — the company name entered in the form</p>
+              <p><code className="text-blue-700">{'{{JOB_TITLE}}'}</code> — the job title entered in the form</p>
+              <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text</p>
+            </div>
+          </details>
         </div>
       </div>
 

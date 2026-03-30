@@ -1,3 +1,22 @@
+## 2026-03-30 — Phase 9: Multi-resume templates
+
+- Add `resume_templates` DB table with seed migration (imports `user/base.md` as default on first run); add `resume_template_id` to `applications` table
+- Add full CRUD API for `/api/resume-templates` (list/create/get/update/delete/set-default); `DELETE` blocks removal of the last template
+- Add `POST /api/applications` for Persona A direct save (no AI); copies template markdown to `resume_md`, redirects to Editor
+- Extend `/api/analyze` to accept `resume_template_id` and `generate_cover_letter`; rejects AI if template has no `{{placeholders}}`; `tailor.js` accepts optional `baseMd` param
+- New Application form redesigned: template selector with Preview modal, optional JD, AI checkboxes (shown only when JD has content), single smart button ("Save & Track" vs "Analyze →")
+- New `/resumes` management page in sidebar: list templates with default star, Edit/Duplicate/Delete/Set-as-default actions
+- New `/resumes/:id` full-screen template editor: split view (markdown + preview), name input, autosave, Set as default button
+- Editor: "Save as template" button opens modal with pre-filled name → creates new template from current resume_md
+
+## 2026-03-30 — Phase 8: Onboarding and open source prep
+
+- Add `user/base.example.md`, `user/config.example.json`, `user/cover-letter/template.example.md` with generic fictional data so new users have a starting point
+- Update `.gitignore` from blanket `user/` exclusion to specific personal files (`base.md`, `config.json`, `prompts.json`, `template.md`), allowing example files to be committed
+- Add `GET /api/stacks` endpoint that reads stack names from `user/config.json`; show available AI variants above JD textarea in New Application form
+- Rename "Stack" label to "Resume variant" in result card; update JD textarea placeholder to clarify AI is optional
+- Add collapsible "Available tokens" reference under each Settings prompt textarea, showing token names and descriptions
+
 ## 2026-03-30 — Phase 7: Bug fixes, silent failure detection, and robustness
 
 - Add save error banner + Ctrl+S + Save button in Editor; autosave failures now surface visibly instead of silently dropping changes

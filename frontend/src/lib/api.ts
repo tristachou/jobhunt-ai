@@ -30,6 +30,15 @@ export interface Application {
   follow_up: number   // 0 | 1
 }
 
+export interface ResumeTemplate {
+  id: number
+  name: string
+  is_default: number
+  created_at: string
+  updated_at: string
+  markdown?: string  // only present in GET /:id
+}
+
 export interface AnalyzeResult {
   id: number
   fit_score: number
@@ -54,8 +63,21 @@ export const api = {
     url?: string
     source?: string
     theme?: string
+    resume_template_id?: number
+    generate_cover_letter?: boolean
   }, signal?: AbortSignal): Promise<AnalyzeResult> {
     return request('/analyze', { method: 'POST', body: JSON.stringify(body), signal })
+  },
+
+  createApplication(body: {
+    job_title: string
+    company: string
+    resume_template_id?: number
+    source?: string
+    url?: string
+    jd?: string
+  }): Promise<{ id: number }> {
+    return request('/applications', { method: 'POST', body: JSON.stringify(body) })
   },
 
   getApplications(): Promise<Application[]> {
@@ -106,5 +128,35 @@ export const api = {
 
   previewStyle(css: string, theme?: string): Promise<{ html: string }> {
     return request('/style/preview', { method: 'POST', body: JSON.stringify({ css, theme }) })
+  },
+
+  getStacks(): Promise<{ stacks: string[] }> {
+    return request('/stacks')
+  },
+
+  // ─── Resume Templates ────────────────────────────────────────────────────────
+
+  getTemplates(): Promise<ResumeTemplate[]> {
+    return request('/resume-templates')
+  },
+
+  createTemplate(body: { name: string; markdown: string }): Promise<{ id: number }> {
+    return request('/resume-templates', { method: 'POST', body: JSON.stringify(body) })
+  },
+
+  getTemplate(id: number): Promise<ResumeTemplate & { markdown: string }> {
+    return request(`/resume-templates/${id}`)
+  },
+
+  updateTemplate(id: number, body: { name?: string; markdown?: string }): Promise<{ ok: boolean }> {
+    return request(`/resume-templates/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+  },
+
+  deleteTemplate(id: number): Promise<{ ok: boolean }> {
+    return request(`/resume-templates/${id}`, { method: 'DELETE' })
+  },
+
+  setDefaultTemplate(id: number): Promise<{ ok: boolean }> {
+    return request(`/resume-templates/${id}/default`, { method: 'PATCH' })
   },
 }

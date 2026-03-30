@@ -1,5 +1,8 @@
-# Personal data — git clone users create their own in user/
-user/
+# Personal data — create your own from the *.example.* files
+user/base.md
+user/config.json
+user/prompts.json
+user/cover-letter/template.md
 
 # Dependencies
 backend/node_modules/

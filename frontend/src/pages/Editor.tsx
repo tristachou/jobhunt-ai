@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api, type Application, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Download, ArrowLeft, RefreshCw, Save } from 'lucide-react'
+import { Loader2, Download, ArrowLeft, RefreshCw, Save, BookmarkPlus } from 'lucide-react'
 
 type Tab = 'resume' | 'coverletter'
 type PanelTab = 'editor' | 'preview'
@@ -30,11 +31,19 @@ export default function Editor() {
   const [saveError, setSaveError]       = useState<string | null>(null)
   const [pdfLoading, setPdfLoading]     = useState<'resume' | 'coverletter' | null>(null)
   const [error, setError]               = useState<string | null>(null)
+  const [saveAsTplOpen, setSaveAsTplOpen] = useState(false)
+  const [tplName, setTplName]           = useState('')
+  const [tplSaving, setTplSaving]       = useState(false)
+  const [tplError, setTplError]         = useState<string | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     api.getApplication(appId)
-      .then(data => { setApp(data); setMarkdown(data.resume_md || '') })
+      .then(data => {
+        setApp(data)
+        setMarkdown(data.resume_md || '')
+        setTplName(`${data.company} — ${data.job_title}`)
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoadingApp(false))
   }, [appId])
@@ -185,6 +194,14 @@ export default function Editor() {
           >
             <Save className="h-3.5 w-3.5" /> Save
           </Button>
+          {tab === 'resume' && (
+            <Button
+              size="sm" variant="outline" className="h-7 text-xs hidden sm:flex"
+              onClick={() => setSaveAsTplOpen(true)}
+            >
+              <BookmarkPlus className="h-3.5 w-3.5" /> Save as template
+            </Button>
+          )}
           {tab === 'resume' && app && (
             <Select value={app.theme || 'classic'} onValueChange={handleThemeChange}>
               <SelectTrigger className="h-7 text-xs w-24">
@@ -271,6 +288,56 @@ export default function Editor() {
           </button>
         ))}
       </div>
+
+      {/* ── Save as template modal ── */}
+      {saveAsTplOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setSaveAsTplOpen(false)}
+        >
+          <div
+            className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_#000] w-full max-w-sm p-6 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="font-serif text-xl font-bold">Save as template</h2>
+            <div className="space-y-1.5">
+              <label className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Template name</label>
+              <Input
+                value={tplName}
+                onChange={e => setTplName(e.target.value)}
+                placeholder="My Resume Template"
+                autoFocus
+              />
+            </div>
+            {tplError && (
+              <p className="font-mono text-xs text-red-600 uppercase tracking-wider">{tplError}</p>
+            )}
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" onClick={() => { setSaveAsTplOpen(false); setTplError(null) }}>
+                Cancel
+              </Button>
+              <Button
+                disabled={tplSaving || !tplName.trim()}
+                onClick={async () => {
+                  setTplSaving(true)
+                  setTplError(null)
+                  try {
+                    await api.createTemplate({ name: tplName.trim(), markdown })
+                    setSaveAsTplOpen(false)
+                  } catch (e) {
+                    setTplError(e instanceof Error ? e.message : 'Failed to save')
+                  } finally {
+                    setTplSaving(false)
+                  }
+                }}
+              >
+                {tplSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Split view ── */}
       <div className="flex flex-1 overflow-hidden">
