@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api, type Application, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Download, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Loader2, Download, ArrowLeft, RefreshCw, Save } from 'lucide-react'
 
 type Tab = 'resume' | 'coverletter'
 type PanelTab = 'editor' | 'preview'
@@ -27,6 +27,8 @@ export default function Editor() {
   const [loadingApp, setLoadingApp]     = useState(true)
   const [loadingPreview, setLoadingPreview] = useState(false)
   const [saving, setSaving]             = useState(false)
+  const [saveError, setSaveError]       = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading]     = useState<'resume' | 'coverletter' | null>(null)
   const [error, setError]               = useState<string | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -65,16 +67,60 @@ export default function Editor() {
     refreshPreview(newMd, tab)
   }, [tab, app])
 
+  const save = useCallback(async (value: string, currentTab: Tab, currentApp: Application | null) => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const field = currentTab === 'resume' ? 'resume_md' : 'cover_md'
+      await api.patchApplication(appId, { [field]: value })
+      if (currentApp) setApp({ ...currentApp, [field]: value })
+    } catch {
+      setSaveError('Save failed — your changes were not saved')
+    } finally {
+      setSaving(false)
+    }
+  }, [appId])
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (saveTimer.current) clearTimeout(saveTimer.current)
+        save(markdown, tab, app)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [markdown, tab, app, save])
+
   function handleMarkdownChange(value: string) {
     setMarkdown(value)
+    setSaveError(null)
     if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(async () => {
-      setSaving(true)
-      const field = tab === 'resume' ? 'resume_md' : 'cover_md'
-      await api.patchApplication(appId, { [field]: value })
-      if (app) setApp({ ...app, [field]: value })
-      setSaving(false)
-    }, 800)
+    saveTimer.current = setTimeout(() => save(value, tab, app), 800)
+  }
+
+  async function handleDownload(type: 'resume' | 'coverletter') {
+    if (pdfLoading) return
+    setPdfLoading(type)
+    try {
+      const res = await fetch(api.getPdfUrl(appId, type))
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? 'PDF generation failed')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${app?.company}_${app?.job_title}_${type}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'PDF generation failed')
+    } finally {
+      setPdfLoading(null)
+    }
   }
 
   if (loadingApp) {
@@ -132,6 +178,13 @@ export default function Editor() {
               <Loader2 className="h-3 w-3 animate-spin" /> Saving
             </span>
           )}
+          <Button
+            size="sm" variant="outline" className="h-7 text-xs hidden sm:flex"
+            onClick={() => { if (saveTimer.current) clearTimeout(saveTimer.current); save(markdown, tab, app) }}
+            disabled={saving}
+          >
+            <Save className="h-3.5 w-3.5" /> Save
+          </Button>
           {tab === 'resume' && app && (
             <Select value={app.theme || 'classic'} onValueChange={handleThemeChange}>
               <SelectTrigger className="h-7 text-xs w-24">
@@ -144,21 +197,30 @@ export default function Editor() {
               </SelectContent>
             </Select>
           )}
-          <a href={api.getPdfUrl(appId, 'resume')} download>
-            <Button size="sm" variant="outline" className="h-7 text-xs hidden sm:flex">
-              <Download className="h-3.5 w-3.5" /> Resume
-            </Button>
-          </a>
-          <a href={api.getPdfUrl(appId, 'coverletter')} download>
-            <Button size="sm" variant="outline" className="h-7 text-xs hidden sm:flex">
-              <Download className="h-3.5 w-3.5" /> Cover Letter
-            </Button>
-          </a>
-          <a href={api.getPdfUrl(appId, tab === 'resume' ? 'resume' : 'coverletter')} download className="sm:hidden">
-            <Button size="sm" variant="outline" className="h-7 text-xs">
-              <Download className="h-3.5 w-3.5" /> PDF
-            </Button>
-          </a>
+          <Button
+            size="sm" variant="outline" className="h-7 text-xs hidden sm:flex"
+            onClick={() => handleDownload('resume')}
+            disabled={pdfLoading !== null}
+          >
+            {pdfLoading === 'resume' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            Resume
+          </Button>
+          <Button
+            size="sm" variant="outline" className="h-7 text-xs hidden sm:flex"
+            onClick={() => handleDownload('coverletter')}
+            disabled={pdfLoading !== null}
+          >
+            {pdfLoading === 'coverletter' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            Cover Letter
+          </Button>
+          <Button
+            size="sm" variant="outline" className="h-7 text-xs sm:hidden"
+            onClick={() => handleDownload(tab === 'resume' ? 'resume' : 'coverletter')}
+            disabled={pdfLoading !== null}
+          >
+            {pdfLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            PDF
+          </Button>
         </div>
       </header>
 
@@ -178,6 +240,22 @@ export default function Editor() {
           </button>
         ))}
       </div>
+
+      {/* ── Banners ── */}
+      {saveError && (
+        <div className="border-b-2 border-red-600 bg-red-100 px-4 py-2 flex items-center gap-2 flex-shrink-0">
+          <div className="w-2.5 h-2.5 bg-red-600 flex-shrink-0" />
+          <span className="font-mono text-xs text-red-600 uppercase tracking-wider">{saveError}</span>
+        </div>
+      )}
+      {tab === 'coverletter' && app && !app.cover_md && (
+        <div className="border-b-2 border-yellow-500 bg-yellow-50 px-4 py-2 flex items-center gap-2 flex-shrink-0">
+          <div className="w-2.5 h-2.5 bg-yellow-500 flex-shrink-0" />
+          <span className="font-mono text-xs text-yellow-700 uppercase tracking-wider">
+            Cover letter template not found — add <code className="normal-case">user/cover-letter/template.md</code> to enable
+          </span>
+        </div>
+      )}
 
       {/* ── Mobile panel toggle ── */}
       <div className="sm:hidden flex border-b-2 border-black bg-[#F0F0E8] flex-shrink-0">

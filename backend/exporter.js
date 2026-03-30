@@ -49,9 +49,9 @@ async function _renderPDF(html, pdfOptions) {
   });
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 60000 });
     await page.emulateMediaType('print');
-    const buffer = await page.pdf(pdfOptions);
+    const buffer = await page.pdf({ ...pdfOptions, timeout: 60000 });
     return Buffer.from(buffer); // ensure Buffer even if Puppeteer returns Uint8Array
   } finally {
     await browser.close();

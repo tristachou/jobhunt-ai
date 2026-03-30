@@ -60,7 +60,8 @@ function updateApplication(id, fields) {
   if (fields.status !== undefined) {
     const row = db.prepare('SELECT status_log FROM applications WHERE id = ?').get(id);
     if (row) {
-      const log = JSON.parse(row.status_log || '[]');
+      let log;
+      try { log = JSON.parse(row.status_log || '[]'); } catch { log = []; }
       const last = log[log.length - 1];
       if (!last || last.status !== fields.status) {
         log.push({ status: fields.status, changed_at: new Date().toISOString() });

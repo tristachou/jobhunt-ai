@@ -1,3 +1,13 @@
+## 2026-03-30 — Phase 7: Bug fixes, silent failure detection, and robustness
+
+- Add save error banner + Ctrl+S + Save button in Editor; autosave failures now surface visibly instead of silently dropping changes
+- Add cover letter unavailable warning in result card and Editor; `cover_letter_available` flag returned from `/api/analyze`; `generateCoverLetter` returns `{ markdown, available }` object
+- Validate Gemini response shape in `tailor.js` (stack/detected_skills/fit_score); clamp fit_score to 0–100; return `soft_skills_injected` flag with yellow hint in result card
+- Replace anchor-tag PDF download with fetch-based download with loading/disabled state to prevent double-clicks spawning multiple Puppeteer instances
+- Add descriptive errors: GEMINI_API_KEY missing (B1), 429 quota exceeded (B2), missing user/base.md or config.json (B3), misleading PDF 404 messages (B4)
+- Add 60s Puppeteer timeout (D1); 60s `Promise.race` in both `geminiJSON` functions (D6); 65s `AbortController` in frontend analyze call (D6)
+- Add `PUT /prompts` token validation (`{{JD}}` + `{{TEMPLATE}}`); theme name whitelist (`/^[a-z0-9-]+$/`) on all endpoints that accept theme; `status_log` JSON.parse guard in db.js
+
 ## 2026-03-24 — Improve frontend spacing, padding, and text legibility
 
 - Replace hardcoded `padding: '1.5rem 10rem'` in App layout with responsive Tailwind (`px-6 py-6 md:px-10 lg:px-14`) and add `max-w-6xl mx-auto` content wrapper to prevent over-stretching on wide screens

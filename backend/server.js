@@ -24,6 +24,11 @@ function themeCssPath(theme) {
   return path.join(THEMES_DIR, `${theme}.css`);
 }
 
+/** Validate theme name — prevent path traversal */
+function isValidTheme(theme) {
+  return typeof theme === 'string' && /^[a-z0-9-]+$/.test(theme);
+}
+
 const {
   insertApplication,
   getAllApplications,
@@ -51,15 +56,19 @@ api.post('/analyze', async (req, res) => {
     return res.status(400).json({ error: 'job_title, company, and jd are required' });
   }
 
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'Gemini API key not configured — set GEMINI_API_KEY in backend/.env' });
+  }
+
   // Theme: explicit in request → user.config.js default → 'classic'
-  const resolvedTheme = theme || getUserConfig().theme || 'classic';
+  const resolvedTheme = (theme && isValidTheme(theme)) ? theme : (getUserConfig().theme || 'classic');
 
   try {
     const { tailorResume }        = require('./tailor');
     const { generateCoverLetter } = require('./coverletter');
 
-    const tailor  = await tailorResume({ jd });
-    const coverMd = await generateCoverLetter({ company, job_title, jd });
+    const tailor      = await tailorResume({ jd });
+    const coverResult = await generateCoverLetter({ company, job_title, jd });
 
     const id = insertApplication({
       created_at: new Date().toISOString(),
@@ -71,18 +80,20 @@ api.post('/analyze', async (req, res) => {
       stack_used: tailor.stack,
       fit_score:  tailor.fit_score,
       resume_md:  tailor.markdown,
-      cover_md:   coverMd || '',
+      cover_md:   coverResult.markdown || '',
       status:     'not_started',
       theme:      resolvedTheme,
     });
 
     res.json({
       id,
-      fit_score:       tailor.fit_score,
-      stack:           tailor.stack,
-      detected_skills: tailor.detected_skills,
-      bolded_skills:   tailor.bolded_skills,
-      theme:           resolvedTheme,
+      fit_score:             tailor.fit_score,
+      stack:                 tailor.stack,
+      detected_skills:       tailor.detected_skills,
+      bolded_skills:         tailor.bolded_skills,
+      soft_skills_injected:  tailor.soft_skills_injected,
+      cover_letter_available: coverResult.available,
+      theme:                 resolvedTheme,
     });
   } catch (err) {
     console.error('[/api/analyze error]', err);
@@ -100,7 +111,11 @@ api.get('/applications/:id/pdf', async (req, res) => {
 
   const markdown = type === 'coverletter' ? record.cover_md : record.resume_md;
   if (!markdown) {
-    return res.status(404).json({ error: `No ${type} markdown saved for this application` });
+    return res.status(404).json({
+      error: type === 'coverletter'
+        ? 'No cover letter saved — generate one from New Application'
+        : 'Resume markdown not saved — try re-generating from New Application',
+    });
   }
 
   try {
@@ -126,6 +141,7 @@ api.get('/applications/:id/pdf', async (req, res) => {
 api.post('/preview', (req, res) => {
   const { markdown, type, theme } = req.body;
   if (!markdown) return res.status(400).json({ error: 'markdown is required' });
+  if (theme && !isValidTheme(theme)) return res.status(400).json({ error: 'Invalid theme name' });
 
   try {
     const { renderResume, renderCoverLetter } = require('./renderer');
@@ -153,6 +169,12 @@ api.put('/prompts', (req, res) => {
   if (typeof tailor !== 'string' || typeof coverletter !== 'string') {
     return res.status(400).json({ error: 'tailor and coverletter must be strings' });
   }
+  if (!tailor.includes('{{JD}}')) {
+    return res.status(400).json({ error: 'Tailor prompt must contain {{JD}}' });
+  }
+  if (!coverletter.includes('{{TEMPLATE}}')) {
+    return res.status(400).json({ error: 'Cover letter prompt must contain {{TEMPLATE}}' });
+  }
   try {
     fs.writeFileSync(PROMPTS_PATH, JSON.stringify({ tailor, coverletter }, null, 2), 'utf8');
     res.json({ ok: true });
@@ -178,6 +200,7 @@ api.get('/style', (_req, res) => {
 api.put('/style', (req, res) => {
   const { css, theme } = req.body;
   if (typeof css !== 'string') return res.status(400).json({ error: 'css must be a string' });
+  if (theme && !isValidTheme(theme)) return res.status(400).json({ error: 'Invalid theme name' });
   try {
     const resolvedTheme = theme || getUserConfig().theme || 'classic';
     fs.writeFileSync(themeCssPath(resolvedTheme), css, 'utf8');
@@ -207,6 +230,7 @@ api.get('/style/themes', (_req, res) => {
 api.post('/style/preview', (req, res) => {
   const { css, theme } = req.body;
   if (typeof css !== 'string') return res.status(400).json({ error: 'css must be a string' });
+  if (theme && !isValidTheme(theme)) return res.status(400).json({ error: 'Invalid theme name' });
   try {
     const { renderResumeWithCss } = require('./renderer');
     const apps     = getAllApplications();

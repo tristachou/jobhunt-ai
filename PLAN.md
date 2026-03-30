@@ -157,9 +157,102 @@ geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 
 ---
 
+---
+
+## Phase 7 — Bug Fixes & Robustness
+
+> Full design in `UX_FIX_PLAN.md` Phase A + B + D
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 39 | A1: Editor autosave failure — add error banner + manual save (Ctrl+S / Save button) | `[x]` | Red banner on save failure; Ctrl+S + Save button trigger immediate save |
+| 40 | A2: Cover letter silently skipped when template missing — show warning banner | `[x]` | `cover_letter_available` in `/analyze` response; yellow banners in result card + Editor |
+| 41 | A3: Validate Gemini response shape before using it | `[x]` | `tailor.js` — throws on invalid `stack`, `detected_skills`, `fit_score` |
+| 42 | A4: PDF download button has no loading state — disable + show "Generating PDF…" | `[x]` | Fetch-based download with loading state; both buttons disabled during generation |
+| 43 | A5: Soft skill injection no-op is silent — return `soft_skills_injected: boolean` | `[x]` | Yellow hint in result card if false |
+| 44 | B1: Missing `GEMINI_API_KEY` shows "Unknown error" — check on startup, return clear message | `[x]` | Early return 500 with descriptive message in `/api/analyze` |
+| 45 | B2: Gemini 429 quota error shows "Unknown error" — detect HTTP 429 in axios catch | `[x]` | `geminiJSON` catches 429 in both `tailor.js` and `coverletter.js` |
+| 46 | B3: Missing `user/base.md` or `config.json` shows path crash — throw descriptive error | `[x]` | `tailorResume` checks file existence before reading |
+| 47 | B4: PDF 404 message is misleading — replace with "Resume markdown not saved — try re-generating" | `[x]` | Separate messages for resume vs cover letter |
+| 48 | B5: Settings shows "Saved" even on failure — move badge to `then()`, show red "Save failed" in `catch()` | `[x]` | Already correct in React version |
+| 49 | D1: Puppeteer has no timeout — add 60s timeout to `page.setContent` / `page.pdf` | `[x]` | `timeout: 60000` on both calls in `exporter.js` |
+| 50 | D2: `fit_score` has no bounds check — clamp to 0–100 | `[x]` | `Math.max(0, Math.min(100, fit_score))` in `tailor.js` |
+| 51 | D3: `PUT /prompts` does not validate required tokens — check `{{JD}}` and `{{TEMPLATE}}` present | `[x]` | Returns 400 if missing |
+| 52 | D4: `theme` parameter has no validation — whitelist `/^[a-z0-9-]+$/` | `[x]` | `isValidTheme()` applied in analyze, preview, style PUT, style/preview |
+| 53 | D5: `status_log` JSON.parse has no error handling — wrap in try/catch, default to `[]` | `[x]` | try/catch in `updateApplication` in `db.js` |
+| 54 | D6: Gemini has no timeout — backend `Promise.race` 60s, frontend `AbortController` 65s | `[x]` | `Promise.race` in both `geminiJSON`; `AbortController` in NewApplication submit |
+
+---
+
+## Phase 8 — Onboarding & Open Source Prep
+
+> Full design in `UX_FIX_PLAN.md` Phase C
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 55 | Add `user/base.example.md` — format demo with no personal data | `[ ]` | |
+| 56 | Add `user/config.example.json` — stack structure demo | `[ ]` | |
+| 57 | Add `user/cover-letter/template.example.md` | `[ ]` | |
+| 58 | Add `user/base.md`, `user/config.json`, `user/cover-letter/template.md` to `.gitignore` | `[ ]` | Remove personal data from repo |
+| 59 | C2: Rename "Stack" label to "Resume variant" + add tooltip | `[ ]` | |
+| 60 | C3: Show available AI variants near the AI toggle on New Application form | `[ ]` | |
+| 61 | C4: Add placeholder hint text to JD textarea | `[ ]` | "Paste the full job description. Leave blank to skip AI analysis." |
+| 62 | C5: Add "Available tokens" docs to Settings prompt textareas | `[ ]` | Collapsible, per prompt |
+
+---
+
+## Phase 9 — Multi-Resume Templates
+
+> Full design in `UX_FIX_PLAN.md` Phase E
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 63 | DB: add `resume_templates` table + migration | `[ ]` | On first run: import `user/base.md` as default template |
+| 64 | DB: add `resume_template_id` column to `applications` | `[ ]` | Nullable — old records unaffected |
+| 65 | API: `GET/POST/PUT/DELETE /api/resume-templates` | `[ ]` | List excludes markdown; GET single includes it |
+| 66 | API: `PATCH /api/resume-templates/:id/default` | `[ ]` | |
+| 67 | API: `/api/analyze` — add optional `resume_template_id` + `generate_cover_letter` params | `[ ]` | |
+| 68 | API: `POST /api/applications` — Persona A direct save (no AI); takes `resume_template_id`, copies template markdown to `resume_md`, status = `not_started` | `[ ]` | Separate from `/api/analyze`; redirect to Editor on success |
+| 69 | Backend: detect `{{placeholder}}` presence in template → auto-disable AI if none found | `[ ]` | |
+| 70 | New Application form redesign — template selector + optional JD + AI checkboxes | `[ ]` | See `UX_FIX_PLAN.md` E.1 for layout |
+| 71 | Resumes management page — list, create, set default | `[ ]` | Add to sidebar |
+| 72 | Resume template edit page — split view, reuse Editor layout | `[ ]` | |
+| 73 | Editor: add "Save as template" button | `[ ]` | Modal with name input → `POST /api/resume-templates` |
+| 74 | New Application form: add "Preview template" panel | `[ ]` | Renders selected template via `POST /api/preview` |
+
+---
+
+## Phase 10 — Resume Builder (Form → Markdown)
+
+> Full design in `UX_FIX_PLAN.md` Phase G
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 75 | API: `POST /api/resume-templates/build` — accept structured data, return generated markdown | `[ ]` | |
+| 76 | New Resume entry point: two options — "Build with form" / "Edit as markdown" | `[ ]` | |
+| 77 | Resume Builder form — Personal info, Summary, Skills, Experience, Education sections | `[ ]` | |
+| 78 | Experience + Education: support multiple entries | `[ ]` | |
+| 79 | Builder: live preview panel (right side) | `[ ]` | Calls `POST /api/preview` on change |
+
+---
+
+## Phase 11 — UX Polish
+
+> Full design in `UX_FIX_PLAN.md` Phase F
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 80 | F1: Show warning when JD is under 100 characters (non-blocking) | `[ ]` | |
+| 81 | F2: Delete confirmation — describe consequences clearly | `[ ]` | |
+| 82 | F3: Status badge — add icon per status (not colour-only) | `[ ]` | Accessibility / colour-blind fix |
+| 83 | F4: Dashboard — show error message on data load failure | `[ ]` | |
+| 84 | F5: Theme selector — add "Preview →" link next to dropdown | `[ ]` | |
+
+---
+
 ## Future Plans
 
-### Scoring System (Phase 5 — to be designed)
+### Scoring System (to be designed)
 
 Current state: single `fit_score: 0–100` returned by Gemini, displayed as one number.
 

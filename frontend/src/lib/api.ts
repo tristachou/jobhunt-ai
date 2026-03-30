@@ -36,6 +36,8 @@ export interface AnalyzeResult {
   stack: string
   detected_skills: string[]
   bolded_skills: string[]
+  soft_skills_injected: boolean
+  cover_letter_available: boolean
   theme: string
 }
 
@@ -52,8 +54,8 @@ export const api = {
     url?: string
     source?: string
     theme?: string
-  }): Promise<AnalyzeResult> {
-    return request('/analyze', { method: 'POST', body: JSON.stringify(body) })
+  }, signal?: AbortSignal): Promise<AnalyzeResult> {
+    return request('/analyze', { method: 'POST', body: JSON.stringify(body), signal })
   },
 
   getApplications(): Promise<Application[]> {

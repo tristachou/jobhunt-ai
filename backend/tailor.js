@@ -9,14 +9,27 @@ const CONFIG_JSON  = path.join(__dirname, '../user/config.json');
 const PROMPTS_JSON = path.join(__dirname, '../user/prompts.json');
 
 async function geminiJSON(prompt) {
-  const res = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-2.5-flash'}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { response_mime_type: 'application/json' },
-    }
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Gemini request timed out after 60s')), 60000)
   );
-  return JSON.parse(res.data.candidates[0].content.parts[0].text);
+  try {
+    const res = await Promise.race([
+      axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-2.5-flash'}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { response_mime_type: 'application/json' },
+        }
+      ),
+      timeoutPromise,
+    ]);
+    return JSON.parse(res.data.candidates[0].content.parts[0].text);
+  } catch (err) {
+    if (err.response?.status === 429) {
+      throw new Error('API quota exceeded. Try again later or check your Gemini billing.');
+    }
+    throw err;
+  }
 }
 
 /**
@@ -62,6 +75,9 @@ function resolveBulletKey(key, bullets, stack, python_framework) {
 }
 
 async function tailorResume({ jd }) {
+  if (!fs.existsSync(BASE_MD)) throw new Error('Missing user config: `user/base.md` not found. Copy `user/base.example.md` to get started.');
+  if (!fs.existsSync(CONFIG_JSON)) throw new Error('Missing user config: `user/config.json` not found. Copy `user/config.example.json` to get started.');
+
   const baseMd = fs.readFileSync(BASE_MD, 'utf8');
   const config = JSON.parse(fs.readFileSync(CONFIG_JSON, 'utf8'));
 
@@ -80,7 +96,13 @@ async function tailorResume({ jd }) {
     .replace('{{JD}}', jd);
   const step1 = await geminiJSON(prompt);
 
-  const { job_role, stack, python_framework, detected_skills, fit_score } = step1;
+  // Validate Gemini response shape
+  if (typeof step1.stack !== 'string') throw new Error('Gemini returned invalid response: expected string for `stack`');
+  if (!Array.isArray(step1.detected_skills)) throw new Error('Gemini returned invalid response: expected array for `detected_skills`');
+  if (typeof step1.fit_score !== 'number') throw new Error('Gemini returned invalid response: expected number for `fit_score`');
+
+  const { job_role, stack, python_framework, detected_skills } = step1;
+  const fit_score = Math.max(0, Math.min(100, step1.fit_score));
   const stackConfig = config.stacks[stack];
   if (!stackConfig) throw new Error(`Unknown stack returned by Gemini: ${stack}`);
   const roleConfig = config.job_roles[job_role];
@@ -122,6 +144,7 @@ async function tailorResume({ jd }) {
     .filter(s => jdLower.includes(s.keyword.toLowerCase()))
     .slice(0, 2)
     .map(s => s.bullet);
+  const soft_skills_injected = softBullets.length > 0;
 
   // Step 7: Fill all placeholders
   const replacements = {
@@ -162,7 +185,7 @@ async function tailorResume({ jd }) {
   ]);
   const bolded_skills = detected_skills.filter(s => allStackSkills.has(s));
 
-  return { markdown: filled, job_role, stack, python_framework, detected_skills, bolded_skills, fit_score };
+  return { markdown: filled, job_role, stack, python_framework, detected_skills, bolded_skills, fit_score, soft_skills_injected };
 }
 
 module.exports = { tailorResume, formatSkillList, injectSoftSkillBullets };

@@ -41,12 +41,20 @@ export default function NewApplication() {
     setLoading(true)
     setError(null)
     setResult(null)
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 65000)
     try {
-      const data = await api.analyze(form)
+      const data = await api.analyze(form, controller.signal)
       setResult(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out after 65 seconds. Please try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      }
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
   }
@@ -199,6 +207,24 @@ export default function NewApplication() {
                 [ Blue badges are bolded in your resume ]
               </p>
             </div>
+
+            {result.soft_skills_injected === false && (
+              <div className="border-2 border-yellow-500 bg-yellow-50 px-3 py-2 flex items-start gap-2">
+                <div className="w-3 h-3 bg-yellow-500 flex-shrink-0 mt-0.5" />
+                <p className="font-mono text-xs text-yellow-700 uppercase tracking-wider">
+                  No soft skills matched — check keywords in <code className="normal-case">user/config.json</code> soft_skills pool
+                </p>
+              </div>
+            )}
+
+            {result.cover_letter_available === false && (
+              <div className="border-2 border-yellow-500 bg-yellow-50 px-3 py-2 flex items-start gap-2">
+                <div className="w-3 h-3 bg-yellow-500 flex-shrink-0 mt-0.5" />
+                <p className="font-mono text-xs text-yellow-700 uppercase tracking-wider">
+                  Cover letter skipped — add <code className="normal-case">user/cover-letter/template.md</code> to enable
+                </p>
+              </div>
+            )}
 
             <Button onClick={() => navigate(`/editor/${result.id}`)} className="gap-2 w-full sm:w-auto">
               Open Editor &amp; Export PDFs
