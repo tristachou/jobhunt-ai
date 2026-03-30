@@ -119,6 +119,27 @@ h2 {
   color: #333;
 }
 
+/* ── Skills section: inline label: value on one line ── */
+
+.section-skills .row {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.section-skills .row-main {
+  font-weight: 700;
+}
+
+.section-skills .row-main::after {
+  content: ': ';
+  font-weight: 400;
+}
+
+.section-skills .row-meta {
+  font-size: inherit;
+  color: inherit;
+}
+
 /* ── Paragraphs ───────────────────────────────── */
 
 p {

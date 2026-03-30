@@ -1,3 +1,14 @@
+## 2026-03-31 — Fix Skills section layout in all themes
+
+- Fix Skills section layout in all single-column themes (classic, minimal, compact, bold): replace `justify-content: space-between` row with a CSS grid (`grid-template-columns: max-content 1fr`) on the section; `.row` becomes `display: contents` so label and value are grid children — label stays on one line, long values wrap within their own column
+
+## 2026-03-31 — Phase 11: UX polish
+
+- Add yellow warning banner when JD is under 100 characters (non-blocking, shows char count)
+- Improve delete confirmation message to describe consequences: "permanently remove all saved data including markdown and status history"
+- Add status icons to all status badges and dropdown options (Hourglass/Send/Bell/Users/XCircle) — accessibility fix, no longer colour-only
+- Add "Preview →" link next to Theme selector in New Application form — opens template preview modal with selected theme applied
+
 ## 2026-03-30 — Phase 9: Multi-resume templates
 
 - Add `resume_templates` DB table with seed migration (imports `user/base.md` as default on first run); add `resume_template_id` to `applications` table

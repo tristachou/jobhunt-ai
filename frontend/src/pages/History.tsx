@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, type Application } from '@/lib/api'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight, Bookmark } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight, Bookmark, Clock, Send, Bell, Users, XCircle, Hourglass } from 'lucide-react'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -104,34 +104,46 @@ const DOT_COLOR: Record<Status, string> = {
   rejected:     'bg-red-600',
 }
 
+const STATUS_ICON: Record<Status, React.ElementType> = {
+  not_started: Hourglass,
+  applied:     Send,
+  followed_up: Bell,
+  interviewed: Users,
+  rejected:    XCircle,
+}
+
 // ─── Status dropdown ───────────────────────────────────────────────────────────
 
 function StatusCell({ app, onUpdate }: { app: Application; onUpdate: (s: Status) => void }) {
   const [open, setOpen] = useState(false)
-  const dotColor = DOT_COLOR
+  const Icon = STATUS_ICON[app.status]
   return (
     <div className="relative inline-block">
       <Badge
         variant={STATUS_VARIANT[app.status]}
-        className="cursor-pointer select-none"
+        className="cursor-pointer select-none gap-1"
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
       >
-        {app.status}
+        <Icon className="h-3 w-3 flex-shrink-0" />
+        {app.status.replace(/_/g, ' ')}
       </Badge>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 z-20 w-36 border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden">
-            {STATUSES.map(s => (
-              <button
-                key={s}
-                className="flex w-full items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
-                onClick={() => { onUpdate(s); setOpen(false) }}
-              >
-                <span className={`h-2 w-2 flex-shrink-0 ${dotColor[s]}`} />
-                {s}
-              </button>
-            ))}
+          <div className="absolute top-full left-0 mt-1 z-20 w-40 border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000000] overflow-hidden">
+            {STATUSES.map(s => {
+              const SIcon = STATUS_ICON[s]
+              return (
+                <button
+                  key={s}
+                  className="flex w-full items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
+                  onClick={() => { onUpdate(s); setOpen(false) }}
+                >
+                  <SIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                  {s.replace(/_/g, ' ')}
+                </button>
+              )
+            })}
           </div>
         </>
       )}
@@ -192,7 +204,7 @@ function DesktopRow({
             </Button>
             <Button
               variant="ghost" size="icon" className="h-7 w-7 hover:text-red-600 transition-colors" title="Delete"
-              onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?`)) onDelete(app.id) }}
+              onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?\n\nThis will permanently remove all saved data including resume markdown, cover letter, and status history.`)) onDelete(app.id) }}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -306,7 +318,7 @@ function MobileCard({
         </Button>
         <Button
           variant="ghost" size="sm" className="h-7 text-xs text-red-600 ml-auto"
-          onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?`)) onDelete(app.id) }}
+          onClick={() => { if (confirm(`Delete "${app.job_title}" at ${app.company}?\n\nThis will permanently remove all saved data including resume markdown, cover letter, and status history.`)) onDelete(app.id) }}
         >
           <Trash2 className="h-3 w-3" />
         </Button>

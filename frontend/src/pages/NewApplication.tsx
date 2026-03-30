@@ -203,7 +203,17 @@ export default function NewApplication() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Theme</Label>
+            <div className="flex items-center justify-between">
+              <Label>Theme</Label>
+              {form.resume_template_id > 0 && (
+                <button
+                  onClick={handlePreview}
+                  className="font-mono text-[10px] text-blue-700 hover:underline uppercase tracking-wider"
+                >
+                  Preview →
+                </button>
+              )}
+            </div>
             <Select value={form.theme} onValueChange={set('theme')}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -246,6 +256,16 @@ export default function NewApplication() {
             onChange={e => set('jd')(e.target.value)}
           />
         </div>
+
+        {/* F1 — short JD warning */}
+        {form.jd.trim().length > 0 && form.jd.trim().length < 100 && (
+          <div className="border-2 border-yellow-500 bg-yellow-50 px-3 py-2 flex items-start gap-2">
+            <div className="w-3 h-3 bg-yellow-500 flex-shrink-0 mt-0.5" />
+            <p className="font-mono text-xs text-yellow-700 uppercase tracking-wider">
+              Job description is very short ({form.jd.trim().length} chars) — AI analysis may be inaccurate
+            </p>
+          </div>
+        )}
 
         {/* AI checkboxes — only when JD has content */}
         {hasJd && (

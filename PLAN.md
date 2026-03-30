@@ -242,11 +242,11 @@ geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 80 | F1: Show warning when JD is under 100 characters (non-blocking) | `[ ]` | |
-| 81 | F2: Delete confirmation — describe consequences clearly | `[ ]` | |
-| 82 | F3: Status badge — add icon per status (not colour-only) | `[ ]` | Accessibility / colour-blind fix |
-| 83 | F4: Dashboard — show error message on data load failure | `[ ]` | |
-| 84 | F5: Theme selector — add "Preview →" link next to dropdown | `[ ]` | |
+| 80 | F1: Show warning when JD is under 100 characters (non-blocking) | `[x]` | Yellow banner below JD textarea showing char count |
+| 81 | F2: Delete confirmation — describe consequences clearly | `[x]` | Added "permanently remove all saved data including markdown and status history" |
+| 82 | F3: Status badge — add icon per status (not colour-only) | `[x]` | Hourglass/Send/Bell/Users/XCircle icons in badge + dropdown |
+| 83 | F4: Dashboard — show error message on data load failure | `[x]` | Already implemented in previous phase |
+| 84 | F5: Theme selector — add "Preview →" link next to dropdown | `[x]` | Preview link in New Application form opens template preview modal with selected theme |
 
 ---
 
