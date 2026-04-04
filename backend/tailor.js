@@ -193,4 +193,21 @@ async function tailorResume({ jd, baseMd: externalBaseMd }) {
   return { markdown: filled, job_role, stack, python_framework, detected_skills, bolded_skills, fit_score, soft_skills_injected };
 }
 
-module.exports = { tailorResume, formatSkillList, injectSoftSkillBullets };
+async function rescoreResume(jd) {
+  const config = JSON.parse(fs.readFileSync(CONFIG_JSON, 'utf8'));
+  const allSkills = [...new Set(
+    Object.values(config.stacks).flatMap(s => [
+      ...s.lang_skills, ...s.frontend_skills, ...s.backend_skills,
+      ...s.database_skills, ...s.cloud_skills,
+    ])
+  )];
+  const prompts = JSON.parse(fs.readFileSync(PROMPTS_JSON, 'utf8'));
+  const prompt = prompts.tailor
+    .replace('{{STACKS}}', JSON.stringify(allSkills))
+    .replace('{{JD}}', jd);
+  const result = await geminiJSON(prompt);
+  if (typeof result.fit_score !== 'number') throw new Error('Gemini returned invalid response: expected number for `fit_score`');
+  return Math.max(0, Math.min(100, result.fit_score));
+}
+
+module.exports = { tailorResume, rescoreResume, formatSkillList, injectSoftSkillBullets };

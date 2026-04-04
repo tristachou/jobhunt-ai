@@ -164,6 +164,32 @@ api.get('/applications/:id/pdf', async (req, res) => {
   }
 });
 
+// ─── Rescore ──────────────────────────────────────────────────────────────────
+
+api.post('/applications/:id/rescore', async (req, res) => {
+  const record = getApplicationById(Number(req.params.id));
+  if (!record) return res.status(404).json({ error: 'Not found' });
+
+  const jd = req.body.jd || record.jd_text;
+  if (!jd) return res.status(400).json({ error: 'No job description available — paste a JD to score against' });
+
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'Gemini API key not configured — set GEMINI_API_KEY in backend/.env' });
+  }
+
+  try {
+    const { rescoreResume } = require('./tailor');
+    const fit_score = await rescoreResume(jd);
+    const updates = { fit_score };
+    if (req.body.jd && !record.jd_text) updates.jd_text = req.body.jd;
+    updateApplication(record.id, updates);
+    res.json({ fit_score });
+  } catch (err) {
+    console.error('[/api/applications/:id/rescore error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Preview ───────────────────────────────────────────────────────────────────
 
 api.post('/preview', (req, res) => {

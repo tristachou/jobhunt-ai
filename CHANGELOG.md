@@ -1,3 +1,16 @@
+## 2026-04-04 — N/A score display + AI Re-score feature
+
+- Show `N/A` instead of `0` for unscored applications in History (ScoreBar) and Editor header; fix detail panel showing `0 / 100`
+- Add `rescoreResume(jd)` to `tailor.js` — lightweight Gemini call returning only `fit_score`, reusing tailor prompt
+- Add `POST /api/applications/:id/rescore` — uses stored JD or accepts JD in body (also saves JD to DB if missing); returns `{ fit_score }`
+- Add Re-score button to Editor header (resume tab only): if JD exists scores immediately, otherwise opens dialog to paste JD
+- Score display added to Editor header left (beside status badge)
+
+## 2026-04-04 — Fix Dashboard Pipeline count double-counting
+
+- Fix `countByStatus` in `Dashboard.tsx` to only count an application's current status, not all historical statuses from `status_log`
+- Previously, an application that moved from `not_started` → `applied` would be counted in both buckets
+
 ## 2026-04-03 — Phase 10: Resume Builder (Form → Markdown)
 
 - Add `POST /api/resume-templates/build` — accepts structured personal/summary/skills/experience/education/certifications data, generates Oh My CV markdown, saves to `resume_templates` table

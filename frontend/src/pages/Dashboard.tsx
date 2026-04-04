@@ -7,10 +7,7 @@ import { api, Application } from '@/lib/api'
 function countByStatus(apps: Application[]) {
   const counts: Record<string, number> = {}
   for (const a of apps) {
-    const log: { status: string }[] = JSON.parse(a.status_log || '[]')
-    const seen = new Set(log.map(e => e.status))
-    seen.add(a.status)
-    for (const s of seen) counts[s] = (counts[s] ?? 0) + 1
+    counts[a.status] = (counts[a.status] ?? 0) + 1
   }
   return counts
 }

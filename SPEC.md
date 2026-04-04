@@ -132,6 +132,8 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 
 `PATCH /applications/:id` — update `status` field only
 
+`POST /applications/:id/rescore` — re-score resume against JD via Gemini; body `{ jd?: string }` (uses stored `jd_text` if omitted, saves JD to DB if not previously stored); returns `{ fit_score: number }`
+
 `GET /health` — returns `{ status: "ok" }`
 
 ---

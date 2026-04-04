@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Download, ArrowLeft, RefreshCw, Save, BookmarkPlus } from 'lucide-react'
+import { Loader2, Download, ArrowLeft, RefreshCw, Save, BookmarkPlus, Sparkles } from 'lucide-react'
 
 type Tab = 'resume' | 'coverletter'
 type PanelTab = 'editor' | 'preview'
@@ -35,6 +35,10 @@ export default function Editor() {
   const [tplName, setTplName]           = useState('')
   const [tplSaving, setTplSaving]       = useState(false)
   const [tplError, setTplError]         = useState<string | null>(null)
+  const [rescoreOpen, setRescoreOpen]   = useState(false)
+  const [rescoring, setRescoring]       = useState(false)
+  const [rescoreJd, setRescoreJd]       = useState('')
+  const [rescoreError, setRescoreError] = useState<string | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -132,6 +136,22 @@ export default function Editor() {
     }
   }
 
+  async function handleRescore(jd?: string) {
+    if (!app) return
+    setRescoring(true)
+    setRescoreError(null)
+    try {
+      const { fit_score } = await api.rescoreApplication(appId, jd)
+      setApp({ ...app, fit_score, jd_text: jd ?? app.jd_text })
+      setRescoreOpen(false)
+      setRescoreJd('')
+    } catch (e) {
+      setRescoreError(e instanceof Error ? e.message : 'Rescore failed')
+    } finally {
+      setRescoring(false)
+    }
+  }
+
   if (loadingApp) {
     return (
       <div className="flex h-dvh items-center justify-center bg-[#F0F0E8]">
@@ -179,6 +199,13 @@ export default function Editor() {
               {app.status}
             </Badge>
           )}
+          {app && (
+            <span className="hidden sm:inline-flex font-mono text-xs text-[#4B5563] flex-shrink-0">
+              Score: <span className={`ml-1 font-bold ${app.fit_score >= 70 ? 'text-green-700' : app.fit_score >= 50 ? 'text-yellow-600' : app.fit_score > 0 ? 'text-red-600' : 'text-[#4B5563]'}`}>
+                {app.fit_score > 0 ? app.fit_score : 'N/A'}
+              </span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -200,6 +227,16 @@ export default function Editor() {
               onClick={() => setSaveAsTplOpen(true)}
             >
               <BookmarkPlus className="h-3.5 w-3.5" /> Save as template
+            </Button>
+          )}
+          {tab === 'resume' && (
+            <Button
+              size="sm" variant="outline" className="h-7 text-xs hidden sm:flex"
+              onClick={() => app?.jd_text ? handleRescore() : setRescoreOpen(true)}
+              disabled={rescoring}
+            >
+              {rescoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              Re-score
             </Button>
           )}
           {tab === 'resume' && app && (
@@ -333,6 +370,47 @@ export default function Editor() {
               >
                 {tplSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Rescore dialog ── */}
+      {rescoreOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => { setRescoreOpen(false); setRescoreError(null); setRescoreJd('') }}
+        >
+          <div
+            className="bg-white border-2 border-black shadow-[8px_8px_0px_0px_#000] w-full max-w-sm p-6 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="font-serif text-xl font-bold">Re-score resume</h2>
+            <p className="font-mono text-xs text-[#4B5563] uppercase tracking-wider">No job description saved — paste one to score against</p>
+            <div className="space-y-1.5">
+              <label className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Job Description</label>
+              <textarea
+                className="w-full h-40 resize-none border-2 border-black px-3 py-2 font-mono text-xs focus:outline-none"
+                value={rescoreJd}
+                onChange={e => setRescoreJd(e.target.value)}
+                placeholder="Paste the job description here…"
+                autoFocus
+              />
+            </div>
+            {rescoreError && (
+              <p className="font-mono text-xs text-red-600 uppercase tracking-wider">{rescoreError}</p>
+            )}
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" onClick={() => { setRescoreOpen(false); setRescoreError(null); setRescoreJd('') }}>
+                Cancel
+              </Button>
+              <Button
+                disabled={rescoring || !rescoreJd.trim()}
+                onClick={() => handleRescore(rescoreJd.trim())}
+              >
+                {rescoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                Score
               </Button>
             </div>
           </div>

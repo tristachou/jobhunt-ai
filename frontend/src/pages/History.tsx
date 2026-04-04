@@ -32,6 +32,14 @@ const FILTERS: { label: string; value: Filter }[] = [
 // ─── Score bar ─────────────────────────────────────────────────────────────────
 
 function ScoreBar({ score }: { score: number }) {
+  if (!score) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-xs text-[#4B5563] w-6 text-right">—</span>
+        <div className="w-12 h-1.5 bg-gray-200 border border-black opacity-30" />
+      </div>
+    )
+  }
   const color = score >= 70 ? 'bg-green-700' : score >= 50 ? 'bg-orange-500' : 'bg-red-600'
   return (
     <div className="flex items-center gap-2">
@@ -230,7 +238,7 @@ function DesktopRow({
                 {[
                   ['ID', app.id],
                   ['Created', app.created_at.slice(0, 10)],
-                  ['Score', `${app.fit_score ?? '—'} / 100`],
+                  ['Score', app.fit_score ? `${app.fit_score} / 100` : '—'],
                   ['Stack', app.stack_used || '—'],
                   ['Source', app.source || '—'],
                 ].map(([k, v]) => (

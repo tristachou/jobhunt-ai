@@ -96,6 +96,10 @@ export const api = {
     return request(`/applications/${id}`, { method: 'DELETE' })
   },
 
+  rescoreApplication(id: number, jd?: string): Promise<{ fit_score: number }> {
+    return request(`/applications/${id}/rescore`, { method: 'POST', body: JSON.stringify(jd ? { jd } : {}) })
+  },
+
   getPdfUrl(id: number, type: 'resume' | 'coverletter'): string {
     return `${BASE}/applications/${id}/pdf?type=${type}`
   },
