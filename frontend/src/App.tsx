@@ -8,6 +8,7 @@ import Editor from './pages/Editor'
 import Style from './pages/Style'
 import Resumes from './pages/Resumes'
 import ResumeEditorPage from './pages/ResumeEditorPage'
+import ResumeBuilderPage from './pages/ResumeBuilderPage'
 
 // ─── Layout — adds scroll + padding for regular pages ──────────────────────────
 
@@ -31,6 +32,7 @@ export default function App() {
       <Routes>
         {/* Full-screen pages — no sidebar */}
         <Route path="/editor/:id" element={<Editor />} />
+        <Route path="/resumes/build" element={<ResumeBuilderPage />} />
         <Route path="/resumes/:id" element={<ResumeEditorPage />} />
 
         {/* Style — has its own SidebarLayout inside */}

@@ -228,11 +228,11 @@ geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 75 | API: `POST /api/resume-templates/build` — accept structured data, return generated markdown | `[ ]` | |
-| 76 | New Resume entry point: two options — "Build with form" / "Edit as markdown" | `[ ]` | |
-| 77 | Resume Builder form — Personal info, Summary, Skills, Experience, Education sections | `[ ]` | |
-| 78 | Experience + Education: support multiple entries | `[ ]` | |
-| 79 | Builder: live preview panel (right side) | `[ ]` | Calls `POST /api/preview` on change |
+| 75 | API: `POST /api/resume-templates/build` — accept structured data, return generated markdown | `[x]` | Also `POST /api/resume-templates/build-preview` (markdown only, no DB save) |
+| 76 | New Resume entry point: two options — "Build with form" / "Edit as markdown" | `[x]` | Modal on Resumes page with two option cards |
+| 77 | Resume Builder form — Personal info, Summary, Skills, Experience, Education sections | `[x]` | `ResumeBuilderPage.tsx` at `/resumes/build` |
+| 78 | Experience + Education: support multiple entries | `[x]` | Add/remove entries and bullets; "Current" checkbox |
+| 79 | Builder: live preview panel (right side) | `[x]` | Debounced 800ms; calls `/build-preview` then `POST /api/preview` |
 
 ---
 

@@ -159,4 +159,16 @@ export const api = {
   setDefaultTemplate(id: number): Promise<{ ok: boolean }> {
     return request(`/resume-templates/${id}/default`, { method: 'PATCH' })
   },
+
+  buildTemplate(body: {
+    name: string
+    personal?: { name?: string; email?: string; phone?: string; location?: string; linkedin?: string; portfolio?: string }
+    summary?: string
+    skills?: { label: string; items: string }[]
+    experience?: { title: string; company: string; location: string; start: string; end: string; current: boolean; bullets: string[] }[]
+    education?: { degree: string; institution: string; location: string; year: string }[]
+    certifications?: { name: string; date: string }[]
+  }): Promise<{ id: number; markdown: string }> {
+    return request('/resume-templates/build', { method: 'POST', body: JSON.stringify(body) })
+  },
 }

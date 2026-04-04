@@ -359,6 +359,90 @@ api.patch('/resume-templates/:id/default', (req, res) => {
   ok ? res.json({ ok: true }) : res.status(404).json({ error: 'Not found' });
 });
 
+/** Convert structured resume data to Oh My CV markdown. */
+function buildResumeMarkdown({ personal = {}, summary, skills, experience, education, certifications }) {
+  const p = personal;
+  const headerItems = [];
+  if (p.phone)     headerItems.push(`  - text: "mobile: ${p.phone}"`);
+  if (p.portfolio) headerItems.push(`  - text: "portfolio: ${p.portfolio}"\n    link: ${p.portfolio}`);
+  if (p.email)     headerItems.push(`  - text: "email: ${p.email}"\n    link: mailto:${p.email}`);
+  if (p.linkedin) {
+    const handle = p.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, '').replace(/\/$/, '');
+    headerItems.push(`  - text: "linkedin: ${p.linkedin}"\n    link: https://linkedin.com/in/${handle}`);
+  }
+
+  const frontMatter = `---\nname: ${p.name || 'Your Name'}\nheader:\n${headerItems.join('\n')}\n---`;
+
+  const summarySection = summary ? `\n## Summary\n\n${summary}\n` : '';
+
+  let skillsSection = '';
+  if (Array.isArray(skills) && skills.length > 0) {
+    skillsSection = '\n## Skills\n\n';
+    for (const group of skills) {
+      if (group.label && group.items) skillsSection += `${group.label}\n  ~ ${group.items}\n\n`;
+    }
+  }
+
+  let expSection = '';
+  if (Array.isArray(experience) && experience.length > 0) {
+    expSection = '\n## Experience\n\n';
+    for (const job of experience) {
+      const end = job.current ? 'Present' : (job.end || '');
+      const dateRange = job.start ? `${job.start}${end ? ` – ${end}` : ''}` : '';
+      expSection += `**${job.title || 'Job Title'}**\n  ~ ${job.location || ''}\n\n`;
+      expSection += `${job.company || 'Company'}\n  ~ ${dateRange}\n\n`;
+      if (Array.isArray(job.bullets)) {
+        for (const b of job.bullets) { if (b) expSection += `- ${b}\n\n`; }
+      }
+    }
+  }
+
+  let eduSection = '';
+  if (Array.isArray(education) && education.length > 0) {
+    eduSection = '\n## Education\n\n';
+    for (const edu of education) {
+      eduSection += `**${edu.institution || 'Institution'}**\n  ~ ${edu.year || ''}\n\n`;
+      if (edu.degree) eduSection += `${edu.degree}\n\n`;
+    }
+  }
+
+  let certSection = '';
+  if (Array.isArray(certifications) && certifications.length > 0) {
+    certSection = '\n## Certification\n\n';
+    for (const cert of certifications) {
+      if (cert.name) certSection += `**${cert.name}**\n  ~ ${cert.date || ''}\n\n`;
+    }
+  }
+
+  return [frontMatter, summarySection, skillsSection, expSection, eduSection, certSection]
+    .join('')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd() + '\n';
+}
+
+api.post('/resume-templates/build', (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== 'string') {
+    return res.status(400).json({ error: 'name is required' });
+  }
+  try {
+    const markdown = buildResumeMarkdown(req.body);
+    const id = insertTemplate({ name, markdown });
+    res.json({ id, markdown });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+api.post('/resume-templates/build-preview', (req, res) => {
+  try {
+    const markdown = buildResumeMarkdown(req.body);
+    res.json({ markdown });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Stacks ────────────────────────────────────────────────────────────────────
 
 api.get('/stacks', (_req, res) => {

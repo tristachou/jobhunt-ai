@@ -26,7 +26,7 @@ job-apply-bot/
 ├── user.config.js                 # Top-level user config (active theme, Gemini model)
 ├── frontend/
 │   └── src/
-│       ├── pages/                 # React pages (NewApplication, History, Editor, Style, Settings)
+│       ├── pages/                 # React pages (NewApplication, History, Editor, Style, Settings, Resumes, ResumeEditorPage, ResumeBuilderPage)
 │       └── lib/api.ts             # Typed API client
 ├── backend/
 │   ├── server.js                  # Express server (port 3000) — all routes under /api

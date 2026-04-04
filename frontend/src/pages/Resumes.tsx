@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, type ResumeTemplate } from '@/lib/api'
 import { Button } from '@/components/ui/button'
-import { Loader2, FilePlus, Edit, Star, Copy, Trash2 } from 'lucide-react'
+import { Loader2, FilePlus, Edit, Star, Copy, Trash2, FileText, PenLine } from 'lucide-react'
 
 export default function Resumes() {
   const navigate = useNavigate()
@@ -12,6 +12,7 @@ export default function Resumes() {
   const [error, setError]         = useState<string | null>(null)
   const [menuOpen, setMenuOpen]   = useState<number | null>(null)
   const [creating, setCreating]   = useState(false)
+  const [showNewModal, setShowNewModal] = useState(false)
 
   useEffect(() => {
     api.getTemplates()
@@ -20,7 +21,8 @@ export default function Resumes() {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleNew() {
+  async function handleNewMarkdown() {
+    setShowNewModal(false)
     setCreating(true)
     try {
       const { id } = await api.createTemplate({ name: 'New Template', markdown: '' })
@@ -29,6 +31,11 @@ export default function Resumes() {
       setError(e instanceof Error ? e.message : 'Failed to create template')
       setCreating(false)
     }
+  }
+
+  function handleNewForm() {
+    setShowNewModal(false)
+    navigate('/resumes/build')
   }
 
   async function handleSetDefault(id: number) {
@@ -85,7 +92,7 @@ export default function Resumes() {
             Manage your resume templates. The default template is used for new applications.
           </p>
         </div>
-        <Button onClick={handleNew} disabled={creating} className="gap-2 flex-shrink-0">
+        <Button onClick={() => setShowNewModal(true)} disabled={creating} className="gap-2 flex-shrink-0">
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />}
           New Resume
         </Button>
@@ -185,6 +192,57 @@ export default function Resumes() {
       <p className="font-mono text-xs text-[#4B5563]">
         [ ★ = default template used for new applications ]
       </p>
+
+      {/* New Resume modal */}
+      {showNewModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowNewModal(false)}
+        >
+          <div
+            className="bg-white border-2 border-black shadow-[6px_6px_0px_0px_#000] w-full max-w-lg mx-4 p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="font-serif text-xl font-bold mb-1">How would you like to create your resume?</h2>
+            <p className="font-sans text-sm text-[#4B5563] mb-6">Choose an approach to get started.</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Build with form */}
+              <button
+                onClick={handleNewForm}
+                className="border-2 border-black p-5 text-left hover:bg-black hover:text-white group transition-colors"
+              >
+                <PenLine className="h-6 w-6 mb-3" />
+                <p className="font-sans font-semibold text-sm mb-1">Build with form</p>
+                <p className="font-sans text-xs text-[#4B5563] group-hover:text-white/80">
+                  Fill in your information step by step — recommended for most users
+                </p>
+              </button>
+
+              {/* Edit as markdown */}
+              <button
+                onClick={handleNewMarkdown}
+                className="border-2 border-black p-5 text-left hover:bg-black hover:text-white group transition-colors"
+              >
+                <FileText className="h-6 w-6 mb-3" />
+                <p className="font-sans font-semibold text-sm mb-1">Edit as markdown</p>
+                <p className="font-sans text-xs text-[#4B5563] group-hover:text-white/80">
+                  Write or paste markdown directly — for advanced users with existing templates
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowNewModal(false)}
+                className="font-mono text-xs uppercase tracking-wider text-[#4B5563] hover:text-black"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

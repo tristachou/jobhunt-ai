@@ -1,3 +1,11 @@
+## 2026-04-03 — Phase 10: Resume Builder (Form → Markdown)
+
+- Add `POST /api/resume-templates/build` — accepts structured personal/summary/skills/experience/education/certifications data, generates Oh My CV markdown, saves to `resume_templates` table
+- Add `POST /api/resume-templates/build-preview` — same markdown generation but no DB save, for live preview use
+- Add `ResumeBuilderPage.tsx` at `/resumes/build` — full-screen split form + live preview; supports multiple skill groups, experience entries with bullets (add/remove), multiple education and certification entries
+- Replace "New Resume" direct-create flow with a modal on the Resumes page offering "Build with form" (→ builder) or "Edit as markdown" (→ blank editor)
+- Add `api.buildTemplate()` to typed API client
+
 ## 2026-03-31 — Fix Skills section layout in all themes
 
 - Fix Skills section layout in all single-column themes (classic, minimal, compact, bold): replace `justify-content: space-between` row with a CSS grid (`grid-template-columns: max-content 1fr`) on the section; `.row` becomes `display: contents` so label and value are grid children — label stays on one line, long values wrap within their own column
