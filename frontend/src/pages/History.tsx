@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api, type Application } from '@/lib/api'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight, Bookmark, Clock, Send, Bell, Users, XCircle, Hourglass } from 'lucide-react'
+import { ArrowUpDown, Pencil, Trash2, Download, ChevronDown, ChevronRight, Bookmark, Send, Bell, Users, XCircle, Hourglass } from 'lucide-react'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 

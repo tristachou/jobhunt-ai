@@ -24,6 +24,9 @@ output/*/
 # Keep the output directory itself
 !output/.gitkeep
 
+# Demo build output
+demo-dist/
+
 # OS
 .DS_Store
 Thumbs.db

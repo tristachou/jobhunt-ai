@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { SidebarLayout } from './components/AppSidebar'
 import Dashboard from './pages/Dashboard'
@@ -9,6 +10,8 @@ import Style from './pages/Style'
 import Resumes from './pages/Resumes'
 import ResumeEditorPage from './pages/ResumeEditorPage'
 import ResumeBuilderPage from './pages/ResumeBuilderPage'
+import DemoCloneModal from './components/DemoCloneModal'
+import { DEMO_MODE, registerDemoModalTrigger } from './lib/api'
 
 // ─── Layout — adds scroll + padding for regular pages ──────────────────────────
 
@@ -27,6 +30,12 @@ function Layout({ children }: { children: React.ReactNode }) {
 // ─── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [demoModalOpen, setDemoModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (DEMO_MODE) registerDemoModalTrigger(() => setDemoModalOpen(true))
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>
@@ -51,6 +60,10 @@ export default function App() {
           </Layout>
         } />
       </Routes>
+
+      {DEMO_MODE && (
+        <DemoCloneModal open={demoModalOpen} onClose={() => setDemoModalOpen(false)} />
+      )}
     </BrowserRouter>
   )
 }

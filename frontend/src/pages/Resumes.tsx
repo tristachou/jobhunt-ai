@@ -122,7 +122,7 @@ export default function Resumes() {
               {/* Default indicator */}
               <div className="flex-shrink-0 w-5 flex justify-center">
                 {tpl.is_default ? (
-                  <Star className="h-4 w-4 fill-black text-black" title="Default template" />
+                  <Star className="h-4 w-4 fill-black text-black" aria-label="Default template" />
                 ) : (
                   <Star className="h-4 w-4 text-[#D1D5DB]" />
                 )}

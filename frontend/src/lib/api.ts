@@ -1,5 +1,16 @@
 const BASE = '/api'
 
+// ─── Demo mode ─────────────────────────────────────────────────────────────────
+
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+
+/** Registered by App.tsx — called whenever a write action is attempted in demo mode */
+let _demoModalTrigger: (() => void) | null = null
+export function registerDemoModalTrigger(fn: () => void) { _demoModalTrigger = fn }
+function triggerDemo() { _demoModalTrigger?.() }
+
+// ─── Request ───────────────────────────────────────────────────────────────────
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -66,6 +77,10 @@ export const api = {
     resume_template_id?: number
     generate_cover_letter?: boolean
   }, signal?: AbortSignal): Promise<AnalyzeResult> {
+    if (DEMO_MODE) {
+      triggerDemo()
+      return import('./demo-data').then(m => m.DEMO_ANALYZE_RESULT)
+    }
     return request('/analyze', { method: 'POST', body: JSON.stringify(body), signal })
   },
 
@@ -77,90 +92,119 @@ export const api = {
     url?: string
     jd?: string
   }): Promise<{ id: number }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ id: 1 }) }
     return request('/applications', { method: 'POST', body: JSON.stringify(body) })
   },
 
   getApplications(): Promise<Application[]> {
+    if (DEMO_MODE) return import('./demo-data').then(m => m.DEMO_APPLICATIONS)
     return request('/applications')
   },
 
   getApplication(id: number): Promise<Application> {
+    if (DEMO_MODE) return import('./demo-data').then(m => {
+      const app = m.DEMO_APPLICATIONS.find(a => a.id === id) ?? m.DEMO_APPLICATIONS[0]
+      return app
+    })
     return request(`/applications/${id}`)
   },
 
   patchApplication(id: number, data: Partial<Application>): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) return Promise.resolve({ ok: true })
     return request(`/applications/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
   },
 
   deleteApplication(id: number): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request(`/applications/${id}`, { method: 'DELETE' })
   },
 
   rescoreApplication(id: number, jd?: string): Promise<{ fit_score: number }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ fit_score: 91 }) }
     return request(`/applications/${id}/rescore`, { method: 'POST', body: JSON.stringify(jd ? { jd } : {}) })
   },
 
   getPdfUrl(id: number, type: 'resume' | 'coverletter'): string {
+    if (DEMO_MODE) return `/demo/${type === 'coverletter' ? 'coverletter' : 'resume'}.pdf`
     return `${BASE}/applications/${id}/pdf?type=${type}`
   },
 
   preview(markdown: string, type: 'resume' | 'coverletter', theme?: string): Promise<{ html: string }> {
+    if (DEMO_MODE) return fetch('/demo/preview.html').then(r => r.text()).then(html => ({ html }))
     return request('/preview', { method: 'POST', body: JSON.stringify({ markdown, type, theme }) })
   },
 
   getPrompts(): Promise<{ tailor: string; coverletter: string }> {
+    if (DEMO_MODE) return Promise.resolve({
+      tailor: 'You are a resume expert. Given this job description:\n\n{{JD}}\n\nTailor the resume to highlight relevant skills.',
+      coverletter: 'Write a cover letter for this role:\n\n{{TEMPLATE}}',
+    })
     return request('/prompts')
   },
 
   savePrompts(body: { tailor: string; coverletter: string }): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request('/prompts', { method: 'PUT', body: JSON.stringify(body) })
   },
 
   // ─── Style / Themes ─────────────────────────────────────────────────────────
 
   getStyle(): Promise<{ theme: string; css: string }> {
+    if (DEMO_MODE) return Promise.resolve({ theme: 'classic', css: '' })
     return request('/style')
   },
 
   saveStyle(css: string, theme?: string): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request('/style', { method: 'PUT', body: JSON.stringify({ css, theme }) })
   },
 
   getThemes(): Promise<{ name: string; label: string; css: string }[]> {
+    if (DEMO_MODE) return Promise.resolve(
+      ['classic', 'modern', 'minimal', 'compact', 'bold'].map(name => ({ name, label: name.charAt(0).toUpperCase() + name.slice(1), css: '' }))
+    )
     return request('/style/themes')
   },
 
   previewStyle(css: string, theme?: string): Promise<{ html: string }> {
+    if (DEMO_MODE) return fetch('/demo/preview.html').then(r => r.text()).then(html => ({ html }))
     return request('/style/preview', { method: 'POST', body: JSON.stringify({ css, theme }) })
   },
 
   getStacks(): Promise<{ stacks: string[] }> {
+    if (DEMO_MODE) return Promise.resolve({ stacks: ['typescript', 'python', 'csharp'] })
     return request('/stacks')
   },
 
   // ─── Resume Templates ────────────────────────────────────────────────────────
 
   getTemplates(): Promise<ResumeTemplate[]> {
+    if (DEMO_MODE) return import('./demo-data').then(m => m.DEMO_TEMPLATES)
     return request('/resume-templates')
   },
 
   createTemplate(body: { name: string; markdown: string }): Promise<{ id: number }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ id: 1 }) }
     return request('/resume-templates', { method: 'POST', body: JSON.stringify(body) })
   },
 
   getTemplate(id: number): Promise<ResumeTemplate & { markdown: string }> {
+    if (DEMO_MODE) return import('./demo-data').then(m => ({ ...m.DEMO_TEMPLATES[0], markdown: m.DEMO_RESUME_MD }))
     return request(`/resume-templates/${id}`)
   },
 
   updateTemplate(id: number, body: { name?: string; markdown?: string }): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request(`/resume-templates/${id}`, { method: 'PUT', body: JSON.stringify(body) })
   },
 
   deleteTemplate(id: number): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request(`/resume-templates/${id}`, { method: 'DELETE' })
   },
 
   setDefaultTemplate(id: number): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
     return request(`/resume-templates/${id}/default`, { method: 'PATCH' })
   },
 
@@ -173,6 +217,7 @@ export const api = {
     education?: { degree: string; institution: string; location: string; year: string }[]
     certifications?: { name: string; date: string }[]
   }): Promise<{ id: number; markdown: string }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ id: 1, markdown: '' }) }
     return request('/resume-templates/build', { method: 'POST', body: JSON.stringify(body) })
   },
 }

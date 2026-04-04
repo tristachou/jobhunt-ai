@@ -1,3 +1,13 @@
+## 2026-04-05 — Static demo mode
+
+- Add `VITE_DEMO_MODE=true` build flag; `npm run build:demo` outputs to `demo-dist/` (separate from production build)
+- Add mock layer in `api.ts` — all API calls intercepted in demo mode; writes trigger a "clone repo" modal, reads return hardcoded fake data
+- Add `DemoCloneModal` component shown globally via `App.tsx` when any write action is attempted
+- Add `frontend/src/lib/demo-data.ts` with fictional candidate (Jordan Avery) + 3 fake applications
+- Add `frontend/public/demo/` with pre-generated `resume.pdf`, `coverletter.pdf`, and `preview.html`
+- Add `scripts/generate-demo-assets.js` to regenerate static assets from `demo/*.md` files
+- Fix pre-existing TS errors: remove unused `Clock` import in `History.tsx`, replace invalid `title` prop with `aria-label` in `Resumes.tsx`
+
 ## 2026-04-04 — N/A score display + AI Re-score feature
 
 - Show `N/A` instead of `0` for unscored applications in History (ScoreBar) and Editor header; fix detail panel showing `0 / 100`

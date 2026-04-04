@@ -4,6 +4,8 @@ Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 
 
 Powered by Gemini AI. Runs entirely on your local machine — your data never leaves your computer.
 
+**[→ Live Demo](https://your-username.github.io/job-apply-bot)** — read-only showcase with fictional data, no setup required.
+
 ---
 
 ## Getting Started for New Users
@@ -93,6 +95,19 @@ npm start            # start backend only (serves built frontend)
 
 cd backend && npm test  # run unit tests
 ```
+
+### Demo build
+
+```bash
+npm run build:demo   # build static demo → demo-dist/
+# preview locally:
+cd frontend && npx vite preview --outDir ../demo-dist --port 4173
+# then open http://localhost:4173
+
+npm run gen:demo     # regenerate demo PDFs + preview HTML (run after editing demo/*.md)
+```
+
+The demo build uses `VITE_DEMO_MODE=true` — all API calls are intercepted and return fictional data. No backend needed. Deployed automatically to GitHub Pages on every push to `main`.
 
 ---
 

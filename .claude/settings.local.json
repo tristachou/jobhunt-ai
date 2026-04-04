@@ -15,7 +15,8 @@
       "Bash(cp \"$CLASSIC\" \"$THEMES/classic.css\")",
       "Bash(cp \"$CLASSIC\" \"$THEMES/modern.css\")",
       "Bash(cp \"$CLASSIC\" \"$THEMES/minimal.css\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node scripts/generate-demo-assets.js)"
     ]
   }
 }
