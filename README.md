@@ -4,6 +4,10 @@ Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 
 
 Powered by Gemini AI. Runs entirely on your local machine — your data never leaves your computer.
 
+> **This tool is designed for local, single-user use only.**
+> Do not deploy it to a public server — there is no authentication and all API endpoints are unauthenticated.
+> Your resume data, job descriptions, and AI-generated content are stored in a local SQLite database.
+
 **[→ Live Demo](https://your-username.github.io/job-apply-bot)** — read-only showcase with fictional data, no setup required.
 
 ---
