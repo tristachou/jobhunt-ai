@@ -5,14 +5,14 @@ import { LayoutDashboard, FilePlus, Clock, Palette, Settings, Menu, FileText } f
 // ─── Nav config ────────────────────────────────────────────────────────────────
 
 const NAV_MAIN = [
-  { to: '/',        label: 'Dashboard',       icon: LayoutDashboard, end: true },
-  { to: '/new',     label: 'New Application', icon: FilePlus },
-  { to: '/history', label: 'History',         icon: Clock },
-  { to: '/resumes', label: 'Resumes',         icon: FileText },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/new', label: 'New Application', icon: FilePlus },
+  { to: '/history', label: 'History', icon: Clock },
+  { to: '/resumes', label: 'Resumes', icon: FileText },
 ]
 
 const NAV_BOTTOM = [
-  { to: '/style',    label: 'Style',    icon: Palette },
+  { to: '/style', label: 'Style', icon: Palette },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -20,17 +20,16 @@ const NAV_BOTTOM = [
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors ${
-      isActive
-        ? 'bg-black text-[#F0F0E8]'
-        : 'text-[#4B5563] hover:bg-black/5 hover:text-black'
+    `flex items-center gap-3 px-3 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors ${isActive
+      ? 'bg-black text-[#F0F0E8]'
+      : 'text-[#4B5563] hover:bg-black/5 hover:text-black'
     }`
 
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <NavLink to="/" className="px-4 py-4 border-b-2 border-black flex-shrink-0 block hover:bg-black/5 transition-colors" onClick={onClose}>
-        <span className="font-serif font-bold text-base leading-tight">Job Apply Bot</span>
+        <span className="font-serif font-bold text-base leading-tight">Jobhunt AI</span>
         <p className="font-mono text-xs text-[#4B5563] mt-0.5">[ APPLICATION TRACKER ]</p>
       </NavLink>
 
@@ -95,7 +94,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-serif font-bold text-sm">Job Apply Bot</span>
+          <span className="font-serif font-bold text-sm">Jobhunt AI</span>
         </header>
 
         {children}

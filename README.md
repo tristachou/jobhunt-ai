@@ -19,17 +19,13 @@ Powered by Gemini AI. Runs entirely on your local machine — your data never le
 ```bash
 # 1. Clone the repo
 git clone https://github.com/tristachou/jobhunt-ai.git
-cd job-apply-bot
+cd jobhunt-ai
 
 # 2. Install dependencies
 npm run install:all
 
-# 3. Add your personal data
-mkdir -p user/cover-letter
-
-cp resumes/base.md user/base.md
-cp resumes/config.json user/config.json
-cp cover-letter/template.md user/cover-letter/template.md
+# 3. Create your personal files from the examples
+npm run setup
 ```
 
 **Edit these three files** with your own details:
@@ -38,8 +34,7 @@ cp cover-letter/template.md user/cover-letter/template.md
 - `user/cover-letter/template.md` — your cover letter template
 
 ```bash
-# 4. Set your Gemini API key
-#    Create backend/.env with:  GEMINI_API_KEY=your_key_here
+# 4. Set your Gemini API key — edit backend/.env and fill in GEMINI_API_KEY
 
 # 5. (Optional) Choose your default theme in user.config.js
 #    Options: classic | modern | minimal | compact | bold
@@ -52,6 +47,8 @@ Open **http://localhost:5173**, paste a job description, click Generate.
 
 The `user/` folder is gitignored — your personal data stays local.
 
+> **Note on `cover-letter/`:** The root `cover-letter/` folder contains the example template source (`template.example.md`). Your personal copy lives in `user/cover-letter/template.md` (gitignored). Only edit the file under `user/`.
+
 ---
 
 ## Personalisation
@@ -63,6 +60,44 @@ The `user/` folder is gitignored — your personal data stays local.
 | `user/cover-letter/template.md` | Your cover letter — keep the `{{placeholder}}` tokens |
 | `user.config.js` | Active theme and Gemini model |
 | `themes/*.css` | CSS for each theme — edit freely, reload preview to see changes |
+
+---
+
+## Screenshots
+
+### New Application — paste JD, run AI analysis
+Paste a job description, pick a resume template and theme, then click **Analyze**. Gemini returns a fit score, detected skills, and fills your resume placeholders in ~10–30 seconds.
+
+![New Application page](docs/screenshots/new-application.png)
+
+---
+
+### Analysis Result — fit score + skill breakdown
+After analysis you see the fit score (0–100), detected skills highlighted in your resume, and a direct link to the Editor.
+
+![Analysis result](docs/screenshots/analysis-result.png)
+
+---
+
+### Editor — review and edit before exporting
+Full-screen split view: markdown editor on the left, live resume preview on the right. Switch tabs between resume and cover letter. Download PDF when ready.
+
+![Editor page](docs/screenshots/editor.png)
+
+---
+
+### History — track every application
+All your applications in one table. Filter by status, click any row to expand details, edit fields inline, or jump back into the Editor.
+
+![History page](docs/screenshots/history.png)
+
+---
+
+### Dashboard — pipeline overview
+KPI cards (total / applied / interview rate / avg fit score), a status pipeline bar chart, a 52-week activity heatmap, and a follow-up list for flagged applications.
+
+![Dashboard page](docs/screenshots/dashboard.png)
+
 
 ---
 
@@ -83,10 +118,10 @@ Five built-in themes live in `themes/`. Switch per-application in the Generate f
 | Theme | Description |
 |-------|-------------|
 | `classic` | Single column, Times New Roman, centered header |
-| `modern` | (Placeholder — same as classic for now) |
-| `minimal` | (Placeholder) |
-| `compact` | (Placeholder) |
-| `bold` | (Placeholder) |
+| `modern` | Two-column layout with sidebar (left: summary/skills/education, right: experience) |
+| `minimal` | Work in progress — falls back to classic |
+| `compact` | Work in progress — falls back to classic |
+| `bold` | Work in progress — falls back to classic |
 
 ---
 

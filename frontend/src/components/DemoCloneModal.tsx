@@ -1,5 +1,5 @@
 // DEMO_GITHUB_URL — update this before deploying
-const DEMO_GITHUB_URL = 'https://github.com/your-username/job-apply-bot'
+const DEMO_GITHUB_URL = 'https://github.com/tristachou/jobhunt-ai'
 
 interface Props {
   open: boolean

@@ -11,7 +11,7 @@ No browser extension required. No scraping. No permission issues.
 ## Project Structure
 
 ```
-job-apply-bot/
+jobhunt-ai/
 ├── user/                          # ← EDIT THIS to personalise your instance
 │   ├── base.md                    # Your resume template with {{placeholders}}
 │   ├── config.json                # Your per-stack skill lists, bullet variants, soft skill pool

@@ -6,9 +6,6 @@ user/cover-letter/template.md
 
 # Dependencies
 backend/node_modules/
-oh-my-cv-main/node_modules/
-oh-my-cv-main/site/.nuxt/
-oh-my-cv-main/site/.output/
 
 # Environment & secrets
 backend/.env
