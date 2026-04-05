@@ -2,7 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'demo' ? '/jobhunt-ai/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -22,4 +23,4 @@ export default defineConfig({
     outDir: '../backend/public',
     emptyOutDir: true,
   },
-})
+}))
