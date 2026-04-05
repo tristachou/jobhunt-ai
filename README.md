@@ -4,11 +4,57 @@ Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 
 
 Powered by Gemini AI. Runs entirely on your local machine — your data never leaves your computer.
 
+**[→ Live Demo](https://tristachou.github.io/jobhunt-ai)** — read-only showcase with fictional data, no setup required.
+
+---
+
+## Screenshots
+
+### New Application — paste JD, run AI analysis
+Paste a job description, pick a resume template and theme, then click **Analyze**. Gemini returns a fit score, detected skills, and fills your resume placeholders in ~10–30 seconds.
+
+![New Application page](docs/screenshots/new-application.png)
+
+---
+
+### Analysis Result — fit score + skill breakdown
+After analysis you see the fit score (0–100), detected skills highlighted in your resume, and a direct link to the Editor.
+
+![Analysis result](docs/screenshots/analysis-result.png)
+
+---
+
+### Editor — review and edit before exporting
+Full-screen split view: markdown editor on the left, live resume preview on the right. Switch tabs between resume and cover letter. Download PDF when ready.
+
+![Editor page](docs/screenshots/editor.png)
+
+---
+
+### History — track every application
+All your applications in one table. Filter by status, click any row to expand details, edit fields inline, or jump back into the Editor.
+
+![History page](docs/screenshots/history.png)
+
+---
+
+### Dashboard — pipeline overview
+KPI cards (total / applied / interview rate / avg fit score), a status pipeline bar chart, a 52-week activity heatmap, and a follow-up list for flagged applications.
+
+![Dashboard page](docs/screenshots/dashboard.png)
+
+---
+
+### Style — live CSS editor
+Pick a built-in theme or write your own CSS. The preview updates in real time so you can tweak spacing, fonts, and colours without leaving the browser.
+
+![Style page](docs/screenshots/style.png)
+
+---
+
 > **This tool is designed for local, single-user use only.**
 > Do not deploy it to a public server — there is no authentication and all API endpoints are unauthenticated.
 > Your resume data, job descriptions, and AI-generated content are stored in a local SQLite database.
-
-**[→ Live Demo](https://tristachou.github.io/jobhunt-ai)** — read-only showcase with fictional data, no setup required.
 
 ---
 
