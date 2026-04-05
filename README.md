@@ -1,5 +1,11 @@
 # jobhunt-ai
 
+[![Stars](https://img.shields.io/github/stars/tristachou/jobhunt-ai?style=flat)](https://github.com/tristachou/jobhunt-ai/stargazers)
+[![Tests](https://img.shields.io/github/actions/workflow/status/tristachou/jobhunt-ai/test.yml?label=tests)](https://github.com/tristachou/jobhunt-ai/actions)
+[![Node](https://img.shields.io/badge/node-v22%2B-brightgreen)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Demo](https://img.shields.io/badge/demo-live-blueviolet)](https://tristachou.github.io/jobhunt-ai)
+
 Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 seconds.
 
 Powered by Gemini AI. Runs entirely on your local machine — your data never leaves your computer.
@@ -106,43 +112,6 @@ The `user/` folder is gitignored — your personal data stays local.
 | `user/cover-letter/template.md` | Your cover letter — keep the `{{placeholder}}` tokens |
 | `user.config.js` | Active theme and Gemini model |
 | `themes/*.css` | CSS for each theme — edit freely, reload preview to see changes |
-
----
-
-## Screenshots
-
-### New Application — paste JD, run AI analysis
-Paste a job description, pick a resume template and theme, then click **Analyze**. Gemini returns a fit score, detected skills, and fills your resume placeholders in ~10–30 seconds.
-
-![New Application page](docs/screenshots/new-application.png)
-
----
-
-### Analysis Result — fit score + skill breakdown
-After analysis you see the fit score (0–100), detected skills highlighted in your resume, and a direct link to the Editor.
-
-![Analysis result](docs/screenshots/analysis-result.png)
-
----
-
-### Editor — review and edit before exporting
-Full-screen split view: markdown editor on the left, live resume preview on the right. Switch tabs between resume and cover letter. Download PDF when ready.
-
-![Editor page](docs/screenshots/editor.png)
-
----
-
-### History — track every application
-All your applications in one table. Filter by status, click any row to expand details, edit fields inline, or jump back into the Editor.
-
-![History page](docs/screenshots/history.png)
-
----
-
-### Dashboard — pipeline overview
-KPI cards (total / applied / interview rate / avg fit score), a status pipeline bar chart, a 52-week activity heatmap, and a follow-up list for flagged applications.
-
-![Dashboard page](docs/screenshots/dashboard.png)
 
 
 ---
