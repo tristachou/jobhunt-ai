@@ -125,12 +125,12 @@ export const api = {
   },
 
   getPdfUrl(id: number, type: 'resume' | 'coverletter'): string {
-    if (DEMO_MODE) return `/demo/${type === 'coverletter' ? 'coverletter' : 'resume'}.pdf`
+    if (DEMO_MODE) return `${import.meta.env.BASE_URL}demo/${type === 'coverletter' ? 'coverletter' : 'resume'}.pdf`
     return `${BASE}/applications/${id}/pdf?type=${type}`
   },
 
   preview(markdown: string, type: 'resume' | 'coverletter', theme?: string): Promise<{ html: string }> {
-    if (DEMO_MODE) return fetch('/demo/preview.html').then(r => r.text()).then(html => ({ html }))
+    if (DEMO_MODE) return fetch(`${import.meta.env.BASE_URL}demo/preview.html`).then(r => r.text()).then(html => ({ html }))
     return request('/preview', { method: 'POST', body: JSON.stringify({ markdown, type, theme }) })
   },
 
@@ -167,7 +167,7 @@ export const api = {
   },
 
   previewStyle(css: string, theme?: string): Promise<{ html: string }> {
-    if (DEMO_MODE) return fetch('/demo/preview.html').then(r => r.text()).then(html => ({ html }))
+    if (DEMO_MODE) return fetch(`${import.meta.env.BASE_URL}demo/preview.html`).then(r => r.text()).then(html => ({ html }))
     return request('/style/preview', { method: 'POST', body: JSON.stringify({ css, theme }) })
   },
 

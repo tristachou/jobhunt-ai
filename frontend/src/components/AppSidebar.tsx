@@ -29,10 +29,10 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-4 py-4 border-b-2 border-black flex-shrink-0">
+      <NavLink to="/" className="px-4 py-4 border-b-2 border-black flex-shrink-0 block hover:bg-black/5 transition-colors" onClick={onClose}>
         <span className="font-serif font-bold text-base leading-tight">Job Apply Bot</span>
         <p className="font-mono text-xs text-[#4B5563] mt-0.5">[ APPLICATION TRACKER ]</p>
-      </div>
+      </NavLink>
 
       {/* Main nav */}
       <nav className="flex-1 py-3">

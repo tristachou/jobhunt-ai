@@ -37,7 +37,7 @@ export default function App() {
   }, [])
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         {/* Full-screen pages — no sidebar */}
         <Route path="/editor/:id" element={<Editor />} />
