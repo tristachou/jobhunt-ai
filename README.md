@@ -1,4 +1,4 @@
-# AI Resume Tailor
+# jobhunt-ai
 
 Paste a job description → get a tailored resume PDF + cover letter PDF in ~30 seconds.
 
@@ -8,7 +8,7 @@ Powered by Gemini AI. Runs entirely on your local machine — your data never le
 > Do not deploy it to a public server — there is no authentication and all API endpoints are unauthenticated.
 > Your resume data, job descriptions, and AI-generated content are stored in a local SQLite database.
 
-**[→ Live Demo](https://tristachou.github.io/ai-resume-tailor)** — read-only showcase with fictional data, no setup required.
+**[→ Live Demo](https://tristachou.github.io/jobhunt-ai)** — read-only showcase with fictional data, no setup required.
 
 ---
 
@@ -18,7 +18,7 @@ Powered by Gemini AI. Runs entirely on your local machine — your data never le
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/tristachou/ai-resume-tailor.git
+git clone https://github.com/tristachou/jobhunt-ai.git
 cd job-apply-bot
 
 # 2. Install dependencies
