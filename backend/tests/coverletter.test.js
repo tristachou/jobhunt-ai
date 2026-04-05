@@ -17,7 +17,7 @@ A highlight from my experience: {{specific_project}}
 {{why_company_culture}}
 
 Sincerely,
-Hsin-Yu Chou`;
+Jane Doe`;
 
 test('fillTemplate: replaces all 6 placeholders', () => {
   const values = {
@@ -43,7 +43,7 @@ test('fillTemplate: leaves non-placeholder text unchanged', () => {
   const result = fillTemplate(TEMPLATE, values);
   assert.ok(result.includes('Dear Hiring Manager'));
   assert.ok(result.includes('Sincerely,'));
-  assert.ok(result.includes('Hsin-Yu Chou'));
+  assert.ok(result.includes('Jane Doe'));
 });
 
 test('fillTemplate: handles empty string values', () => {

@@ -74,9 +74,9 @@ test('renderBlock: not a paired row if only one line with ~', () => {
 // ─── parseFrontMatter ─────────────────────────────────────────────────────────
 
 const SAMPLE_FM = `---
-name: Hsin-Yu Chou
+name: Jane Doe
 header:
-  - text: "mobile: 0401321635"
+  - text: "mobile: 0400 000 000"
   - text: "email: test@example.com"
     link: mailto:test@example.com
 ---
@@ -87,13 +87,13 @@ Some text here.`;
 
 test('parseFrontMatter: extracts name', () => {
   const { name } = parseFrontMatter(SAMPLE_FM);
-  assert.equal(name, 'Hsin-Yu Chou');
+  assert.equal(name, 'Jane Doe');
 });
 
 test('parseFrontMatter: extracts header items', () => {
   const { headerItems } = parseFrontMatter(SAMPLE_FM);
   assert.equal(headerItems.length, 2);
-  assert.equal(headerItems[0].text, 'mobile: 0401321635');
+  assert.equal(headerItems[0].text, 'mobile: 0400 000 000');
   assert.equal(headerItems[0].link, null);
   assert.equal(headerItems[1].text, 'email: test@example.com');
   assert.equal(headerItems[1].link, 'mailto:test@example.com');
