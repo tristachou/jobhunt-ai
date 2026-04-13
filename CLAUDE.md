@@ -178,9 +178,16 @@ After any code change in a conversation, update `CHANGELOG.md` with:
 
 ### resume markdown format (user/base.md)
 - Uses Oh My CV syntax: `  ~ text` for right-side annotations; YAML front matter for header
-- 16 `{{placeholders}}` — do NOT add or remove any
+- Placeholders: `{{name}}`, `{{summary}}`, `{{job_title_display}}`, skill lines, `{{expN_technologies}}`, `{{expN_bullet_X}}`
+- Add `<!-- SOFT_SKILLS_INJECT -->` between experience blocks to mark soft-skill injection point
 - `soft_skills.pool` entries must be `{ keyword, bullet }` objects
 - Do NOT create separate markdown files per stack — one `base.md` with placeholders only
+
+### config.json schema
+- `stacks[key].experiences[]` — array of `{ id, technologies, technologies_variants?, bullet_pool[] }`
+- `bullet_pool[]` entries: `{ id, text, must_have, tags, stack_variant? }`
+- `job_roles[key].experience_slots` — `{ exp1: N, exp2: M }` maps experience IDs to slot counts
+- `stack_variant` on a bullet: `"python_django"` or `"python_fastapi"` — entry only selected when variant matches
 
 ### DB
 - Test DB: set `TEST_DB_PATH` env var in tests to avoid touching production DB
@@ -226,4 +233,4 @@ Oh My CV (`OHMYCV_PATH`, `OHMYCV_PORT`) has been removed — no longer needed.
 2. Puppeteer `page.pdf()` requires `printBackground: true` to render coloured elements
 3. `node:sqlite` does NOT support WAL mode toggle via pragma in all versions — keep default journal mode
 4. `user.config.js` is not cached (`delete require.cache[...]`) so live theme changes take effect without restart
-5. Soft skill bullets are injected BEFORE the Phygitalker block (end of Orefox section), at most 2
+5. Soft skill bullets are injected at the `<!-- SOFT_SKILLS_INJECT -->` marker in `base.md` (placed between experience blocks); marker is always removed from output

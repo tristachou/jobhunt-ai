@@ -127,8 +127,10 @@ export default function Editor() {
       const a = document.createElement('a')
       a.href = url
       a.download = `${app?.company}_${app?.job_title}_${type}.pdf`
+      document.body.appendChild(a)
       a.click()
-      URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'PDF generation failed')
     } finally {

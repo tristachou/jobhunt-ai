@@ -64,6 +64,51 @@ export interface AnalyzeResult {
 export const THEMES = ['classic', 'modern', 'minimal', 'compact', 'bold'] as const
 export type ThemeName = typeof THEMES[number]
 
+export interface BulletPoolEntry {
+  id: string
+  text: string
+  must_have: boolean
+  tags: string[]
+  stack_variant?: string
+}
+
+export interface ExperienceBlock {
+  id: string
+  technologies: string
+  technologies_variants?: Record<string, string>
+  bullet_pool: BulletPoolEntry[]
+}
+
+export interface StackConfig {
+  name: string
+  primary_stack: string
+  job_title_display: string
+  lang_skills: string[]
+  frontend_skills: string[]
+  backend_skills: string[]
+  database_skills: string[]
+  cloud_skills: string[]
+  ai_skills: string[]
+  experiences: ExperienceBlock[]
+}
+
+export interface JobRoleConfig {
+  summary: string
+  experience_slots: Record<string, number>
+  include_ai_skills: boolean
+}
+
+export interface SoftSkillEntry {
+  keyword: string
+  bullet: string
+}
+
+export interface AppConfig {
+  stacks: Record<string, StackConfig>
+  job_roles: Record<string, JobRoleConfig>
+  soft_skills: { pool: SoftSkillEntry[] }
+}
+
 // ─── Applications ──────────────────────────────────────────────────────────────
 
 export const api = {
@@ -174,6 +219,16 @@ export const api = {
   getStacks(): Promise<{ stacks: string[] }> {
     if (DEMO_MODE) return Promise.resolve({ stacks: ['typescript', 'python', 'csharp'] })
     return request('/stacks')
+  },
+
+  getConfig(): Promise<AppConfig> {
+    if (DEMO_MODE) return import('./demo-data').then(m => m.DEMO_CONFIG)
+    return request('/config')
+  },
+
+  saveConfig(body: AppConfig): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
+    return request('/config', { method: 'PUT', body: JSON.stringify(body) })
   },
 
   // ─── Resume Templates ────────────────────────────────────────────────────────

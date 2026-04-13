@@ -3,8 +3,49 @@ import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Loader2, Check } from 'lucide-react'
+import ProfileTab from './ProfileTab'
+
+type SettingsTab = 'prompts' | 'profile'
 
 export default function Settings() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('prompts')
+
+  return (
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div className="border-b-2 border-black pb-4">
+        <h1 className="font-serif text-3xl font-bold">Settings</h1>
+        <p className="font-sans text-sm text-[#4B5563] mt-1">
+          Customise AI prompts and your personal profile used to tailor resumes.
+        </p>
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex border-b-2 border-black -mt-2">
+        {(['prompts', 'profile'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 py-2 font-mono text-xs uppercase tracking-wider border-b-2 -mb-px transition-colors ${
+              activeTab === tab
+                ? 'border-black text-black'
+                : 'border-transparent text-[#4B5563] hover:text-black'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'prompts' ? <PromptsPanel /> : <ProfileTab />}
+    </div>
+  )
+}
+
+// ─── Prompts panel ─────────────────────────────────────────────────────────────
+
+function PromptsPanel() {
   const [tailor, setTailor]           = useState('')
   const [coverletter, setCoverletter] = useState('')
   const [loading, setLoading]         = useState(true)
@@ -42,64 +83,55 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-8">
-
-      {/* Page header */}
-      <div className="border-b-2 border-black pb-4">
-        <h1 className="font-serif text-3xl font-bold">Settings</h1>
-        <p className="font-sans text-sm text-[#4B5563] mt-1">
-          Customise the AI prompts used to tailor your resume and generate cover letters.
+    <div className="space-y-6">
+      {/* Tailor prompt */}
+      <div className="space-y-2">
+        <Label>Tailor Prompt</Label>
+        <p className="font-mono text-xs text-[#4B5563]">
+          Used to analyse the job description and fill in resume placeholders.
         </p>
+        <textarea
+          className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
+          spellCheck={false}
+          value={tailor}
+          onChange={e => setTailor(e.target.value)}
+        />
+        <details className="group">
+          <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
+            Available tokens ▸
+          </summary>
+          <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
+            <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text <span className="text-red-600">(required)</span></p>
+            <p><code className="text-blue-700">{'{{STACKS}}'}</code> — JSON array of all skill keywords from <code>user/config.json</code></p>
+            <p><code className="text-blue-700">{'{{STACK_KEYS}}'}</code> — JSON array of stack names (e.g. <code>["typescript","python"]</code>) — Gemini must return one of these</p>
+            <p><code className="text-blue-700">{'{{JOB_ROLE_KEYS}}'}</code> — JSON array of job role names (e.g. <code>["software_engineer"]</code>) — Gemini must return one of these</p>
+          </div>
+        </details>
       </div>
 
-      <div className="space-y-6">
-        {/* Tailor prompt */}
-        <div className="space-y-2">
-          <Label>Tailor Prompt</Label>
-          <p className="font-mono text-xs text-[#4B5563]">
-            Used to analyse the job description and fill in resume placeholders.
-          </p>
-          <textarea
-            className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
-            spellCheck={false}
-            value={tailor}
-            onChange={e => setTailor(e.target.value)}
-          />
-          <details className="group">
-            <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
-              Available tokens ▸
-            </summary>
-            <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
-              <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text <span className="text-red-600">(required)</span></p>
-              <p><code className="text-blue-700">{'{{STACKS}}'}</code> — JSON array of all skill keywords from <code>user/config.json</code></p>
-            </div>
-          </details>
-        </div>
-
-        {/* Cover letter prompt */}
-        <div className="space-y-2">
-          <Label>Cover Letter Prompt</Label>
-          <p className="font-mono text-xs text-[#4B5563]">
-            Used to generate a personalised cover letter.
-          </p>
-          <textarea
-            className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
-            spellCheck={false}
-            value={coverletter}
-            onChange={e => setCoverletter(e.target.value)}
-          />
-          <details className="group">
-            <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
-              Available tokens ▸
-            </summary>
-            <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
-              <p><code className="text-blue-700">{'{{TEMPLATE}}'}</code> — the full cover letter template from <code>user/cover-letter/template.md</code> <span className="text-red-600">(required)</span></p>
-              <p><code className="text-blue-700">{'{{COMPANY}}'}</code> — the company name entered in the form</p>
-              <p><code className="text-blue-700">{'{{JOB_TITLE}}'}</code> — the job title entered in the form</p>
-              <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text</p>
-            </div>
-          </details>
-        </div>
+      {/* Cover letter prompt */}
+      <div className="space-y-2">
+        <Label>Cover Letter Prompt</Label>
+        <p className="font-mono text-xs text-[#4B5563]">
+          Used to generate a personalised cover letter.
+        </p>
+        <textarea
+          className="w-full min-h-52 rounded-none border border-black bg-white px-3 py-2.5 font-mono text-xs leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-blue-700"
+          spellCheck={false}
+          value={coverletter}
+          onChange={e => setCoverletter(e.target.value)}
+        />
+        <details className="group">
+          <summary className="cursor-pointer font-mono text-xs text-[#4B5563] uppercase tracking-wider hover:text-black select-none">
+            Available tokens ▸
+          </summary>
+          <div className="mt-2 border border-black bg-white px-3 py-2 space-y-1 font-mono text-xs">
+            <p><code className="text-blue-700">{'{{TEMPLATE}}'}</code> — the full cover letter template from <code>user/cover-letter/template.md</code> <span className="text-red-600">(required)</span></p>
+            <p><code className="text-blue-700">{'{{COMPANY}}'}</code> — the company name entered in the form</p>
+            <p><code className="text-blue-700">{'{{JOB_TITLE}}'}</code> — the job title entered in the form</p>
+            <p><code className="text-blue-700">{'{{JD}}'}</code> — the full job description text</p>
+          </div>
+        </details>
       </div>
 
       {error && (

@@ -1,4 +1,4 @@
-import type { Application, AnalyzeResult, ResumeTemplate } from './api'
+import type { Application, AnalyzeResult, ResumeTemplate, AppConfig, ExperienceBlock } from './api'
 
 // ─── Fake resume markdown ───────────────────────────────────────────────────────
 
@@ -173,6 +173,63 @@ export const DEMO_ANALYZE_RESULT: AnalyzeResult = {
   soft_skills_injected: true,
   cover_letter_available: true,
   theme: 'modern',
+}
+
+// ─── Fake config ────────────────────────────────────────────────────────────────
+
+const DEMO_EXPERIENCES: ExperienceBlock[] = [
+  {
+    id: 'exp1',
+    technologies: 'TypeScript, Node.js, React, PostgreSQL, RESTful API, AWS, Docker',
+    bullet_pool: [
+      { id: 'backend',  text: 'Implemented and maintained backend **RESTful APIs** using **TypeScript** and **Node.js**', must_have: false, tags: ['backend', 'api'] },
+      { id: 'database', text: 'Designed and optimised database schemas in **PostgreSQL** to support high-throughput queries', must_have: false, tags: ['database', 'performance'] },
+      { id: 'frontend', text: 'Built responsive front-end interfaces using **React** and **TypeScript** for real-time data display', must_have: false, tags: ['frontend', 'react'] },
+      { id: 'devops',   text: 'Containerised services with **Docker** and deployed to **AWS EC2** with automated **GitHub Actions** pipelines', must_have: false, tags: ['devops', 'docker', 'aws'] },
+      { id: 'test',     text: 'Wrote unit and integration tests achieving high code coverage', must_have: false, tags: ['testing', 'quality'] },
+    ],
+  },
+  {
+    id: 'exp2',
+    technologies: 'TypeScript, Node.js, React, MySQL, Redis, GitHub Actions, Docker',
+    bullet_pool: [
+      { id: 'backend', text: 'Engineered high-traffic **RESTful APIs** with **Node.js** and **Redis** caching for improved response times', must_have: false, tags: ['backend', 'api', 'performance'] },
+      { id: 'auth',    text: 'Implemented token-based authentication using JWT for secure session management', must_have: false, tags: ['auth', 'security', 'jwt'] },
+      { id: 'devops',  text: 'Maintained containerised deployments via **Docker** and automated releases with **GitHub Actions**', must_have: false, tags: ['devops', 'docker', 'cicd'] },
+    ],
+  },
+]
+
+export const DEMO_CONFIG: AppConfig = {
+  stacks: {
+    typescript: {
+      name: 'Jordan Avery',
+      primary_stack: 'TypeScript (Node.js)',
+      job_title_display: 'Software Engineer',
+      lang_skills: ['TypeScript', 'JavaScript', 'Python', 'Go'],
+      frontend_skills: ['React', 'Next.js', 'Tailwind CSS', 'HTML5', 'CSS3'],
+      backend_skills: ['Node.js', 'Express', 'RESTful API', 'GraphQL', 'OpenAPI'],
+      database_skills: ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis'],
+      cloud_skills: ['AWS (EC2, S3, Lambda, RDS)', 'Docker', 'Git & GitHub Actions'],
+      ai_skills: ['LLM Integration (OpenAI / Anthropic APIs)', 'Prompt Engineering', 'Agentic Workflows'],
+      experiences: DEMO_EXPERIENCES,
+    },
+  },
+  job_roles: {
+    software_engineer: {
+      summary: 'Software Engineer with X years of experience in full-stack development. Proficient in building robust back-ends with {{primary_stack}} and dynamic front-ends using TypeScript and React.',
+      experience_slots: { exp1: 5, exp2: 3 },
+      include_ai_skills: false,
+    },
+  },
+  soft_skills: {
+    pool: [
+      { keyword: 'collaboration', bullet: 'Collaborated effectively across cross-functional Agile teams, communicating technical concepts clearly to stakeholders' },
+      { keyword: 'communication', bullet: 'Communicated technical decisions and trade-offs clearly in written documentation and team discussions' },
+      { keyword: 'mentoring',     bullet: 'Mentored junior developers through code reviews, pair programming, and structured onboarding sessions' },
+      { keyword: 'leadership',    bullet: 'Led sprint planning and technical discussions, helping the team prioritise work and unblock delivery' },
+    ],
+  },
 }
 
 // ─── Fake templates ─────────────────────────────────────────────────────────────

@@ -1,3 +1,28 @@
+## 2026-04-14 — Generalize experience blocks with content pool
+
+- Replace company-specific `orefox_*`/`phygitalker_*` keys throughout `config.json`, `base.md`, and `tailor.js` with generic `exp1`/`exp2` identifiers — tool is no longer coupled to any individual's work history
+- Restructure `config.json` schema: `stacks[x].bullets` flat dict → `stacks[x].experiences[]` array; each experience has `id`, `technologies`, `bullet_pool[]` (with `must_have`, `tags`, optional `stack_variant`)
+- Replace `job_roles[x].orefox_bullet_set`/`phygitalker_bullet_set` with `experience_slots: { exp1: N, exp2: M }` — declarative slot counts instead of hardcoded key lists
+- Add `selectBulletsFromPool()` in `tailor.js`: selects bullets from pool using must_have priority + JD keyword/tag scoring; handles `stack_variant` filtering for Python Django/FastAPI variants
+- Replace hardcoded `~ Taiwan` string detection in `injectSoftSkillBullets` with a `<!-- SOFT_SKILLS_INJECT -->` marker in `base.md`; marker is removed cleanly when no soft skills match
+- Update `base.md`, `base.example.md`, `config.example.json`, TypeScript types (`BulletPoolEntry`, `ExperienceBlock`), `demo-data.ts`, and `ProfileTab.tsx` to reflect new schema
+- ProfileTab now renders collapsible experience blocks with inline bullet pool editor (must-have checkbox, text, tags) instead of a flat key→value bullet list
+
+## 2026-04-12 — Universal prompt + Profile UI
+
+- Add `{{STACK_KEYS}}` and `{{JOB_ROLE_KEYS}}` injection to `tailor.js` (both `tailorResume` and `rescoreResume`); extract shared `buildTailorPrompt()` helper to avoid drift
+- Add `user/prompts.example.json` — ready-to-use universal prompt that works with any config without hardcoded stack names or personal details; existing `prompts.json` is unaffected
+- Add `GET /api/config` and `PUT /api/config` endpoints to read/write `user/config.json` with basic shape validation
+- Add `AppConfig`, `StackConfig`, `JobRoleConfig`, `SoftSkillEntry` TypeScript interfaces to `api.ts`
+- Add `getConfig()` and `saveConfig()` to the `api` object with demo mode support
+- Add `DEMO_CONFIG` to `demo-data.ts`
+- Add Profile tab to Settings page: skill list editor (tag pills), experience bullet editor, soft skills pool editor; all persisted via PUT /api/config
+
+## 2026-04-12 — Fix double-click required on Download and Analyze buttons
+
+- Fix PDF download in `Editor.tsx`: append anchor to DOM before `.click()` and delay `URL.revokeObjectURL` by 100ms so browser can process the download asynchronously before the blob URL is revoked
+- Fix all Button variants in `button.tsx`: add `active:` state (extra 1px translate + brightness dim) distinct from hover state, so users get clear visual feedback that a click was registered
+
 ## 2026-04-05 — Static demo mode
 
 - Add `VITE_DEMO_MODE=true` build flag; `npm run build:demo` outputs to `demo-dist/` (separate from production build)

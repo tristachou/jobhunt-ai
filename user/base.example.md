@@ -43,17 +43,19 @@ Most Recent Company
 
 Description: Brief description of what the company does and your team's focus.
 
-Technologies: {{orefox_technologies}}
+Technologies: {{exp1_technologies}}
 
-- {{orefox_bullet_1}}
+- {{exp1_bullet_1}}
 
-- {{orefox_bullet_2}}
+- {{exp1_bullet_2}}
 
-- {{orefox_bullet_3}}
+- {{exp1_bullet_3}}
 
-- {{orefox_bullet_4}}
+- {{exp1_bullet_4}}
 
-- {{orefox_bullet_5}}
+- {{exp1_bullet_5}}
+
+<!-- SOFT_SKILLS_INJECT -->
 
 **{{job_title_display}}**
   ~ City, Country
@@ -63,13 +65,13 @@ Previous Company
 
 Description: Brief description of what the company does.
 
-Technologies: {{phygitalker_technologies}}
+Technologies: {{exp2_technologies}}
 
-- {{phygitalker_bullet_1}}
+- {{exp2_bullet_1}}
 
-- {{phygitalker_bullet_2}}
+- {{exp2_bullet_2}}
 
-- {{phygitalker_bullet_3}}
+- {{exp2_bullet_3}}
 
 ## Projects
 

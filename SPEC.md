@@ -149,59 +149,75 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 {
   "stacks": {
     "csharp": {
+      "name": "Your Name",
       "primary_stack": "C# (ASP.NET Core)",
       "job_title_display": "Software Engineer",
-      "lang_skills":     ["C#", "Python", "JavaScript", "TypeScript", "PHP"],
-      "frontend_skills": ["React", "Next.js", "Tailwind CSS", "Redux", "HTML5", "CSS3"],
-      "backend_skills":  ["ASP.NET Core", "RESTful API", "Entity Framework Core", "Node.js", "OpenAPI", "Middleware"],
-      "database_skills": ["SQL Server", "MySQL", "MongoDB", "PostgreSQL", "DynamoDB", "Redis", "Dapper"],
-      "cloud_skills":    ["AWS", "Docker", "Git & GitHub Actions", "xUnit"],
-      "bullets": {
-        "orefox_technologies":       "C#, ASP.NET Core, React, TypeScript, SQL Server, RESTful API, Entity Framework Core, AWS, Docker",
-        "orefox_backend_bullet":     "Implemented and maintained backend **RESTful APIs** using **C#** and **ASP.NET Core**, integrated with AI models for data analytics",
-        "orefox_realtime_bullet":    "Built real-time monitoring dashboard using **SignalR** and Redis with sub-second synchronization",
-        "orefox_test_bullet":        "Created unit tests for frontend and backend using **Jest** and **xUnit**",
-        "phygitalker_technologies":  "C#, ASP.NET Core, React, SQL Server, Redis, GitHub Actions, Agile",
-        "phygitalker_backend_bullet":"Engineered **RESTful APIs** using **C#** and **ASP.NET Core** with **Entity Framework Core**, database indexing and Redis caching for high-traffic stability",
-        "phygitalker_auth_bullet":   "Implemented token-based authentication using **ASP.NET Core Identity** and JWT session management",
-        "phygitalker_test_bullet":   "Established testing suites using **xUnit** and Jest, achieving high code coverage"
-      }
-    },
-    "python": { "...": "same shape" },
-    "java":   { "...": "same shape" }
+      "lang_skills":     ["C#", "Python", "JavaScript", "TypeScript"],
+      "frontend_skills": ["React", "Next.js", "Tailwind CSS"],
+      "backend_skills":  ["ASP.NET Core", "RESTful API", "Entity Framework Core"],
+      "database_skills": ["SQL Server", "PostgreSQL", "Redis"],
+      "cloud_skills":    ["AWS", "Docker", "Git & GitHub Actions"],
+      "ai_skills":       ["LLM Integration", "Prompt Engineering"],
+      "experiences": [
+        {
+          "id": "exp1",
+          "technologies": "C#, ASP.NET Core, React, TypeScript, SQL Server, AWS, Docker",
+          "bullet_pool": [
+            { "id": "backend",  "text": "Built **RESTful APIs** using **C#** and **ASP.NET Core**", "must_have": false, "tags": ["backend", "api"] },
+            { "id": "devops",   "text": "Deployed to **AWS ECS** with **Docker** and **GitHub Actions** CI/CD", "must_have": false, "tags": ["devops", "aws", "docker"] },
+            { "id": "test",     "text": "Created unit tests using **xUnit** and **Jest**", "must_have": false, "tags": ["testing"] }
+          ]
+        },
+        {
+          "id": "exp2",
+          "technologies": "C#, ASP.NET Core, React, SQL Server, Redis, Docker",
+          "bullet_pool": [
+            { "id": "backend", "text": "Engineered high-traffic APIs with **Redis** caching", "must_have": false, "tags": ["backend", "performance"] },
+            { "id": "auth",    "text": "Implemented JWT authentication", "must_have": false, "tags": ["auth", "security"] }
+          ]
+        }
+      ]
+    }
   },
-
+  "job_roles": {
+    "swe": {
+      "summary": "Software Engineer with N years experience... {{primary_stack}}...",
+      "experience_slots": { "exp1": 5, "exp2": 3 },
+      "include_ai_skills": false
+    }
+  },
   "soft_skills": {
     "pool": [
-      { "keyword": "communication",  "bullet": "Communicated technical concepts clearly to non-technical stakeholders across disciplines" },
-      { "keyword": "autonomous",     "bullet": "Took ownership of tasks end-to-end, delivering independently in fast-paced environments" },
-      { "keyword": "independent",    "bullet": "Took ownership of tasks end-to-end, delivering independently in fast-paced environments" },
-      { "keyword": "leadership",     "bullet": "Mentored junior team members and contributed to code review culture" },
-      { "keyword": "adaptable",      "bullet": "Adapted quickly to new technologies and delivered solutions with minimal onboarding time" },
-      { "keyword": "proactive",      "bullet": "Proactively identified and resolved performance bottlenecks, improving system responsiveness" },
-      { "keyword": "agile",          "bullet": "Drove sprint planning and backlog grooming in collaboration with product and design teams" }
+      { "keyword": "communication", "bullet": "Communicated technical concepts clearly to stakeholders" },
+      { "keyword": "leadership",    "bullet": "Mentored junior team members and contributed to code review culture" }
     ]
   }
 }
 ```
 
+**Key schema rules:**
+- `experiences[].id` must match a key in `job_roles[].experience_slots` (e.g. `exp1`, `exp2`)
+- `experience_slots` values = number of bullet slots in `base.md` for that experience block
+- `bullet_pool[].must_have: true` → always selected; `false` → scored by JD keyword/tag match
+- `bullet_pool[].stack_variant` (optional) → only include bullet when stack variant matches (e.g. `"python_django"`)
+- `technologies_variants` (optional object on experience) → override `technologies` for specific stack variants
+
 #### base.md placeholders (use exactly these names)
 ```
-{{primary_stack}}             → summary sentence
-{{job_title_display}}         → job title in experience headers
-{{lang_skills}}               → skills line, formatted with ** bold **
-{{frontend_skills}}           → skills line
-{{backend_skills}}            → skills line
-{{database_skills}}           → skills line
-{{cloud_skills}}              → skills line
-{{orefox_technologies}}       → technologies line under Orefox
-{{orefox_backend_bullet}}     → first bullet under Orefox
-{{orefox_realtime_bullet}}    → third bullet under Orefox
-{{orefox_test_bullet}}        → fourth bullet under Orefox
-{{phygitalker_technologies}}  → technologies line under Phygitalker
-{{phygitalker_backend_bullet}}→ first bullet under Phygitalker
-{{phygitalker_auth_bullet}}   → fourth bullet under Phygitalker
-{{phygitalker_test_bullet}}   → eighth bullet under Phygitalker
+{{name}}                  → full name (from stack config)
+{{summary}}               → role summary sentence
+{{job_title_display}}     → job title in experience headers
+{{lang_skills}}           → skills line, formatted with **bold**
+{{frontend_skills}}       → skills line
+{{backend_skills}}        → skills line
+{{database_skills}}       → skills line
+{{cloud_skills}}          → skills line
+{{ai_skills_section}}     → full AI skills section (empty string if not ai_engineer role)
+{{exp1_technologies}}     → technologies line for first experience block
+{{exp1_bullet_1}} … {{exp1_bullet_N}}  → N bullet slots for exp1
+{{exp2_technologies}}     → technologies line for second experience block
+{{exp2_bullet_1}} … {{exp2_bullet_M}}  → M bullet slots for exp2
+<!-- SOFT_SKILLS_INJECT -->  → placement marker for soft-skill bullet injection (removed from output)
 ```
 
 #### tailor.js logic (step by step)
@@ -209,7 +225,7 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 **Step 1 — Gemini call (JSON mode)**
 Send JD to Gemini. Response:
 ```json
-{ "stack": "csharp", "detected_skills": ["C#", "ASP.NET Core"], "fit_score": 87 }
+{ "job_role": "swe", "stack": "csharp", "python_framework": null, "detected_skills": ["C#", "ASP.NET Core"], "fit_score": 87 }
 ```
 
 **Step 2 — Skill formatting (programmatic)**
@@ -217,22 +233,29 @@ For each skill list in the chosen stack:
 - The first item is always bolded: `**skill**`
 - Any other skill that appears in `detected_skills`: bold it + move it to the front (after the first item)
 - All other skills: leave as plain text at the end
-- DO NOT add skills not in the list; DO NOT remove any skill
 
-**Step 3 — Soft skill injection (programmatic)**
+**Step 3 — Bullet pool selection (programmatic)**
+For each experience block listed in `job_roles[role].experience_slots`:
+1. Filter `bullet_pool` by `stack_variant` (exclude entries whose variant doesn't match)
+2. Always include `must_have: true` bullets
+3. Score remaining optional bullets: +2 per tag that overlaps with detected skills, +1 per detected skill found in bullet text
+4. Fill slots with: must-have bullets first, then top-scored optional bullets
+5. Empty slots replaced with empty string; empty `- ` lines removed from output
+
+**Step 4 — Soft skill injection (programmatic)**
 - Scan JD text for `keyword` values in `soft_skills.pool` (case-insensitive)
 - Pick at most 2 matching `bullet` strings
-- Append each as a new `- bullet` line before the Phygitalker experience block (end of Orefox block)
-- If no keywords match, add nothing
+- Inject as `- bullet` lines at the `<!-- SOFT_SKILLS_INJECT -->` marker in `base.md`
+- Marker is removed from output whether or not bullets are injected
 
-**Step 4 — Fill placeholders (programmatic)**
+**Step 5 — Fill placeholders (programmatic)**
 Replace every `{{placeholder}}` in `base.md` with the corresponding value.
 
 #### Absolute rules
 - Summary: DO NOT touch
 - All existing bullet text: DO NOT rewrite
 - Education, Certification, header, dates: DO NOT touch
-- DO NOT add or remove bullet points (except optional soft skill bullets in Step 3)
+- DO NOT add or remove bullet points (except optional soft skill bullets at the inject marker)
 
 ---
 

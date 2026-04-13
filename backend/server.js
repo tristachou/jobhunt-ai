@@ -10,6 +10,7 @@ const fs      = require('fs');
 
 const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
 const PROMPTS_PATH     = path.resolve(__dirname, '../user/prompts.json');
+const CONFIG_JSON_PATH = path.resolve(__dirname, '../user/config.json');
 const THEMES_DIR       = path.resolve(__dirname, '../themes');
 const BASE_MD_PATH     = path.resolve(__dirname, '../user/base.md');
 
@@ -473,10 +474,46 @@ api.post('/resume-templates/build-preview', (req, res) => {
 
 api.get('/stacks', (_req, res) => {
   try {
-    const config = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../user/config.json'), 'utf8'));
+    const config = JSON.parse(fs.readFileSync(CONFIG_JSON_PATH, 'utf8'));
     res.json({ stacks: Object.keys(config.stacks) });
   } catch {
     res.json({ stacks: [] }); // graceful fallback if config.json missing
+  }
+});
+
+// ─── User Config ───────────────────────────────────────────────────────────────
+
+api.get('/config', (_req, res) => {
+  try {
+    const raw = fs.readFileSync(CONFIG_JSON_PATH, 'utf8');
+    res.json(JSON.parse(raw));
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.status(404).json({ error: 'user/config.json not found. Copy user/config.example.json to get started.' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+api.put('/config', (req, res) => {
+  const body = req.body;
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return res.status(400).json({ error: 'Request body must be a JSON object' });
+  }
+  if (!body.stacks || typeof body.stacks !== 'object' || Array.isArray(body.stacks)) {
+    return res.status(400).json({ error: 'config must have a "stacks" object' });
+  }
+  if (!body.job_roles || typeof body.job_roles !== 'object' || Array.isArray(body.job_roles)) {
+    return res.status(400).json({ error: 'config must have a "job_roles" object' });
+  }
+  if (!body.soft_skills || typeof body.soft_skills !== 'object' || !Array.isArray(body.soft_skills.pool)) {
+    return res.status(400).json({ error: 'config must have a "soft_skills.pool" array' });
+  }
+  try {
+    fs.writeFileSync(CONFIG_JSON_PATH, JSON.stringify(body, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
