@@ -305,6 +305,8 @@ function formatThemeLabel(name) {
 
 // ─── Applications — direct save (Persona A, no AI) ────────────────────────────
 
+const STATIC_COVER_PATH = path.resolve(__dirname, '../user/cover-letter/static.md');
+
 api.post('/applications', (req, res) => {
   const { job_title, company, resume_template_id, source, url, jd } = req.body;
   if (!job_title || !company) {
@@ -323,6 +325,14 @@ api.post('/applications', (req, res) => {
     if (tpl) { resume_md = tpl.markdown; resolvedTemplateId = tpl.id; }
   }
 
+  // Fill static cover letter template with company and job_title
+  let cover_md = '';
+  if (fs.existsSync(STATIC_COVER_PATH)) {
+    cover_md = fs.readFileSync(STATIC_COVER_PATH, 'utf8')
+      .replace(/\{\{company\}\}/g,   company)
+      .replace(/\{\{job_title\}\}/g, job_title);
+  }
+
   const id = insertApplication({
     created_at:         new Date().toISOString(),
     company,
@@ -333,7 +343,7 @@ api.post('/applications', (req, res) => {
     stack_used:         '',
     fit_score:          null,
     resume_md,
-    cover_md:           '',
+    cover_md,
     status:             'not_started',
     theme:              getUserConfig().theme || 'classic',
     resume_template_id: resolvedTemplateId,

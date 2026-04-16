@@ -1,3 +1,9 @@
+## 2026-04-16 — Auto-fill static cover letter on manual application save
+
+- Add `user/cover-letter/static.md` — a pre-written cover letter with only `{{company}}` and `{{job_title}}` as placeholders, no AI required
+- `POST /api/applications` now reads `static.md` and fills in company + job_title before saving `cover_md`, so the editor always has a ready-to-use cover letter even without Gemini
+- Also remove weak/repetitive hardcoded bullets from `user/base.md` (`"Collaborated across teams"`, `"Managed source control with Git"`, `"Description:"` labels)
+
 ## 2026-04-15 — Fix markdown link rendering in resume body
 
 - Add `[text](url)` → `<a href>` conversion to `inlineMd()` in `renderer.js`; previously only `**bold**` was parsed, causing raw link syntax to appear as literal text in PDFs
