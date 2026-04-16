@@ -194,7 +194,9 @@ function renderBlock(block) {
 }
 
 function inlineMd(text) {
-  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return text
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
 // ─── HTML builder ──────────────────────────────────────────────────────────────

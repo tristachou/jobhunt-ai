@@ -1,3 +1,8 @@
+## 2026-04-15 — Fix markdown link rendering in resume body
+
+- Add `[text](url)` → `<a href>` conversion to `inlineMd()` in `renderer.js`; previously only `**bold**` was parsed, causing raw link syntax to appear as literal text in PDFs
+- Fixes GitHub URLs in Projects section (`~ [github.com/...](https://...)`) not rendering as clickable links
+
 ## 2026-04-14 — Generalize experience blocks with content pool
 
 - Replace company-specific `orefox_*`/`phygitalker_*` keys throughout `config.json`, `base.md`, and `tailor.js` with generic `exp1`/`exp2` identifiers — tool is no longer coupled to any individual's work history
