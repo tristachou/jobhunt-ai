@@ -10,9 +10,7 @@ const fs      = require('fs');
 
 const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
 const PROMPTS_PATH     = path.resolve(__dirname, '../user/prompts.json');
-const CONFIG_JSON_PATH = path.resolve(__dirname, '../user/config.json');
 const THEMES_DIR       = path.resolve(__dirname, '../themes');
-const BASE_MD_PATH     = path.resolve(__dirname, '../user/base.md');
 
 /** Load user config (not cached — allows live changes without restart issues) */
 function getUserConfig() {
@@ -83,11 +81,6 @@ api.post('/analyze', async (req, res) => {
     if (defaultTpl) { baseMd = defaultTpl.markdown; resolvedTemplateId = defaultTpl.id; }
   }
 
-  // Skip AI if template has no placeholders
-  if (baseMd && !baseMd.includes('{{')) {
-    return res.status(400).json({ error: 'Selected template has no {{placeholders}} — use Save & Track instead' });
-  }
-
   try {
     const { tailorResume }        = require('./tailor');
     const { generateCoverLetter } = require('./coverletter');
@@ -105,7 +98,7 @@ api.post('/analyze', async (req, res) => {
       url:                url    || '',
       source:             source || 'other',
       jd_text:            jd,
-      stack_used:         tailor.stack,
+      stack_used:         tailor.job_title,
       fit_score:          tailor.fit_score,
       resume_md:          tailor.markdown,
       cover_md:           coverResult.markdown || '',
@@ -117,10 +110,8 @@ api.post('/analyze', async (req, res) => {
     res.json({
       id,
       fit_score:              tailor.fit_score,
-      stack:                  tailor.stack,
+      job_title:              tailor.job_title,
       detected_skills:        tailor.detected_skills,
-      bolded_skills:          tailor.bolded_skills,
-      soft_skills_injected:   tailor.soft_skills_injected,
       cover_letter_available: doCoverLetter ? coverResult.available : false,
       theme:                  resolvedTheme,
     });
@@ -211,27 +202,28 @@ api.post('/preview', (req, res) => {
 
 // ─── Prompts ───────────────────────────────────────────────────────────────────
 
-api.get('/prompts', (_req, res) => {
+// ─── Cover Letter Template ─────────────────────────────────────────────────────
+
+const COVER_LETTER_TEMPLATE_PATH = path.resolve(__dirname, '../user/cover-letter/template.md');
+
+api.get('/cover-letter/template', (_req, res) => {
   try {
-    res.json(JSON.parse(fs.readFileSync(PROMPTS_PATH, 'utf8')));
+    const template = fs.existsSync(COVER_LETTER_TEMPLATE_PATH)
+      ? fs.readFileSync(COVER_LETTER_TEMPLATE_PATH, 'utf8')
+      : '';
+    res.json({ template });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-api.put('/prompts', (req, res) => {
-  const { tailor, coverletter } = req.body;
-  if (typeof tailor !== 'string' || typeof coverletter !== 'string') {
-    return res.status(400).json({ error: 'tailor and coverletter must be strings' });
-  }
-  if (!tailor.includes('{{JD}}')) {
-    return res.status(400).json({ error: 'Tailor prompt must contain {{JD}}' });
-  }
-  if (!coverletter.includes('{{TEMPLATE}}')) {
-    return res.status(400).json({ error: 'Cover letter prompt must contain {{TEMPLATE}}' });
+api.put('/cover-letter/template', (req, res) => {
+  const { template } = req.body;
+  if (typeof template !== 'string') {
+    return res.status(400).json({ error: 'template must be a string' });
   }
   try {
-    fs.writeFileSync(PROMPTS_PATH, JSON.stringify({ tailor, coverletter }, null, 2), 'utf8');
+    fs.writeFileSync(COVER_LETTER_TEMPLATE_PATH, template, 'utf8');
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -308,7 +300,7 @@ function formatThemeLabel(name) {
 const STATIC_COVER_PATH = path.resolve(__dirname, '../user/cover-letter/static.md');
 
 api.post('/applications', (req, res) => {
-  const { job_title, company, resume_template_id, source, url, jd } = req.body;
+  const { job_title, company, resume_template_id, source, url, jd, theme } = req.body;
   if (!job_title || !company) {
     return res.status(400).json({ error: 'job_title and company are required' });
   }
@@ -345,7 +337,7 @@ api.post('/applications', (req, res) => {
     resume_md,
     cover_md,
     status:             'not_started',
-    theme:              getUserConfig().theme || 'classic',
+    theme:              (theme && isValidTheme(theme)) ? theme : (getUserConfig().theme || 'classic'),
     resume_template_id: resolvedTemplateId,
   });
 
@@ -475,53 +467,6 @@ api.post('/resume-templates/build-preview', (req, res) => {
   try {
     const markdown = buildResumeMarkdown(req.body);
     res.json({ markdown });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ─── Stacks ────────────────────────────────────────────────────────────────────
-
-api.get('/stacks', (_req, res) => {
-  try {
-    const config = JSON.parse(fs.readFileSync(CONFIG_JSON_PATH, 'utf8'));
-    res.json({ stacks: Object.keys(config.stacks) });
-  } catch {
-    res.json({ stacks: [] }); // graceful fallback if config.json missing
-  }
-});
-
-// ─── User Config ───────────────────────────────────────────────────────────────
-
-api.get('/config', (_req, res) => {
-  try {
-    const raw = fs.readFileSync(CONFIG_JSON_PATH, 'utf8');
-    res.json(JSON.parse(raw));
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      return res.status(404).json({ error: 'user/config.json not found. Copy user/config.example.json to get started.' });
-    }
-    res.status(500).json({ error: err.message });
-  }
-});
-
-api.put('/config', (req, res) => {
-  const body = req.body;
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return res.status(400).json({ error: 'Request body must be a JSON object' });
-  }
-  if (!body.stacks || typeof body.stacks !== 'object' || Array.isArray(body.stacks)) {
-    return res.status(400).json({ error: 'config must have a "stacks" object' });
-  }
-  if (!body.job_roles || typeof body.job_roles !== 'object' || Array.isArray(body.job_roles)) {
-    return res.status(400).json({ error: 'config must have a "job_roles" object' });
-  }
-  if (!body.soft_skills || typeof body.soft_skills !== 'object' || !Array.isArray(body.soft_skills.pool)) {
-    return res.status(400).json({ error: 'config must have a "soft_skills.pool" array' });
-  }
-  try {
-    fs.writeFileSync(CONFIG_JSON_PATH, JSON.stringify(body, null, 2), 'utf8');
-    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

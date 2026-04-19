@@ -80,9 +80,8 @@ npm run install:all
 npm run setup
 ```
 
-**Edit these three files** with your own details:
-- `user/base.md` — your resume in the `{{placeholder}}` format
-- `user/config.json` — your per-stack skill lists and bullet variants
+**Edit these two files** with your own details:
+- `user/cv.md` — your complete resume in Oh My CV markdown format
 - `user/cover-letter/template.md` — your cover letter template
 
 ```bash
@@ -107,10 +106,9 @@ The `user/` folder is gitignored — your personal data stays local.
 
 | File | What to edit |
 |------|-------------|
-| `user/base.md` | Your resume — replace example text with your own experience |
-| `user/config.json` | Your tech stacks and per-stack skill lists |
+| `user/cv.md` | Your complete resume — paste your real CV in Oh My CV markdown format |
 | `user/cover-letter/template.md` | Your cover letter — keep the `{{placeholder}}` tokens |
-| `user.config.js` | Active theme and Gemini model |
+| `user.config.js` | Active theme |
 | `themes/*.css` | CSS for each theme — edit freely, reload preview to see changes |
 
 

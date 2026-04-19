@@ -13,8 +13,8 @@ No browser extension required. No scraping. No permission issues.
 ```
 jobhunt-ai/
 ├── user/                          # ← EDIT THIS to personalise your instance
-│   ├── base.md                    # Your resume template with {{placeholders}}
-│   ├── config.json                # Your per-stack skill lists, bullet variants, soft skill pool
+│   ├── cv.md                      # Your complete resume (Oh My CV markdown, no placeholders)
+│   ├── prompts.json               # Gemini prompt strings (tailor / rescore / coverletter)
 │   └── cover-letter/
 │       └── template.md            # Your cover letter template with {{placeholders}}
 ├── themes/                        # Resume CSS themes (classic / modern / minimal / compact / bold)
@@ -57,7 +57,7 @@ Manually pastes: job_title, company, url, source, jd
         ↓
 Clicks "Generate" → POST /process
         ↓
-tailor.js: Gemini picks stack → formats skills → fills base.md placeholders
+tailor.js: reads user/cv.md → Gemini rewrites summary + reorders skills/bullets → returns tailored markdown
         ↓
 coverletter.js: Gemini fills 6 template.md placeholders
         ↓
@@ -66,7 +66,7 @@ exporter.js: Oh My CV (Puppeteer + IndexedDB) → resume.pdf
         ↓
 db.js: saves application record to SQLite
         ↓
-UI shows: fit score, stack selected, detected skills, bolded skills, download links
+UI shows: fit score, detected role, matched skills, download links
 ```
 
 ---
@@ -140,122 +140,36 @@ Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framewor
 
 ### 3. Resume Tailor (tailor.js)
 
-**Inputs:** `user/base.md` + `user/config.json` + JD text
+**Inputs:** `user/cv.md` (or template from DB) + JD text
 
-**Implementation:** One Gemini call for stack selection + fit score + detected skills. All skill formatting and placeholder substitution done programmatically (no second Gemini call).
+**Implementation:** One Gemini call sends the full CV + JD and returns a tailored resume markdown, detected skills, fit score, and detected job title. No programmatic slot-filling.
 
-#### config.json structure (use exactly this shape)
+#### tailor.js logic
+
+**Step 1 — Load CV**
+Use `baseMd` if provided by caller (from DB template); otherwise read `user/cv.md`.
+
+**Step 2 — Gemini call (JSON mode)**
+Send prompt from `user/prompts.json` (`tailor` key) with `{{CV}}` and `{{JD}}` substituted.
+
+Response:
 ```json
 {
-  "stacks": {
-    "csharp": {
-      "name": "Your Name",
-      "primary_stack": "C# (ASP.NET Core)",
-      "job_title_display": "Software Engineer",
-      "lang_skills":     ["C#", "Python", "JavaScript", "TypeScript"],
-      "frontend_skills": ["React", "Next.js", "Tailwind CSS"],
-      "backend_skills":  ["ASP.NET Core", "RESTful API", "Entity Framework Core"],
-      "database_skills": ["SQL Server", "PostgreSQL", "Redis"],
-      "cloud_skills":    ["AWS", "Docker", "Git & GitHub Actions"],
-      "ai_skills":       ["LLM Integration", "Prompt Engineering"],
-      "experiences": [
-        {
-          "id": "exp1",
-          "technologies": "C#, ASP.NET Core, React, TypeScript, SQL Server, AWS, Docker",
-          "bullet_pool": [
-            { "id": "backend",  "text": "Built **RESTful APIs** using **C#** and **ASP.NET Core**", "must_have": false, "tags": ["backend", "api"] },
-            { "id": "devops",   "text": "Deployed to **AWS ECS** with **Docker** and **GitHub Actions** CI/CD", "must_have": false, "tags": ["devops", "aws", "docker"] },
-            { "id": "test",     "text": "Created unit tests using **xUnit** and **Jest**", "must_have": false, "tags": ["testing"] }
-          ]
-        },
-        {
-          "id": "exp2",
-          "technologies": "C#, ASP.NET Core, React, SQL Server, Redis, Docker",
-          "bullet_pool": [
-            { "id": "backend", "text": "Engineered high-traffic APIs with **Redis** caching", "must_have": false, "tags": ["backend", "performance"] },
-            { "id": "auth",    "text": "Implemented JWT authentication", "must_have": false, "tags": ["auth", "security"] }
-          ]
-        }
-      ]
-    }
-  },
-  "job_roles": {
-    "swe": {
-      "summary": "Software Engineer with N years experience... {{primary_stack}}...",
-      "experience_slots": { "exp1": 5, "exp2": 3 },
-      "include_ai_skills": false
-    }
-  },
-  "soft_skills": {
-    "pool": [
-      { "keyword": "communication", "bullet": "Communicated technical concepts clearly to stakeholders" },
-      { "keyword": "leadership",    "bullet": "Mentored junior team members and contributed to code review culture" }
-    ]
-  }
+  "tailored_resume_md": "...",
+  "detected_skills": ["Python", "React", "AWS"],
+  "fit_score": 82,
+  "job_title": "Senior Backend Engineer"
 }
 ```
 
-**Key schema rules:**
-- `experiences[].id` must match a key in `job_roles[].experience_slots` (e.g. `exp1`, `exp2`)
-- `experience_slots` values = number of bullet slots in `base.md` for that experience block
-- `bullet_pool[].must_have: true` → always selected; `false` → scored by JD keyword/tag match
-- `bullet_pool[].stack_variant` (optional) → only include bullet when stack variant matches (e.g. `"python_django"`)
-- `technologies_variants` (optional object on experience) → override `technologies` for specific stack variants
+**Step 3 — Return**
+Return `{ markdown, fit_score, detected_skills, job_title }`.
 
-#### base.md placeholders (use exactly these names)
-```
-{{name}}                  → full name (from stack config)
-{{summary}}               → role summary sentence
-{{job_title_display}}     → job title in experience headers
-{{lang_skills}}           → skills line, formatted with **bold**
-{{frontend_skills}}       → skills line
-{{backend_skills}}        → skills line
-{{database_skills}}       → skills line
-{{cloud_skills}}          → skills line
-{{ai_skills_section}}     → full AI skills section (empty string if not ai_engineer role)
-{{exp1_technologies}}     → technologies line for first experience block
-{{exp1_bullet_1}} … {{exp1_bullet_N}}  → N bullet slots for exp1
-{{exp2_technologies}}     → technologies line for second experience block
-{{exp2_bullet_1}} … {{exp2_bullet_M}}  → M bullet slots for exp2
-<!-- SOFT_SKILLS_INJECT -->  → placement marker for soft-skill bullet injection (removed from output)
-```
-
-#### tailor.js logic (step by step)
-
-**Step 1 — Gemini call (JSON mode)**
-Send JD to Gemini. Response:
-```json
-{ "job_role": "swe", "stack": "csharp", "python_framework": null, "detected_skills": ["C#", "ASP.NET Core"], "fit_score": 87 }
-```
-
-**Step 2 — Skill formatting (programmatic)**
-For each skill list in the chosen stack:
-- The first item is always bolded: `**skill**`
-- Any other skill that appears in `detected_skills`: bold it + move it to the front (after the first item)
-- All other skills: leave as plain text at the end
-
-**Step 3 — Bullet pool selection (programmatic)**
-For each experience block listed in `job_roles[role].experience_slots`:
-1. Filter `bullet_pool` by `stack_variant` (exclude entries whose variant doesn't match)
-2. Always include `must_have: true` bullets
-3. Score remaining optional bullets: +2 per tag that overlaps with detected skills, +1 per detected skill found in bullet text
-4. Fill slots with: must-have bullets first, then top-scored optional bullets
-5. Empty slots replaced with empty string; empty `- ` lines removed from output
-
-**Step 4 — Soft skill injection (programmatic)**
-- Scan JD text for `keyword` values in `soft_skills.pool` (case-insensitive)
-- Pick at most 2 matching `bullet` strings
-- Inject as `- bullet` lines at the `<!-- SOFT_SKILLS_INJECT -->` marker in `base.md`
-- Marker is removed from output whether or not bullets are injected
-
-**Step 5 — Fill placeholders (programmatic)**
-Replace every `{{placeholder}}` in `base.md` with the corresponding value.
-
-#### Absolute rules
-- Summary: DO NOT touch
-- All existing bullet text: DO NOT rewrite
-- Education, Certification, header, dates: DO NOT touch
-- DO NOT add or remove bullet points (except optional soft skill bullets at the inject marker)
+#### Tailoring rules (enforced via prompt)
+- **Rewrite:** Summary paragraph (inject JD keywords); Skills section (bold + reorder matching skills)
+- **Reorder only:** Experience bullets within each role (most JD-relevant first); Projects section order
+- **Never change:** Bullet text content, company names, dates, metrics, education, certifications, YAML front matter
+- **Never invent:** Skills or experience not present in the CV
 
 ---
 

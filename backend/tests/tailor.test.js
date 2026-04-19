@@ -1,151 +1,99 @@
 'use strict';
 
 const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const { formatSkillList, injectSoftSkillBullets, selectBulletsFromPool } = require('../tailor');
+const assert   = require('node:assert/strict');
+const path     = require('path');
+const fs       = require('fs');
 
-// ─── formatSkillList ──────────────────────────────────────────────────────────
+// ─── Module exports ───────────────────────────────────────────────────────────
 
-test('formatSkillList: first item is always bold', () => {
-  const skills    = ['C#', 'Python', 'JavaScript'];
-  const detected  = new Set(); // nothing detected
-  const result    = formatSkillList(skills, detected);
-  assert.ok(result.startsWith('**C#**'), `Expected result to start with **C#**, got: ${result}`);
+test('tailor.js exports tailorResume and rescoreResume', () => {
+  const mod = require('../tailor');
+  assert.equal(typeof mod.tailorResume,  'function', 'tailorResume should be a function');
+  assert.equal(typeof mod.rescoreResume, 'function', 'rescoreResume should be a function');
 });
 
-test('formatSkillList: detected skills are bolded and moved to front (after first)', () => {
-  const skills   = ['C#', 'Python', 'JavaScript', 'TypeScript'];
-  const detected = new Set(['javascript', 'typescript']);
-  const result   = formatSkillList(skills, detected);
-  // Expected order: **C#**, **JavaScript**, **TypeScript**, Python
-  assert.equal(result, '**C#**, **JavaScript**, **TypeScript**, Python');
+// ─── tailorResume — missing cv.md ─────────────────────────────────────────────
+
+test('tailorResume throws when cv.md is missing and no baseMd provided', async () => {
+  // Temporarily rename cv.md so it appears missing
+  const cvPath = path.resolve(__dirname, '../../user/cv.md');
+  const tmpPath = cvPath + '.bak';
+  const existed = fs.existsSync(cvPath);
+  if (existed) fs.renameSync(cvPath, tmpPath);
+
+  try {
+    // Clear require cache so tailor.js re-reads paths fresh
+    delete require.cache[require.resolve('../tailor')];
+    const { tailorResume } = require('../tailor');
+    await assert.rejects(
+      () => tailorResume({ jd: 'some jd text' }),
+      /cv\.md/i
+    );
+  } finally {
+    if (existed) fs.renameSync(tmpPath, cvPath);
+    delete require.cache[require.resolve('../tailor')];
+  }
 });
 
-test('formatSkillList: non-detected skills stay plain at end', () => {
-  const skills   = ['C#', 'Python', 'JavaScript'];
-  const detected = new Set(['c#']); // only the primary
-  const result   = formatSkillList(skills, detected);
-  // Primary always bold; Python and JavaScript not detected → plain at end
-  assert.equal(result, '**C#**, Python, JavaScript');
+// ─── tailorResume — uses provided baseMd over cv.md ──────────────────────────
+
+test('tailorResume uses baseMd when provided (no Gemini call made for validation)', async () => {
+  // We just verify that passing baseMd does not throw a "cv.md not found" error.
+  // The actual Gemini call will fail (no API key in test env) but that's expected.
+  delete require.cache[require.resolve('../tailor')];
+  const { tailorResume } = require('../tailor');
+  try {
+    await tailorResume({ jd: 'test jd', baseMd: '# My CV\n\nSome content' });
+  } catch (err) {
+    // Should fail due to missing API key or network, NOT due to missing cv.md
+    assert.ok(
+      !err.message.includes('cv.md not found'),
+      `Unexpected cv.md error when baseMd provided: ${err.message}`
+    );
+  }
 });
 
-test('formatSkillList: preserves all skills — count never changes', () => {
-  const skills   = ['C#', 'Python', 'JavaScript', 'TypeScript', 'PHP'];
-  const detected = new Set(['python', 'typescript']);
-  const result   = formatSkillList(skills, detected);
-  const parts    = result.split(', ');
-  assert.equal(parts.length, skills.length, 'Skill count must not change');
+// ─── prompts.json — required keys present ────────────────────────────────────
+
+test('prompts.json contains tailor, rescore, and coverletter keys', () => {
+  const promptsPath = path.resolve(__dirname, '../../user/prompts.json');
+  assert.ok(fs.existsSync(promptsPath), 'user/prompts.json must exist');
+  const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf8'));
+  assert.equal(typeof prompts.tailor,      'string', 'tailor key must be a string');
+  assert.equal(typeof prompts.rescore,     'string', 'rescore key must be a string');
+  assert.equal(typeof prompts.coverletter, 'string', 'coverletter key must be a string');
 });
 
-test('formatSkillList: single skill list', () => {
-  const result = formatSkillList(['C#'], new Set());
-  assert.equal(result, '**C#**');
+test('tailor prompt contains required placeholders', () => {
+  const promptsPath = path.resolve(__dirname, '../../user/prompts.json');
+  const { tailor } = JSON.parse(fs.readFileSync(promptsPath, 'utf8'));
+  assert.ok(tailor.includes('{{CV}}'), 'tailor prompt must contain {{CV}} placeholder');
+  assert.ok(tailor.includes('{{JD}}'), 'tailor prompt must contain {{JD}} placeholder');
 });
 
-// ─── selectBulletsFromPool ────────────────────────────────────────────────────
-
-const SAMPLE_POOL = [
-  { id: 'backend',  text: 'Built RESTful APIs',              must_have: false, tags: ['backend', 'api'] },
-  { id: 'devops',   text: 'Deployed to AWS ECS with Docker', must_have: false, tags: ['devops', 'aws', 'docker'] },
-  { id: 'test',     text: 'Created unit tests with Jest',    must_have: false, tags: ['testing'] },
-  { id: 'realtime', text: 'Built WebSocket dashboard',       must_have: false, tags: ['realtime', 'websocket'] },
-  { id: 'cicd',     text: 'Set up GitHub Actions CI/CD',     must_have: false, tags: ['cicd', 'devops'] },
-];
-
-test('selectBulletsFromPool: returns up to count bullets', () => {
-  const result = selectBulletsFromPool(SAMPLE_POOL, 3, new Set());
-  assert.equal(result.length, 3);
+test('rescore prompt contains required placeholders', () => {
+  const promptsPath = path.resolve(__dirname, '../../user/prompts.json');
+  const { rescore } = JSON.parse(fs.readFileSync(promptsPath, 'utf8'));
+  assert.ok(rescore.includes('{{CV}}'), 'rescore prompt must contain {{CV}} placeholder');
+  assert.ok(rescore.includes('{{JD}}'), 'rescore prompt must contain {{JD}} placeholder');
 });
 
-test('selectBulletsFromPool: must_have bullets are always included', () => {
-  const pool = [
-    { id: 'a', text: 'Must include this', must_have: true,  tags: [] },
-    { id: 'b', text: 'Optional bullet',   must_have: false, tags: [] },
-  ];
-  const result = selectBulletsFromPool(pool, 2, new Set());
-  assert.ok(result.includes('Must include this'), 'must_have bullet missing');
+// ─── cv.md — exists and has content ──────────────────────────────────────────
+
+test('user/cv.md exists and is non-empty', () => {
+  const cvPath = path.resolve(__dirname, '../../user/cv.md');
+  assert.ok(fs.existsSync(cvPath), 'user/cv.md must exist');
+  const content = fs.readFileSync(cvPath, 'utf8');
+  assert.ok(content.length > 100, 'user/cv.md must have substantial content');
 });
 
-test('selectBulletsFromPool: scores optional bullets by tag match', () => {
-  const result = selectBulletsFromPool(SAMPLE_POOL, 2, new Set(['devops', 'docker']));
-  // devops bullet has tags matching 'devops' and 'docker' → highest score
-  assert.ok(result.includes('Deployed to AWS ECS with Docker'), 'devops bullet should be selected');
-});
-
-test('selectBulletsFromPool: returns empty array when count is 0', () => {
-  const result = selectBulletsFromPool(SAMPLE_POOL, 0, new Set());
-  assert.equal(result.length, 0);
-});
-
-test('selectBulletsFromPool: filters by stack_variant', () => {
-  const pool = [
-    { id: 'fastapi', text: 'FastAPI backend', must_have: false, tags: ['backend'], stack_variant: 'python_fastapi' },
-    { id: 'django',  text: 'Django backend',  must_have: false, tags: ['backend'], stack_variant: 'python_django' },
-    { id: 'generic', text: 'Generic bullet',  must_have: false, tags: ['testing'] },
-  ];
-  const result = selectBulletsFromPool(pool, 3, new Set(), 'python_django');
-  assert.ok(!result.includes('FastAPI backend'), 'FastAPI bullet should be excluded for django variant');
-  assert.ok(result.includes('Django backend'),   'Django bullet should be included');
-  assert.ok(result.includes('Generic bullet'),   'Generic bullet should be included');
-});
-
-test('selectBulletsFromPool: handles empty pool gracefully', () => {
-  const result = selectBulletsFromPool([], 5, new Set());
-  assert.equal(result.length, 0);
-});
-
-// ─── injectSoftSkillBullets ───────────────────────────────────────────────────
-
-const SAMPLE_MD = `## Experience
-
-**Software Engineer**
-  ~ Brisbane, Australia
-
-Company One
-  ~ Feb 2025 - July 2025
-
-- Built something cool
-
-<!-- SOFT_SKILLS_INJECT -->
-
-**Software Engineer**
-  ~ Taiwan
-
-Company Two
-  ~ Aug 2022 - July 2023
-
-- Built something else`;
-
-test('injectSoftSkillBullets: injects bullets at the marker', () => {
-  const bullets = ['Communicated clearly with stakeholders', 'Worked autonomously'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets);
-  assert.ok(result.includes('- Communicated clearly with stakeholders'), 'First bullet missing');
-  assert.ok(result.includes('- Worked autonomously'), 'Second bullet missing');
-});
-
-test('injectSoftSkillBullets: bullets appear BEFORE the second experience block', () => {
-  const bullets = ['Some soft skill'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets);
-  const bulletIdx  = result.indexOf('- Some soft skill');
-  const company2Idx = result.indexOf('Company Two');
-  assert.ok(bulletIdx < company2Idx, 'Bullet must appear before second experience block');
-});
-
-test('injectSoftSkillBullets: no injection when bullets array is empty (removes marker)', () => {
-  const result = injectSoftSkillBullets(SAMPLE_MD, []);
-  assert.ok(!result.includes('<!-- SOFT_SKILLS_INJECT -->'), 'Marker should be removed');
-  assert.ok(result.includes('Company Two'), 'Content after marker should be preserved');
-});
-
-test('injectSoftSkillBullets: no injection when marker not found', () => {
-  const noMarker = SAMPLE_MD.replace('<!-- SOFT_SKILLS_INJECT -->', '');
-  const result   = injectSoftSkillBullets(noMarker, ['Some bullet']);
-  assert.equal(result, noMarker);
-});
-
-test('injectSoftSkillBullets: injects exactly the bullets passed', () => {
-  const bullets = ['Bullet A', 'Bullet B'];
-  const result  = injectSoftSkillBullets(SAMPLE_MD, bullets);
-  const count   = (result.match(/- Bullet/g) || []).length;
-  assert.equal(count, 2);
+test('user/cv.md has no unfilled {{placeholders}}', () => {
+  const cvPath = path.resolve(__dirname, '../../user/cv.md');
+  const content = fs.readFileSync(cvPath, 'utf8');
+  const placeholders = content.match(/\{\{[^}]+\}\}/g) || [];
+  assert.equal(
+    placeholders.length, 0,
+    `user/cv.md should have no placeholders, found: ${placeholders.join(', ')}`
+  );
 });

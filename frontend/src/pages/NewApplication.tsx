@@ -32,14 +32,12 @@ export default function NewApplication() {
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState<string | null>(null)
   const [result, setResult]         = useState<AnalyzeResult | null>(null)
-  const [stacks, setStacks]         = useState<string[]>([])
   const [templates, setTemplates]   = useState<ResumeTemplate[]>([])
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
-    api.getStacks().then(d => setStacks(d.stacks)).catch(() => {})
     api.getTemplates().then(list => {
       setTemplates(list)
       const def = list.find(t => t.is_default)
@@ -98,6 +96,7 @@ export default function NewApplication() {
           source:             form.source,
           url:                form.url,
           jd:                 form.jd,
+          theme:              form.theme,
         })
         navigate(`/editor/${id}`)
       } catch (err) {
@@ -242,11 +241,6 @@ export default function NewApplication() {
             <Label htmlFor="jd">
               Job Description <span className="text-[#4B5563] normal-case font-sans text-xs">(optional)</span>
             </Label>
-            {stacks.length > 0 && (
-              <span className="font-mono text-[10px] text-[#4B5563] uppercase tracking-wider">
-                AI variants: {stacks.join(', ')}
-              </span>
-            )}
           </div>
           <Textarea
             id="jd"
@@ -338,33 +332,21 @@ export default function NewApplication() {
                   </p>
                 </div>
                 <span className="ml-auto font-mono text-xs text-[#4B5563] uppercase tracking-wider">
-                  Resume variant: <span className="text-black font-bold">{result.stack}</span>
+                  Role: <span className="text-black font-bold">{result.job_title}</span>
                 </span>
               </div>
             </div>
 
             {/* Detected skills */}
-            <div className="space-y-2">
-              <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Detected Skills</p>
-              <div className="flex flex-wrap gap-1.5">
-                {result.detected_skills.map(s => (
-                  <Badge
-                    key={s}
-                    variant={result.bolded_skills.includes(s) ? 'applied' : 'secondary'}
-                  >
-                    {s}
-                  </Badge>
-                ))}
-              </div>
-              <p className="font-mono text-xs text-[#4B5563]">[ Blue badges are bolded in your resume ]</p>
-            </div>
-
-            {result.soft_skills_injected === false && (
-              <div className="border-2 border-yellow-500 bg-yellow-50 px-3 py-2 flex items-start gap-2">
-                <div className="w-3 h-3 bg-yellow-500 flex-shrink-0 mt-0.5" />
-                <p className="font-mono text-xs text-yellow-700 uppercase tracking-wider">
-                  No soft skills matched — check keywords in <code className="normal-case">user/config.json</code> soft_skills pool
-                </p>
+            {result.detected_skills.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Matched Skills</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.detected_skills.map(s => (
+                    <Badge key={s} variant="applied">{s}</Badge>
+                  ))}
+                </div>
+                <p className="font-mono text-xs text-[#4B5563]">[ Skills from the JD found in your resume ]</p>
               </div>
             )}
 

@@ -53,61 +53,15 @@ export interface ResumeTemplate {
 export interface AnalyzeResult {
   id: number
   fit_score: number
-  stack: string
+  job_title: string
   detected_skills: string[]
-  bolded_skills: string[]
-  soft_skills_injected: boolean
   cover_letter_available: boolean
   theme: string
 }
 
-export const THEMES = ['classic', 'modern', 'minimal', 'compact', 'bold'] as const
+export const THEMES = ['classic', 'modern', 'executive', 'sidebar'] as const
 export type ThemeName = typeof THEMES[number]
 
-export interface BulletPoolEntry {
-  id: string
-  text: string
-  must_have: boolean
-  tags: string[]
-  stack_variant?: string
-}
-
-export interface ExperienceBlock {
-  id: string
-  technologies: string
-  technologies_variants?: Record<string, string>
-  bullet_pool: BulletPoolEntry[]
-}
-
-export interface StackConfig {
-  name: string
-  primary_stack: string
-  job_title_display: string
-  lang_skills: string[]
-  frontend_skills: string[]
-  backend_skills: string[]
-  database_skills: string[]
-  cloud_skills: string[]
-  ai_skills: string[]
-  experiences: ExperienceBlock[]
-}
-
-export interface JobRoleConfig {
-  summary: string
-  experience_slots: Record<string, number>
-  include_ai_skills: boolean
-}
-
-export interface SoftSkillEntry {
-  keyword: string
-  bullet: string
-}
-
-export interface AppConfig {
-  stacks: Record<string, StackConfig>
-  job_roles: Record<string, JobRoleConfig>
-  soft_skills: { pool: SoftSkillEntry[] }
-}
 
 // ─── Applications ──────────────────────────────────────────────────────────────
 
@@ -136,6 +90,7 @@ export const api = {
     source?: string
     url?: string
     jd?: string
+    theme?: string
   }): Promise<{ id: number }> {
     if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ id: 1 }) }
     return request('/applications', { method: 'POST', body: JSON.stringify(body) })
@@ -179,17 +134,14 @@ export const api = {
     return request('/preview', { method: 'POST', body: JSON.stringify({ markdown, type, theme }) })
   },
 
-  getPrompts(): Promise<{ tailor: string; coverletter: string }> {
-    if (DEMO_MODE) return Promise.resolve({
-      tailor: 'You are a resume expert. Given this job description:\n\n{{JD}}\n\nTailor the resume to highlight relevant skills.',
-      coverletter: 'Write a cover letter for this role:\n\n{{TEMPLATE}}',
-    })
-    return request('/prompts')
+  getCoverLetterTemplate(): Promise<{ template: string }> {
+    if (DEMO_MODE) return Promise.resolve({ template: '' })
+    return request('/cover-letter/template')
   },
 
-  savePrompts(body: { tailor: string; coverletter: string }): Promise<{ ok: boolean }> {
+  saveCoverLetterTemplate(body: { template: string }): Promise<{ ok: boolean }> {
     if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
-    return request('/prompts', { method: 'PUT', body: JSON.stringify(body) })
+    return request('/cover-letter/template', { method: 'PUT', body: JSON.stringify(body) })
   },
 
   // ─── Style / Themes ─────────────────────────────────────────────────────────
@@ -214,21 +166,6 @@ export const api = {
   previewStyle(css: string, theme?: string): Promise<{ html: string }> {
     if (DEMO_MODE) return fetch(`${import.meta.env.BASE_URL}demo/preview.html`).then(r => r.text()).then(html => ({ html }))
     return request('/style/preview', { method: 'POST', body: JSON.stringify({ css, theme }) })
-  },
-
-  getStacks(): Promise<{ stacks: string[] }> {
-    if (DEMO_MODE) return Promise.resolve({ stacks: ['typescript', 'python', 'csharp'] })
-    return request('/stacks')
-  },
-
-  getConfig(): Promise<AppConfig> {
-    if (DEMO_MODE) return import('./demo-data').then(m => m.DEMO_CONFIG)
-    return request('/config')
-  },
-
-  saveConfig(body: AppConfig): Promise<{ ok: boolean }> {
-    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
-    return request('/config', { method: 'PUT', body: JSON.stringify(body) })
   },
 
   // ─── Resume Templates ────────────────────────────────────────────────────────

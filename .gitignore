@@ -1,6 +1,5 @@
 # Personal data — create your own from the *.example.* files
-user/base.md
-user/config.json
+user/cv.md
 user/prompts.json
 user/cover-letter/template.md
 
@@ -37,3 +36,6 @@ Thumbs.db
 *.swp
 *.swo
 node_modules
+
+# Private planning docs
+SAAS_MIGRATION_PLAN.md

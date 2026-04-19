@@ -25,7 +25,7 @@ const LEFT_SECTION_SLUGS = new Set([
 ]);
 
 /** Theme names that use two-column HTML layout (resume-left / resume-right). */
-const TWO_COLUMN_THEMES = new Set(['modern']);
+const TWO_COLUMN_THEMES = new Set(['modern', 'sidebar']);
 
 /** Load CSS for the given theme name (or the default from user.config.js). */
 function loadThemeCss(theme) {

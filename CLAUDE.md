@@ -79,10 +79,9 @@ frontend/src/
   lib/api.ts        — Typed fetch wrapper for all /api calls
 
 user/               — EDIT THIS to personalise your instance
-  base.md           — Resume template (Oh My CV markdown, 16 {{placeholders}})
-  config.json       — Per-stack skill lists + soft_skills.pool
+  cv.md             — Your complete resume (Oh My CV markdown, no placeholders)
   cover-letter/template.md
-  prompts.json      — Gemini prompt strings (editable in Settings UI)
+  prompts.json      — Gemini prompt strings (tailor / rescore / coverletter)
 
 themes/             — CSS files (classic / modern / minimal / compact / bold)
 user.config.js      — Active theme name (overridden by GEMINI_MODEL in .env)
@@ -176,18 +175,10 @@ After any code change in a conversation, update `CHANGELOG.md` with:
 - JSON mode: `generationConfig: { response_mime_type: 'application/json' }`
 - Prompts loaded from `user/prompts.json` at runtime (not hardcoded in tailor.js/coverletter.js)
 
-### resume markdown format (user/base.md)
+### resume markdown format (user/cv.md)
 - Uses Oh My CV syntax: `  ~ text` for right-side annotations; YAML front matter for header
-- Placeholders: `{{name}}`, `{{summary}}`, `{{job_title_display}}`, skill lines, `{{expN_technologies}}`, `{{expN_bullet_X}}`
-- Add `<!-- SOFT_SKILLS_INJECT -->` between experience blocks to mark soft-skill injection point
-- `soft_skills.pool` entries must be `{ keyword, bullet }` objects
-- Do NOT create separate markdown files per stack — one `base.md` with placeholders only
-
-### config.json schema
-- `stacks[key].experiences[]` — array of `{ id, technologies, technologies_variants?, bullet_pool[] }`
-- `bullet_pool[]` entries: `{ id, text, must_have, tags, stack_variant? }`
-- `job_roles[key].experience_slots` — `{ exp1: N, exp2: M }` maps experience IDs to slot counts
-- `stack_variant` on a bullet: `"python_django"` or `"python_fastapi"` — entry only selected when variant matches
+- Complete CV with no `{{placeholders}}` — AI rewrites summary and reorders skills/bullets directly
+- Copy from `user/cv.example.md` as a starting point
 
 ### DB
 - Test DB: set `TEST_DB_PATH` env var in tests to avoid touching production DB
@@ -229,8 +220,7 @@ Oh My CV (`OHMYCV_PATH`, `OHMYCV_PORT`) has been removed — no longer needed.
 
 ## Known Gotchas
 
-1. `formatSkillList` in tailor.js: first skill is ALWAYS bold, regardless of `detected_skills`
-2. Puppeteer `page.pdf()` requires `printBackground: true` to render coloured elements
-3. `node:sqlite` does NOT support WAL mode toggle via pragma in all versions — keep default journal mode
-4. `user.config.js` is not cached (`delete require.cache[...]`) so live theme changes take effect without restart
-5. Soft skill bullets are injected at the `<!-- SOFT_SKILLS_INJECT -->` marker in `base.md` (placed between experience blocks); marker is always removed from output
+1. Puppeteer `page.pdf()` requires `printBackground: true` to render coloured elements
+2. `node:sqlite` does NOT support WAL mode toggle via pragma in all versions — keep default journal mode
+3. `user.config.js` is not cached (`delete require.cache[...]`) so live theme changes take effect without restart
+4. `tailor.js` uses `baseMd` if provided (from DB template); falls back to `user/cv.md` otherwise

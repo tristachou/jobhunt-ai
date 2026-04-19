@@ -1,3 +1,25 @@
+## 2026-04-20 — Simplify pipeline to cv + prompt (remove config.json dependency)
+
+- Replace `user/base.md` (placeholder template) + `user/config.json` (bullet pool / stack config) with `user/cv.md` (complete CV in Oh My CV format)
+- Rewrite `backend/tailor.js`: remove `formatSkillList`, `selectBulletsFromPool`, `injectSoftSkillBullets`; now reads `user/cv.md`, sends CV + JD to Gemini, returns `{ markdown, fit_score, detected_skills, job_title }`
+- Rewrite `user/prompts.json` tailor key: AI directly rewrites Summary + reorders Skills/bullets/Projects; add separate `rescore` key for lightweight fit scoring
+- Remove `/api/stacks`, `/api/config` GET/PUT routes from `server.js`; remove `CONFIG_JSON_PATH` / `BASE_MD_PATH` constants; remove `{{placeholder}}` check
+- Update `server.js` analyze response: remove `stack`, `bolded_skills`, `soft_skills_injected`; add `job_title`; store `job_title` in `stack_used` DB column
+- Update `frontend/src/lib/api.ts`: remove `AnalyzeResult.stack/bolded_skills/soft_skills_injected`; add `job_title`; remove config-related interfaces and `getStacks`/`getConfig`/`saveConfig` methods
+- Update `frontend/src/pages/NewApplication.tsx`: remove stacks fetch, "AI variants" label, stack badge, soft_skills warning; simplify skill badges to single variant
+- Add `prompts/` folder with English translations of career-ops modes: `_shared.md`, `_profile.md`, `pdf.md`, `oferta.md`, `auto-pipeline.md`
+- Rewrite `backend/tests/tailor.test.js` to test new simplified interface (37/37 pass)
+- Add `user/cv.example.md` (complete CV template, no placeholders); update `user/prompts.example.json` to match new tailor/rescore/coverletter format
+- Update `.gitignore`: replace `user/base.md` + `user/config.json` with `user/cv.md`
+- Update `README.md`, `CLAUDE.md`, `SPEC.md`: remove all references to `base.md`, `config.json`, and placeholder-filling logic; document new `cv.md` approach
+
+## 2026-04-16 — Replace prompts editor with cover letter template editor in Settings
+
+- Remove `/api/prompts` GET/PUT endpoints from `server.js`; add `/api/cover-letter/template` GET/PUT that reads/writes `user/cover-letter/template.md`
+- Remove `getPrompts`/`savePrompts` from `api.ts`; add `getCoverLetterTemplate`/`saveCoverLetterTemplate`
+- Rewrite `Settings.tsx`: replace 'prompts' tab (two prompt textareas) with 'cover-letter' tab (single template editor with `{{company}}` / `{{job_title}}` placeholder hints)
+- Prompts remain hidden server-side; users only configure their personal cover letter content
+
 ## 2026-04-16 — Auto-fill static cover letter on manual application save
 
 - Add `user/cover-letter/static.md` — a pre-written cover letter with only `{{company}}` and `{{job_title}}` as placeholders, no AI required
