@@ -202,6 +202,30 @@ api.post('/preview', (req, res) => {
 
 // ─── Prompts ───────────────────────────────────────────────────────────────────
 
+// ─── CV (user/cv.md) ──────────────────────────────────────────────────────────
+
+const CV_MD_PATH = path.resolve(__dirname, '../user/cv.md');
+
+api.get('/cv', (_req, res) => {
+  try {
+    const cv = fs.existsSync(CV_MD_PATH) ? fs.readFileSync(CV_MD_PATH, 'utf8') : '';
+    res.json({ cv });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+api.put('/cv', (req, res) => {
+  const { cv } = req.body;
+  if (typeof cv !== 'string') return res.status(400).json({ error: 'cv must be a string' });
+  try {
+    fs.writeFileSync(CV_MD_PATH, cv, 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Cover Letter Template ─────────────────────────────────────────────────────
 
 const COVER_LETTER_TEMPLATE_PATH = path.resolve(__dirname, '../user/cover-letter/template.md');

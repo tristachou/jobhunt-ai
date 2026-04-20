@@ -1,3 +1,11 @@
+## 2026-04-20 — Fix Settings page: replace broken Profile tab with CV editor, enlarge editor panels
+
+- Replace dead `ProfileTab` (called removed `api.getConfig()`/`saveConfig()`) with a new `CvPanel` that reads/writes `user/cv.md` via new `GET/PUT /api/cv` endpoints
+- Add `GET /api/cv` and `PUT /api/cv` to `server.js`; add `getCv()`/`saveCv()` to `api.ts`
+- Extract shared `EditorPanel` component in `Settings.tsx` to avoid duplication between cover-letter and cv panels
+- Increase textarea height from fixed `min-h-[32rem]` to `min-h-[calc(100vh-22rem)]` so both panels use most of the viewport height
+- Settings tabs now labeled "Cover Letter Template" and "CV (cv.md)" for clarity
+
 ## 2026-04-20 — Simplify pipeline to cv + prompt (remove config.json dependency)
 
 - Replace `user/base.md` (placeholder template) + `user/config.json` (bullet pool / stack config) with `user/cv.md` (complete CV in Oh My CV format)

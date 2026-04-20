@@ -134,6 +134,16 @@ export const api = {
     return request('/preview', { method: 'POST', body: JSON.stringify({ markdown, type, theme }) })
   },
 
+  getCv(): Promise<{ cv: string }> {
+    if (DEMO_MODE) return Promise.resolve({ cv: '' })
+    return request('/cv')
+  },
+
+  saveCv(body: { cv: string }): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
+    return request('/cv', { method: 'PUT', body: JSON.stringify(body) })
+  },
+
   getCoverLetterTemplate(): Promise<{ template: string }> {
     if (DEMO_MODE) return Promise.resolve({ template: '' })
     return request('/cover-letter/template')
