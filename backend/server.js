@@ -182,6 +182,29 @@ api.post('/applications/:id/rescore', async (req, res) => {
   }
 });
 
+// ─── Evaluate ─────────────────────────────────────────────────────────────────
+
+api.post('/applications/:id/evaluate', async (req, res) => {
+  const record = getApplicationById(Number(req.params.id));
+  if (!record) return res.status(404).json({ error: 'Not found' });
+  if (!record.jd_text) return res.status(400).json({ error: 'No job description saved — run Analyze first' });
+
+  const provider = (process.env.LLM_PROVIDER || 'gemini').toLowerCase();
+  if (provider !== 'ollama' && !process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'Gemini API key not configured — set GEMINI_API_KEY in backend/.env' });
+  }
+
+  try {
+    const { evaluateApplication } = require('./evaluator');
+    const result = await evaluateApplication({ jd: record.jd_text });
+    updateApplication(record.id, result);
+    res.json(result);
+  } catch (err) {
+    console.error('[/api/evaluate error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Preview ───────────────────────────────────────────────────────────────────
 
 api.post('/preview', (req, res) => {
@@ -201,6 +224,30 @@ api.post('/preview', (req, res) => {
 });
 
 // ─── Prompts ───────────────────────────────────────────────────────────────────
+
+// ─── Profile (user/profile.md) ────────────────────────────────────────────────
+
+const PROFILE_MD_PATH = path.resolve(__dirname, '../user/profile.md');
+
+api.get('/profile', (_req, res) => {
+  try {
+    const profile = fs.existsSync(PROFILE_MD_PATH) ? fs.readFileSync(PROFILE_MD_PATH, 'utf8') : '';
+    res.json({ profile });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+api.put('/profile', (req, res) => {
+  const { profile } = req.body;
+  if (typeof profile !== 'string') return res.status(400).json({ error: 'profile must be a string' });
+  try {
+    fs.writeFileSync(PROFILE_MD_PATH, profile, 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── CV (user/cv.md) ──────────────────────────────────────────────────────────
 

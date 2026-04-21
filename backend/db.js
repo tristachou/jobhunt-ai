@@ -40,7 +40,11 @@ db.exec(`
 `);
 
 // Migration: add new columns to existing DBs (safe to run every time)
-for (const col of ['resume_md TEXT', 'cover_md TEXT', "theme TEXT DEFAULT 'classic'", "status_log TEXT DEFAULT '[]'", "follow_up INTEGER DEFAULT 0", 'resume_template_id INTEGER']) {
+for (const col of [
+  'resume_md TEXT', 'cover_md TEXT', "theme TEXT DEFAULT 'classic'",
+  "status_log TEXT DEFAULT '[]'", "follow_up INTEGER DEFAULT 0", 'resume_template_id INTEGER',
+  'eval_score INTEGER', 'eval_recommendation TEXT', 'eval_archetype TEXT', 'eval_review TEXT',
+]) {
   try { db.exec(`ALTER TABLE applications ADD COLUMN ${col}`); } catch { /* already exists */ }
 }
 
@@ -80,7 +84,8 @@ function getApplicationById(id) {
 
 function updateApplication(id, fields) {
   const ALLOWED = ['created_at', 'company', 'job_title', 'url', 'source',
-                   'jd_text', 'stack_used', 'fit_score', 'status', 'resume_md', 'cover_md', 'theme', 'status_log', 'follow_up'];
+                   'jd_text', 'stack_used', 'fit_score', 'status', 'resume_md', 'cover_md', 'theme', 'status_log', 'follow_up',
+                   'eval_score', 'eval_recommendation', 'eval_archetype', 'eval_review'];
   const pairs = Object.entries(fields).filter(([k]) => ALLOWED.includes(k));
   if (!pairs.length) return false;
 

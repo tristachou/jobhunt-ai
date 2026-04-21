@@ -63,7 +63,8 @@ export default function NewApplication() {
     if (useAI) {
       // Persona B: AI analyze flow
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 65000)
+      const timeoutMs = parseInt(import.meta.env.VITE_ANALYZE_TIMEOUT_MS || '300000', 10)
+      const timeout = setTimeout(() => controller.abort(), timeoutMs)
       try {
         const data = await api.analyze({
           job_title:           form.job_title,
@@ -78,7 +79,7 @@ export default function NewApplication() {
         setResult(data)
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
-          setError('Request timed out after 65 seconds. Please try again.')
+          setError(`Request timed out after ${timeoutMs / 1000}s. Try again or use a faster model.`)
         } else {
           setError(err instanceof Error ? err.message : 'Unknown error')
         }

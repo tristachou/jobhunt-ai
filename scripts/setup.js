@@ -16,17 +16,17 @@ const ROOT = path.resolve(__dirname, '..');
 
 const copies = [
   {
-    src:  'user/base.example.md',
-    dest: 'user/base.md',
-    hint: 'Edit user/base.md — replace the example content with your own resume.',
+    src:  'user/cv.example.md',
+    dest: 'user/cv.md',
+    hint: 'Edit user/cv.md — replace with your own resume in Oh My CV markdown format.',
   },
   {
-    src:  'user/config.example.json',
-    dest: 'user/config.json',
-    hint: 'Edit user/config.json — add your tech stacks and skill lists.',
+    src:  'user/profile.example.md',
+    dest: 'user/profile.md',
+    hint: 'Edit user/profile.md — set your target roles, adaptive framing, and professional narrative.',
   },
   {
-    src:  'cover-letter/template.example.md',
+    src:  'user/cover-letter/template.example.md',
     dest: 'user/cover-letter/template.md',
     hint: 'Edit user/cover-letter/template.md — write your cover letter template.',
   },

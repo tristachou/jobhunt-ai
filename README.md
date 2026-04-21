@@ -80,8 +80,9 @@ npm run install:all
 npm run setup
 ```
 
-**Edit these two files** with your own details:
-- `user/cv.md` — your complete resume in Oh My CV markdown format
+**Edit these three files** with your own details:
+- `user/cv.md` — your complete resume (Oh My CV markdown format — see `user/cv.example.md`)
+- `user/profile.md` — your target roles, framing, and narrative (see `user/profile.example.md`)
 - `user/cover-letter/template.md` — your cover letter template
 
 ```bash
@@ -98,7 +99,7 @@ Open **http://localhost:5173**, paste a job description, click Generate.
 
 The `user/` folder is gitignored — your personal data stays local.
 
-> **Note on `cover-letter/`:** The root `cover-letter/` folder contains the example template source (`template.example.md`). Your personal copy lives in `user/cover-letter/template.md` (gitignored). Only edit the file under `user/`.
+> The `user/` folder is gitignored — your personal data (CV, profile, cover letter) stays local and is never committed.
 
 ---
 
@@ -106,7 +107,8 @@ The `user/` folder is gitignored — your personal data stays local.
 
 | File | What to edit |
 |------|-------------|
-| `user/cv.md` | Your complete resume — paste your real CV in Oh My CV markdown format |
+| `user/cv.md` | Your complete resume in Oh My CV markdown format (see `cv.example.md`) |
+| `user/profile.md` | Your target roles, adaptive framing, and professional narrative (see `profile.example.md`) |
 | `user/cover-letter/template.md` | Your cover letter — keep the `{{placeholder}}` tokens |
 | `user.config.js` | Active theme |
 | `themes/*.css` | CSS for each theme — edit freely, reload preview to see changes |

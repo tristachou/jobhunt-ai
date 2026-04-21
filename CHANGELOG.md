@@ -1,3 +1,49 @@
+## 2026-04-22 — Rewrite SPEC.md to match current v2 architecture; update README
+
+- Rewrite SPEC.md from scratch — removes all v1 references (Oh My CV, vanilla JS frontend, /process endpoint, base.md + config.json)
+- Project structure, API endpoints, component details, DB schema, and tech stack now accurately reflect the live codebase
+- README: add user/profile.md to setup instructions and personalisation table
+
+## 2026-04-22 — Clean up legacy example files; update setup script
+
+- Delete `user/base.example.md` and `user/config.example.json` — superseded by `cv.md`/`profile.md` workflow
+- Update `scripts/setup.js` to copy `cv.example.md` → `cv.md` and `profile.example.md` → `profile.md` for new users instead of the old base/config files
+
+## 2026-04-22 — Separate user data layer from prompt logic in tailor pipeline
+
+- Add `user/profile.md` — user-owned file for target roles, adaptive framing, and professional narrative (replaces personal data that was in `prompts/_profile.md`)
+- Add `user/profile.example.md` — blank template for new users to fill in
+- Add `prompts/tailor.md` — fixed one-shot prompt template integrating archetype detection, writing rules, and ATS rules from `_shared.md`; replaces the `tailor` string in `prompts.json`
+- Update `tailor.js` to assemble prompt from `prompts/tailor.md` + `user/profile.md` + `user/cv.md`; now returns `archetype` field alongside existing fields
+- Add `GET/PUT /api/profile` endpoints to `server.js`
+- Add `getProfile`/`saveProfile` to `api.ts`
+- Add Profile tab to Settings page for editing `user/profile.md` in-browser
+
+## 2026-04-21 — Fix coverletter.js to respect LLM_PROVIDER
+
+- Replace hardcoded `geminiJSON()` in `coverletter.js` with shared `callLLM()` from `tailor.js`
+- Cover letter generation now uses Ollama when `LLM_PROVIDER=ollama`, same as resume tailoring
+
+## 2026-04-21 — Add Analysis tab with AI job evaluation
+
+- New `POST /api/applications/:id/evaluate` endpoint — runs condensed oferta.md-style evaluation via Gemini/Ollama
+- New `evaluator.js` reads `prompts/_shared.md` + `_profile.md` + `evaluate.md` for modular prompt construction
+- DB migration adds `eval_score`, `eval_recommendation`, `eval_archetype`, `eval_review` columns
+- Editor gains third "Analysis" tab: Evaluate button, score/archetype/recommendation display, strengths/gaps/actions breakdown
+
+## 2026-04-21 — Fix frontend timeout for slow local LLMs
+
+- Remove hardcoded 65s `AbortController` timeout in `NewApplication.tsx` — replace with `VITE_ANALYZE_TIMEOUT_MS` env var (default 300s)
+- Set `timeout: 0` and `proxyTimeout: 0` on Vite's `/api` proxy so slow Ollama models don't get cut off
+
+## 2026-04-20 — Add Ollama support as alternative LLM provider
+
+- Replace `geminiJSON()` in `tailor.js` with `callLLM()` that branches on `LLM_PROVIDER` env var
+- `LLM_PROVIDER=ollama` calls `POST {OLLAMA_BASE_URL}/api/generate` with `format: "json"` for structured output
+- `LLM_PROVIDER=gemini` (default) retains existing Gemini behaviour; 503 error message now suggests switching to Ollama
+- Add `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `LLM_TIMEOUT_MS` env vars; update `.env.example` with both provider sections
+- No changes to prompt logic or response validation — both providers use identical prompts and return same shape
+
 ## 2026-04-20 — Fix Settings page: replace broken Profile tab with CV editor, enlarge editor panels
 
 - Replace dead `ProfileTab` (called removed `api.getConfig()`/`saveConfig()`) with a new `CvPanel` that reads/writes `user/cv.md` via new `GET/PUT /api/cv` endpoints

@@ -1,358 +1,335 @@
 # Job Application Automation — SPEC
 
 ## Overview
-A semi-automatic job application pipeline.
-The user manually pastes job details into a local web UI, and the system automatically tailors a resume, generates a cover letter, exports PDFs, and logs the application to a local database.
 
-No browser extension required. No scraping. No permission issues.
+Semi-automatic job application pipeline. The user pastes a job description into a local web UI; AI tailors the resume and cover letter; the user reviews and edits in a markdown editor; PDFs are exported on demand.
+
+No browser extension. No scraping. No external services beyond the AI API. Runs entirely on your local machine.
 
 ---
 
 ## Project Structure
 
 ```
-jobhunt-ai/
-├── user/                          # ← EDIT THIS to personalise your instance
+Job-Apply-Bot/
+├── user/                          # ← EDIT THIS to personalise your instance (gitignored)
 │   ├── cv.md                      # Your complete resume (Oh My CV markdown, no placeholders)
-│   ├── prompts.json               # Gemini prompt strings (tailor / rescore / coverletter)
+│   ├── cv.example.md              # Filled example for reference
+│   ├── profile.md                 # Your target roles, adaptive framing, and narrative
+│   ├── profile.example.md         # Filled example for reference
+│   ├── prompts.json               # AI prompt strings (rescore / coverletter)
 │   └── cover-letter/
 │       └── template.md            # Your cover letter template with {{placeholders}}
-├── themes/                        # Resume CSS themes (classic / modern / minimal / compact / bold)
+├── prompts/                       # Fixed AI prompt templates (system logic — not user data)
+│   ├── tailor.md                  # One-shot resume tailor prompt (archetype detection + rules)
+│   ├── evaluate.md                # Job fit evaluation prompt
+│   ├── _shared.md                 # Shared scoring rules and archetype table
+│   └── _profile.md                # (legacy — replaced by user/profile.md)
+├── themes/                        # Resume CSS themes
 │   ├── classic.css
 │   ├── modern.css
 │   ├── minimal.css
 │   ├── compact.css
 │   └── bold.css
-├── user.config.js                 # Top-level user config (active theme, Gemini model)
+├── user.config.js                 # Active theme name (not cached — live reload)
 ├── frontend/
 │   └── src/
-│       ├── pages/                 # React pages (NewApplication, History, Editor, Style, Settings, Resumes, ResumeEditorPage, ResumeBuilderPage)
-│       └── lib/api.ts             # Typed API client
+│       ├── pages/                 # React pages
+│       │   ├── NewApplication.tsx
+│       │   ├── History.tsx
+│       │   ├── Editor.tsx
+│       │   ├── Dashboard.tsx
+│       │   ├── Style.tsx
+│       │   ├── Settings.tsx
+│       │   ├── Resumes.tsx
+│       │   ├── ResumeEditorPage.tsx
+│       │   └── ResumeBuilderPage.tsx
+│       ├── components/            # AppSidebar + shadcn/ui components
+│       └── lib/api.ts             # Typed fetch wrapper for all /api calls
 ├── backend/
-│   ├── server.js                  # Express server (port 3000) — all routes under /api
-│   ├── tailor.js                  # Resume tailoring (Gemini + programmatic)
-│   ├── coverletter.js             # Cover letter generation (Gemini)
-│   ├── renderer.js                # Markdown → HTML (reads CSS from themes/); supports two-column layout for modern theme
+│   ├── server.js                  # Express (port 3000) — all routes under /api
+│   ├── tailor.js                  # Resume tailoring + LLM call (Gemini or Ollama)
+│   ├── coverletter.js             # Cover letter generation
+│   ├── evaluator.js               # Job fit evaluation
+│   ├── renderer.js                # Oh My CV markdown → HTML
 │   ├── exporter.js                # HTML → PDF via Puppeteer
-│   ├── db.js                      # SQLite CRUD via node:sqlite
+│   ├── db.js                      # All SQLite CRUD via node:sqlite
 │   ├── package.json
-│   └── .env                       # GEMINI_API_KEY, GEMINI_MODEL (overrides user.config.js)
-├── resumes/
-│   └── prompts.json               # Gemini prompt templates (editable in Settings UI)
-├── output/
-│   └── YYYY-MM-DD_Company_Title/
+│   └── .env                       # GEMINI_API_KEY, GEMINI_MODEL, LLM_PROVIDER
+├── scripts/
+│   └── setup.js                   # First-time setup: copies example files into place
 ├── SPEC.md
 ├── PLAN.md
+├── CHANGELOG.md
 └── README.md
 ```
 
 ---
 
-## Full Flow
+## Two-Stage Pipeline
 
 ```
-User opens localhost:3000
-        ↓
-Manually pastes: job_title, company, url, source, jd
-        ↓
-Clicks "Generate" → POST /process
-        ↓
-tailor.js: reads user/cv.md → Gemini rewrites summary + reorders skills/bullets → returns tailored markdown
-        ↓
-coverletter.js: Gemini fills 6 template.md placeholders
-        ↓
-exporter.js: Oh My CV (Puppeteer + IndexedDB) → resume.pdf
-             plain HTML (Puppeteer) → cover-letter.pdf
-        ↓
-db.js: saves application record to SQLite
-        ↓
-UI shows: fit score, detected role, matched skills, download links
+Stage 1 — POST /api/analyze
+  JD + user/profile.md + user/cv.md
+    → tailor.js assembles prompt from prompts/tailor.md
+    → LLM (Gemini or Ollama): detects archetype, rewrites summary, reorders skills/bullets
+    → coverletter.js fills template.md placeholders
+    → markdown saved to SQLite
+    → returns: fit_score, job_title, detected_skills, archetype
+
+Stage 2 — user reviews / edits markdown in browser
+
+Stage 3 — GET /api/applications/:id/pdf?type=resume|coverletter
+  markdown from DB
+    → renderer.js: Oh My CV markdown → HTML (applies theme CSS)
+    → exporter.js: Puppeteer page.setContent() + page.pdf()
+    → PDF streamed to browser
 ```
+
+---
+
+## API Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/analyze` | Stage 1: AI tailor → save markdown to DB |
+| GET | `/api/applications` | All application records |
+| POST | `/api/applications` | Create application without AI |
+| GET | `/api/applications/:id` | Single application record |
+| PATCH | `/api/applications/:id` | Update any allowed field |
+| DELETE | `/api/applications/:id` | Delete record |
+| GET | `/api/applications/:id/pdf?type=resume\|coverletter` | On-demand PDF stream |
+| POST | `/api/applications/:id/rescore` | Re-score fit against JD via LLM |
+| POST | `/api/applications/:id/evaluate` | Run full job fit evaluation |
+| POST | `/api/preview` | Render markdown → HTML (live preview) |
+| GET | `/api/profile` | Read `user/profile.md` |
+| PUT | `/api/profile` | Save `user/profile.md` |
+| GET | `/api/cv` | Read `user/cv.md` |
+| PUT | `/api/cv` | Save `user/cv.md` |
+| GET | `/api/cover-letter/template` | Read cover letter template |
+| PUT | `/api/cover-letter/template` | Save cover letter template |
+| GET | `/api/prompts` | Read `user/prompts.json` (rescore + coverletter) |
+| PUT | `/api/prompts` | Save `user/prompts.json` |
+| GET | `/api/style` | Active theme name + CSS |
+| PUT | `/api/style` | Save CSS to theme file |
+| GET | `/api/style/themes` | All available themes |
+| POST | `/api/style/preview` | Render resume with arbitrary CSS |
+| GET | `/api/resume-templates` | All saved resume templates |
+| POST | `/api/resume-templates` | Create template |
+| GET | `/api/resume-templates/:id` | Single template (includes markdown) |
+| PUT | `/api/resume-templates/:id` | Update template |
+| DELETE | `/api/resume-templates/:id` | Delete template |
+| PATCH | `/api/resume-templates/:id/default` | Set as default template |
+| POST | `/api/resume-templates/build` | Build template from structured fields |
+| GET | `/api/health` | `{ status: "ok" }` |
 
 ---
 
 ## Component Details
 
-### 1. Local Web UI (frontend/)
+### tailor.js
 
-Served by Express at `localhost:3000`. Single HTML page, vanilla JS, no framework.
+Assembles the LLM prompt by concatenating:
 
-**Input fields:**
-- Job Title (text input)
-- Company (text input)
-- Source (dropdown: LinkedIn / Seek / Other)
-- Job URL (text input)
-- Job Description (large textarea)
+1. `prompts/tailor.md` — fixed system prompt (archetype detection table, tailoring rules, ATS rules, output format)
+2. `user/profile.md` — user's target roles, adaptive framing, and narrative
+3. `user/cv.md` (or a DB template if one is selected)
+4. The JD text
 
-**After clicking "Generate":**
-- Loading state while processing
-- Displays: fit score (0–100), stack selected, detected skills, bolded skills
-- Download buttons for resume PDF and cover letter PDF
+Sends a single LLM call in JSON mode. Returns:
 
-**Applications history (same page, nav toggle):**
-- Table of all past records from SQLite
-- Columns: date, company, title, source, fit score, stack, status, PDF links
-- Status can be updated inline (generated → applied → interview → rejected)
-
----
-
-### 2. Local Backend (Node.js + Express)
-
-**Port:** 3000
-
-**Startup sequence:**
-1. `server.js` spawns Oh My CV (`pnpm dev`) in `oh-my-cv-main/site/` with `PORT=5173`
-2. Polls `localhost:5173` until ready (up to 40s)
-3. Starts Express on port 3000
-4. On process exit (SIGINT/SIGTERM), kills the Oh My CV child process
-
-**Reverse proxy:** `/cv/*` → `localhost:5173` via `http-proxy-middleware`
-- `localhost:3000/cv` = Oh My CV editor (no need to open port 5173 directly)
-
-**Endpoints:**
-
-`POST /process`
-```json
-// Request
-{ "job_title": "...", "company": "...", "jd": "...", "url": "...", "source": "linkedin" }
-
-// Response
-{
-  "fit_score": 87,
-  "stack": "csharp",
-  "detected_skills": ["C#", "ASP.NET Core", "React"],
-  "bolded_skills": ["C#", "ASP.NET Core", "React"],
-  "resume_pdf": "/output/2025-01-15_Atlassian_Full-Stack-Developer/resume.pdf",
-  "coverletter_pdf": "/output/2025-01-15_Atlassian_Full-Stack-Developer/cover-letter.pdf",
-  "record_id": 42
-}
-```
-
-`GET /applications` — all records from SQLite as JSON
-
-`PATCH /applications/:id` — update `status` field only
-
-`POST /applications/:id/rescore` — re-score resume against JD via Gemini; body `{ jd?: string }` (uses stored `jd_text` if omitted, saves JD to DB if not previously stored); returns `{ fit_score: number }`
-
-`GET /health` — returns `{ status: "ok" }`
-
----
-
-### 3. Resume Tailor (tailor.js)
-
-**Inputs:** `user/cv.md` (or template from DB) + JD text
-
-**Implementation:** One Gemini call sends the full CV + JD and returns a tailored resume markdown, detected skills, fit score, and detected job title. No programmatic slot-filling.
-
-#### tailor.js logic
-
-**Step 1 — Load CV**
-Use `baseMd` if provided by caller (from DB template); otherwise read `user/cv.md`.
-
-**Step 2 — Gemini call (JSON mode)**
-Send prompt from `user/prompts.json` (`tailor` key) with `{{CV}}` and `{{JD}}` substituted.
-
-Response:
 ```json
 {
   "tailored_resume_md": "...",
   "detected_skills": ["Python", "React", "AWS"],
   "fit_score": 82,
-  "job_title": "Senior Backend Engineer"
+  "job_title": "Senior Backend Engineer",
+  "archetype": "Backend / Platform Engineer"
 }
 ```
 
-**Step 3 — Return**
-Return `{ markdown, fit_score, detected_skills, job_title }`.
+Tailoring rules (enforced via `prompts/tailor.md`):
+- **Rewrite:** Summary (inject JD keywords + apply archetype framing); Skills (bold + reorder)
+- **Reorder only:** Experience bullets within each role; Projects section order
+- **Never change:** Bullet text content, company names, dates, metrics, education, YAML front matter
+- **Never invent:** Skills or experience not in the CV
 
-#### Tailoring rules (enforced via prompt)
-- **Rewrite:** Summary paragraph (inject JD keywords); Skills section (bold + reorder matching skills)
-- **Reorder only:** Experience bullets within each role (most JD-relevant first); Projects section order
-- **Never change:** Bullet text content, company names, dates, metrics, education, certifications, YAML front matter
-- **Never invent:** Skills or experience not present in the CV
+Supports Gemini (default) and Ollama — switched via `LLM_PROVIDER` env var.
 
 ---
 
-### 4. Cover Letter Generator (coverletter.js)
+### coverletter.js
 
-**Approach:** Fill-in-the-blank only. Gemini fills placeholders via JSON mode, does not rewrite the template.
+Fill-in-the-blank only. LLM fills placeholders in `user/cover-letter/template.md` without rewriting any other text.
 
-**Placeholders in user/cover-letter/template.md:**
+Placeholders:
 ```
-{{company}}              ← company name
-{{job_title}}            ← job title
-{{why_company}}          ← 1-2 sentences from JD about why this company
-{{matching_skills}}      ← top 3 skills from JD that match the resume
-{{specific_project}}     ← most relevant bullet point from experience
-{{why_company_culture}}  ← 1-2 sentences about culture/mission fit from JD
+{{company}}             ← company name
+{{job_title}}           ← job title
+{{why_company}}         ← 1-2 sentences from JD about why this company
+{{matching_skills}}     ← top 3 skills from JD matching the resume
+{{specific_project}}    ← most relevant experience bullet
+{{why_company_culture}} ← 1-2 sentences on culture/mission fit
 ```
 
-**Rules:**
-- Keep all other sentences in the template exactly as written
-- Only replace the `{{placeholder}}` tokens
-- Output length must match the template (no extra paragraphs)
+---
 
-> If `user/cover-letter/template.md` is missing, skip cover letter generation and log a clear TODO. Do not block the rest of the pipeline.
+### evaluator.js
+
+Runs a condensed job fit evaluation using `prompts/_shared.md` + `prompts/evaluate.md`.
+
+Returns and saves to DB:
+```json
+{
+  "eval_score": 78,
+  "eval_recommendation": "Apply",
+  "eval_archetype": "Backend / Platform Engineer",
+  "eval_review": "{\"strengths\": [...], \"gaps\": [...], \"actions\": [...], \"summary\": \"...\"}"
+}
+```
 
 ---
 
-### 5. PDF Exporter (exporter.js)
+### renderer.js
 
-**Assumes Oh My CV is already running** — lifecycle managed entirely by `server.js`.
+Converts Oh My CV markdown to HTML for preview and PDF export.
 
-**Resume PDF — via Oh My CV + Puppeteer:**
-1. Launch Puppeteer (headless), navigate to `localhost:5173`
-3. Inject resume data into the app's IndexedDB (localForage key: `ohmycv_data`, version key: `ohmycv_version`)
-4. Navigate to `/editor/{resumeId}`, wait for `#resume-preview` to render
-5. Call `page.pdf()` → save to `output/YYYY-MM-DD_Company_Title/resume.pdf`
+- `renderResume(markdown, theme)` — reads CSS from `themes/<theme>.css`
+- `renderResumeWithCss(markdown, css, theme)` — injects a CSS string directly (live style editor)
+- `renderCoverLetter(markdown)` — simple HTML wrapper for cover letter
 
-**Cover letter PDF — via plain HTML + Puppeteer:**
-1. Convert cover letter markdown to simple HTML
-2. Call `page.setContent()` + `page.pdf()` → save to `output/.../cover-letter.pdf`
-
-> Oh My CV must be started with `PORT=5173` to avoid conflicting with the backend on port 3000.
+Parses YAML front matter for the header block. Handles `  ~ text` syntax for right-side annotations.
 
 ---
 
-### 6. Database (db.js)
+### exporter.js
 
-**Engine:** `node:sqlite` — built into Node.js v22+, no native compilation required.
+Converts HTML to PDF via Puppeteer (`page.setContent()` + `page.pdf()`).
+
+- `exportResumePDF(markdown, theme)` → Buffer
+- `exportCoverLetterPDF(markdown)` → Buffer
+
+Both use `printBackground: true`. PDFs are streamed directly to the browser — not saved to disk.
+
+---
+
+### db.js
+
+**Engine:** `node:sqlite` (built into Node.js v22+, no install needed)
 
 **Table: `applications`**
 
-| Column                | Type        | Notes |
-|-----------------------|-------------|-------|
-| id                    | INTEGER PK  | autoincrement |
-| created_at            | TEXT        | ISO 8601 |
-| company               | TEXT        | |
-| job_title             | TEXT        | |
-| url                   | TEXT        | |
-| source                | TEXT        | "linkedin" / "seek" / "other" |
-| jd_text               | TEXT        | full JD |
-| stack_used            | TEXT        | "csharp" / "python" / "java" |
-| fit_score             | INTEGER     | 0–100 |
-| resume_pdf_path       | TEXT        | relative URL path |
-| coverletter_pdf_path  | TEXT        | relative URL path |
-| status                | TEXT        | "generated" / "applied" / "interview" / "rejected" |
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | autoincrement |
+| created_at | TEXT | ISO 8601 |
+| company | TEXT | |
+| job_title | TEXT | |
+| url | TEXT | |
+| source | TEXT | `linkedin` / `seek` / `other` |
+| jd_text | TEXT | full JD |
+| stack_used | TEXT | detected job title |
+| fit_score | INTEGER | 0–100 |
+| resume_md | TEXT | tailored resume markdown |
+| cover_md | TEXT | generated cover letter markdown |
+| status | TEXT | see status values below |
+| theme | TEXT | e.g. `classic` |
+| status_log | TEXT | JSON array of `{status, changed_at}` |
+| follow_up | INTEGER | 0 or 1 |
+| resume_template_id | INTEGER | FK to resume_templates |
+| eval_score | INTEGER | 0–100 from evaluator |
+| eval_recommendation | TEXT | `Apply` / `Apply with caveats` / `Skip` |
+| eval_archetype | TEXT | detected archetype from evaluation |
+| eval_review | TEXT | JSON `{strengths, gaps, actions, summary}` |
+
+**Status values:** `not_started` · `analyzed` · `exported` · `applied` · `interview` · `rejected`
+
+**Table: `resume_templates`**
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | INTEGER PK | autoincrement |
+| name | TEXT | display name |
+| markdown | TEXT | Oh My CV markdown content |
+| is_default | INTEGER | 0 or 1 |
+| created_at | TEXT | ISO 8601 |
+| updated_at | TEXT | ISO 8601 |
+
+---
+
+## Frontend
+
+| Mode | URL | Notes |
+|------|-----|-------|
+| Dev | http://localhost:5173 | Vite dev server; proxies `/api/*` → :3000 |
+| Prod | http://localhost:3000 | Express serves `backend/public/` (built by `npm run build`) |
+
+**Stack:** React + Vite + TypeScript + Tailwind CSS + shadcn/ui
+
+**Pages:**
+- `NewApplication` — paste JD, run AI analysis
+- `History` — table of all past applications with inline status editing
+- `Editor` — split markdown editor + live preview, PDF download
+- `Dashboard` — KPIs, status pipeline chart, activity heatmap, follow-up list
+- `Style` — live CSS editor with theme switcher
+- `Settings` — tabs for CV, Profile, and Cover Letter Template editors
+- `Resumes` — manage saved resume templates
+- `ResumeEditorPage` — full-screen markdown editor for a template
+- `ResumeBuilderPage` — guided form to build a template from structured fields
 
 ---
 
 ## Tech Stack
 
-| Layer      | Tech                                                        |
-|------------|-------------------------------------------------------------|
-| Frontend   | Vanilla HTML/CSS/JS                                         |
-| Backend    | Node.js v22+, Express (port 3000)                           |
-| AI         | Gemini API — model set via `GEMINI_MODEL` in `.env`         |
-| Database   | SQLite via `node:sqlite` (built-in, no npm install needed)  |
-| PDF export | Puppeteer + Oh My CV (resume) / plain HTML (cover letter)   |
-| Templates  | `base.md` + `config.json` (Oh My CV markdown format)        |
+| Layer | Tech |
+|-------|------|
+| Frontend | React + Vite + TypeScript + Tailwind CSS + shadcn/ui |
+| Backend | Node.js v22+, Express (port 3000) |
+| AI | Gemini API (default) or Ollama (local) — switched via `LLM_PROVIDER` |
+| Database | SQLite via `node:sqlite` (built-in, no install needed) |
+| PDF export | Puppeteer — `page.setContent()` + `page.pdf()` |
 
 ---
 
-## Environment Setup
+## Environment Variables (`backend/.env`)
 
-```bash
-# 1. Install Oh My CV dependencies (only needed once, or after moving the project folder)
-cd oh-my-cv-main
-pnpm install
-
-# 2. Install backend dependencies
-cd backend
-npm install
 ```
+GEMINI_API_KEY=AIza...           # required for Gemini (default provider)
+GEMINI_MODEL=gemini-2.5-flash    # Gemini model name
 
-`backend/.env`:
-```
-GEMINI_API_KEY=AIza...
-GEMINI_MODEL=gemini-2.5-flash
-OHMYCV_PATH=../oh-my-cv-main
-OHMYCV_PORT=5173
-OUTPUT_DIR=../output
-```
-
-**Running:**
-```bash
-# Terminal 1 — Oh My CV (must be on port 5173, not 3000)
-cd oh-my-cv-main && PORT=5173 pnpm dev
-
-# Terminal 2 — Backend + Frontend
-cd backend && node server.js
-
-# Open http://localhost:3000
+LLM_PROVIDER=gemini              # "gemini" (default) or "ollama"
+OLLAMA_BASE_URL=http://localhost:11434   # Ollama base URL (if using Ollama)
+OLLAMA_MODEL=gemma3:12b          # Ollama model (if using Ollama)
+LLM_TIMEOUT_MS=120000            # LLM request timeout in ms
 ```
 
 ---
 
 ## Demo Mode
 
-A static demo build that requires no backend, no API key, and can be hosted on GitHub Pages.
+A static build that requires no backend, no API key, and can be hosted on GitHub Pages.
 
-### How it works
+`VITE_DEMO_MODE=true` activates a mock layer in `api.ts`. Every API call is intercepted before any `fetch` is made — reads return hardcoded data from `demo-data.ts`, write operations trigger a `DemoCloneModal`.
 
-`VITE_DEMO_MODE=true` activates a mock layer in `frontend/src/lib/api.ts`. Every API call is intercepted before any `fetch` is made:
+Demo assets live in `frontend/public/demo/` (pre-generated PDFs + preview HTML). Regenerate after editing the source markdown:
 
-| Operation | Demo behaviour |
-|---|---|
-| All GET / list / read calls | Return hardcoded data from `demo-data.ts` |
-| `preview()` | Returns pre-rendered HTML from `/demo/preview.html` (static file) |
-| `getPdfUrl()` | Returns `/demo/resume.pdf` or `/demo/coverletter.pdf` (static files) |
-| `patchApplication()` | Silent fake success (allows browsing without interruption) |
-| All write operations (analyze, delete, rescore, save…) | Trigger `DemoCloneModal` + return fake success |
-
-### Demo assets
-
-Pre-generated files committed to the repo under `frontend/public/demo/`:
-
-| File | What it is |
-|---|---|
-| `resume.md` | Source markdown for the fictional candidate (Jordan Avery) |
-| `coverletter.md` | Source markdown for the cover letter |
-| `resume.pdf` | Generated by `npm run gen:demo` — served as static download |
-| `coverletter.pdf` | Same |
-| `preview.html` | Pre-rendered resume HTML — served as inline preview |
-
-Regenerate after editing the `.md` files:
 ```bash
 npm run gen:demo
 ```
 
-### Build & deploy
-
+Build and deploy:
 ```bash
 npm run build:demo        # outputs to demo-dist/
 ```
 
-GitHub Actions workflow (`.github/workflows/deploy-demo.yml`) automatically deploys `demo-dist/` to GitHub Pages on every push to `main`.
-
-**One-time repo setup:** Settings → Pages → Source → **GitHub Actions**
-
-### Files involved
-
-| File | Purpose |
-|---|---|
-| `frontend/src/lib/api.ts` | Mock layer — `DEMO_MODE` flag + `triggerDemo()` |
-| `frontend/src/lib/demo-data.ts` | Hardcoded fake applications, analyze result, templates |
-| `frontend/src/components/DemoCloneModal.tsx` | Modal shown when visitor attempts a write action |
-| `frontend/public/demo/` | Pre-generated static assets (PDFs + preview HTML) |
-| `frontend/.env.demo` | `VITE_DEMO_MODE=true` |
-| `scripts/generate-demo-assets.js` | Regenerates PDFs + preview HTML from source `.md` files |
-| `.github/workflows/deploy-demo.yml` | CI/CD — auto-deploys demo to GitHub Pages |
+GitHub Actions (`.github/workflows/deploy-demo.yml`) auto-deploys to GitHub Pages on every push to `main`.
 
 ---
 
-## Out of Scope (for now)
-- Browser extension / auto-scraping
-- Auto-submitting applications
-- Email tracking
+## Known Gotchas
 
----
-
-## Notes for AI Agents
-1. `resumes/config.json` soft_skills.pool uses `{ keyword, bullet }` objects — not plain strings.
-2. Oh My CV pnpm symlinks break if the project folder is moved — run `pnpm install` from `oh-my-cv-main/` to fix.
-3. Oh My CV defaults to port 3000; always start with `PORT=5173` to avoid conflict with the backend.
-4. SQLite uses named parameters with `:name` syntax (not `@name`) for `node:sqlite`.
-5. The exporter spawns Oh My CV with `PORT` and `NUXT_PORT` env vars set to `OHMYCV_PORT`.
-6. To change the Gemini model, edit `GEMINI_MODEL` in `.env` — no code changes needed.
-7. Do NOT create separate markdown files per stack — one `base.md` with placeholders only.
+1. `page.pdf()` requires `printBackground: true` to render coloured elements
+2. `node:sqlite` does not support WAL mode toggle via pragma in all versions — keep default journal mode
+3. `user.config.js` is not cached (`delete require.cache[...]`) so live theme changes take effect without restart
+4. `tailor.js` uses `baseMd` if provided (from DB template); falls back to `user/cv.md` otherwise
+5. Named params in `node:sqlite` use `:name` syntax; `run()` takes a plain object (no `:` prefix on keys)

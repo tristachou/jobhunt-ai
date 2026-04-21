@@ -1,93 +1,89 @@
 ---
-name: Your Name
+name: Alex Chen
 header:
-  - text: "mobile: +1 555 000 0000"
-  - text: "portfolio: yourname.dev"
-    link: https://yourname.dev
-  - text: "email: yourname@example.com"
-    link: mailto:yourname@example.com
-  - text: "linkedin: linkedin.com/in/yourname"
-    link: https://www.linkedin.com/in/yourname/
+  - text: "mobile: +1 415 555 0192"
+  - text: "portfolio: alexchen.dev"
+    link: https://alexchen.dev
+  - text: "email: alex.chen@example.com"
+    link: mailto:alex.chen@example.com
+  - text: "linkedin: linkedin.com/in/alex-chen-dev"
+    link: https://www.linkedin.com/in/alex-chen-dev/
 ---
 
 ## Summary
 
-Software Engineer with X years of experience building full-stack web applications. Proficient in Python and TypeScript with a focus on cloud-native architectures on AWS. Experienced in delivering scalable backend services and modern React frontends in Agile environments.
+Backend engineer with 3 years building production APIs in Python at two companies, with hands-on AWS deployment and a full-stack track record in React and TypeScript. Owns features from database schema to browser UI without needing a separate frontend handoff.
 
 ## Skills
 
 Programming Languages
-  ~ **Python**, **TypeScript**, JavaScript, Go
+  ~ **Python**, **TypeScript**, JavaScript, Go, SQL
 
 Front-end
-  ~ **React**, Next.js, Tailwind CSS, Redux, HTML5, CSS3
+  ~ **React**, **TypeScript**, Next.js, Tailwind CSS, Redux, HTML5, CSS3
 
 Back-end
-  ~ **FastAPI**, Django, RESTful API, Node.js, Express
+  ~ **FastAPI**, **Django**, RESTful API, Node.js, Express, OpenAPI
 
 Database
-  ~ **PostgreSQL**, MySQL, MongoDB, Redis, DynamoDB
+  ~ **PostgreSQL**, **Redis**, MySQL, MongoDB, DynamoDB, Prisma
 
 Cloud & Tools
-  ~ **AWS** (ECS, Lambda, S3, SQS, CloudWatch), Docker, Git, GitHub Actions
+  ~ **AWS** (ECS, Lambda, S3, SQS, ElastiCache, CloudWatch, ALB, Auto Scaling), Docker, Git, GitHub Actions, Terraform
 
 ## Experience
 
 **Software Engineer**
-  ~ City, Country
+  ~ San Francisco, CA (Remote)
 
-Most Recent Company
-  ~ Jan 2024 – Present
+DataFlow Inc
+  ~ Mar 2023 – Present
 
-Brief description of what the company does and your team's focus.
+B2B analytics platform processing 50M+ events per day for mid-market e-commerce clients.
 
-Technologies: Python, FastAPI, React, TypeScript, PostgreSQL, AWS, Docker
+*Stack: Python, FastAPI, PostgreSQL, Redis, React, TypeScript, AWS ECS, Docker*
 
-- Built RESTful APIs using Python and FastAPI; containerised services with Docker and deployed to AWS ECS
-- Developed interactive front-end interfaces using TypeScript and React for real-time data dashboards
-- Configured AWS infrastructure (ECS, ALB, Auto Scaling, S3); monitored system health via CloudWatch
-- Implemented event-driven notification pipeline using AWS Lambda and SQS
+- Rebuilt the ingestion API in FastAPI, cutting median response time from 340ms to 95ms under peak load
+- Designed a PostgreSQL schema with pgvector for semantic search across 8M product records; reduced query time by 60%
+- Set up AWS ECS cluster with ALB and Auto Scaling; configured CloudWatch alarms that cut mean time to detection from 25 min to 4 min
+- Built React dashboard for real-time event monitoring, replacing a third-party tool and saving $18k/year in licensing fees
+- Introduced GitHub Actions CI pipeline with Pytest and Playwright; test coverage went from 31% to 84%
 
-**Software Engineer**
-  ~ City, Country
+**Junior Software Engineer**
+  ~ Austin, TX
 
-Previous Company
-  ~ Jan 2022 – Dec 2023
+ShopCo
+  ~ Jun 2021 – Feb 2023
 
-Brief description of the company and your role.
+E-commerce platform with 200k active monthly users.
 
-Technologies: Python, Django, React, MySQL, Redis, Docker, GitHub Actions
+*Stack: Python, Django, React, MySQL, Redis, Docker, GitHub Actions*
 
-- Engineered RESTful APIs using Python and Django REST Framework with Redis caching for high-traffic stability
-- Built responsive front-end interfaces using React and Redux for a production e-commerce platform
-- Implemented token-based authentication and JWT session management
-- Deployed and managed containerised services using Docker; maintained CI/CD pipeline via GitHub Actions
-- Established testing suites using Pytest and Jest, achieving high code coverage
+- Developed product catalogue API in Django REST Framework serving 1.2M requests per day with Redis caching
+- Built responsive storefront components in React and Redux; improved Lighthouse performance score from 58 to 91
+- Implemented JWT authentication and role-based access control for a merchant admin portal used by 3,000 sellers
+- Containerised legacy services with Docker and migrated them to GitHub Actions CI/CD, reducing deploy time from 45 min to 8 min
+- Wrote integration tests with Pytest achieving 78% coverage on all new API endpoints
 
 ## Projects
 
-**Your Notable Project**
-[github.com/yourname/project](https://github.com/yourname/project) · [Live Demo](https://yourname.dev/project)
+**PriceWatch** — Personal Project
+[github.com/alexchen/pricewatch](https://github.com/alexchen/pricewatch) · [Live Demo](https://pricewatch.alexchen.dev)
 
-Technologies: React, TypeScript, Node.js, PostgreSQL, AWS
+*Stack: Python, FastAPI, PostgreSQL, React, TypeScript, AWS Lambda, SQS*
 
-- Built a full-stack web application with automated testing and CI/CD pipeline on GitHub Actions
-- Implemented real-time features using WebSockets and Redis caching
-- Deployed to AWS ECS with auto-scaling and CloudWatch monitoring
+- Built a price tracking tool that monitors 500+ product URLs and sends alerts via email and Slack when prices drop
+- Serverless scraping layer on AWS Lambda triggered by SQS, handling 10k checks per day at under $3/month infra cost
+- React frontend with TypeScript for managing watchlists and viewing price history charts
 
 ## Certification
 
-**AWS Certified Solutions Architect Associate**
-  ~ Jan 2025
+**AWS Certified Solutions Architect — Associate**
+  ~ Sep 2023
 
 ## Education
 
-**Your University**
-  ~ Jan 2024 – Dec 2025
+**University of Texas at Austin**
+  ~ Sep 2017 – May 2021
 
-M.Sc. in Information Technology, Computer Science
-
-**Another University**
-  ~ Jan 2019 – Jun 2023
-
-B.Sc. in Computer Science
+B.S. in Computer Science

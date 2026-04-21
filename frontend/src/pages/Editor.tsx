@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { api, type Application, THEMES } from '@/lib/api'
+import { api, type Application, type EvalResult, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Download, ArrowLeft, RefreshCw, Save, BookmarkPlus, Sparkles } from 'lucide-react'
 
-type Tab = 'resume' | 'coverletter'
+type Tab = 'resume' | 'coverletter' | 'analysis'
 type PanelTab = 'editor' | 'preview'
 
 const STATUS_VARIANT: Record<string, any> = {
@@ -39,6 +39,8 @@ export default function Editor() {
   const [rescoring, setRescoring]       = useState(false)
   const [rescoreJd, setRescoreJd]       = useState('')
   const [rescoreError, setRescoreError] = useState<string | null>(null)
+  const [evaluating, setEvaluating]     = useState(false)
+  const [evalError, setEvalError]       = useState<string | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -152,6 +154,26 @@ export default function Editor() {
     } finally {
       setRescoring(false)
     }
+  }
+
+  async function handleEvaluate() {
+    if (!app) return
+    setEvaluating(true)
+    setEvalError(null)
+    try {
+      const result = await api.evaluateApplication(appId)
+      setApp({ ...app, ...result })
+    } catch (e) {
+      setEvalError(e instanceof Error ? e.message : 'Evaluation failed')
+    } finally {
+      setEvaluating(false)
+    }
+  }
+
+  function parseEvalReview(raw: string | null) {
+    if (!raw) return null
+    try { return JSON.parse(raw) as { strengths: string[]; gaps: string[]; actions: string[]; summary: string } }
+    catch { return null }
   }
 
   if (loadingApp) {
@@ -282,7 +304,7 @@ export default function Editor() {
 
       {/* ── Document tabs ── */}
       <div className="flex border-b-2 border-black bg-white flex-shrink-0">
-        {(['resume', 'coverletter'] as Tab[]).map(t => (
+        {(['resume', 'coverletter', 'analysis'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -292,7 +314,7 @@ export default function Editor() {
                 : 'border-transparent text-[#4B5563] hover:text-black'
             }`}
           >
-            {t === 'coverletter' ? 'Cover Letter' : 'Resume'}
+            {t === 'coverletter' ? 'Cover Letter' : t === 'analysis' ? 'Analysis' : 'Resume'}
           </button>
         ))}
       </div>
@@ -419,8 +441,123 @@ export default function Editor() {
         </div>
       )}
 
+      {/* ── Analysis panel ── */}
+      {tab === 'analysis' && app && (() => {
+        const review = parseEvalReview(app.eval_review)
+        const recColor = app.eval_recommendation === 'Apply'
+          ? 'bg-green-100 text-green-800 border-green-800'
+          : app.eval_recommendation === 'Skip'
+          ? 'bg-red-100 text-red-800 border-red-800'
+          : 'bg-yellow-100 text-yellow-800 border-yellow-800'
+        return (
+          <div className="flex-1 overflow-auto p-6 bg-[#F0F0E8]">
+            <div className="max-w-2xl mx-auto space-y-5">
+
+              {/* Evaluate button */}
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">
+                  {app.eval_score ? 'Last evaluation' : 'No evaluation yet'}
+                </span>
+                <Button size="sm" onClick={handleEvaluate} disabled={evaluating || !app.jd_text}>
+                  {evaluating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                  {app.eval_score ? 'Re-evaluate' : 'Evaluate'}
+                </Button>
+              </div>
+
+              {!app.jd_text && (
+                <div className="border-2 border-yellow-500 bg-yellow-50 px-4 py-3 font-mono text-xs text-yellow-700 uppercase tracking-wider">
+                  No job description saved — run Analyze first
+                </div>
+              )}
+
+              {evalError && (
+                <div className="border-2 border-red-600 bg-red-50 px-4 py-3 font-mono text-xs text-red-600 uppercase tracking-wider">
+                  {evalError}
+                </div>
+              )}
+
+              {app.eval_score != null && review && (
+                <>
+                  {/* Score + Archetype + Recommendation */}
+                  <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] p-5 space-y-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="font-mono text-2xl font-bold">{app.eval_score}<span className="text-sm text-[#4B5563]">/100</span></span>
+                      <span className={`font-mono text-xs uppercase tracking-wider border px-2 py-0.5 ${recColor}`}>
+                        {app.eval_recommendation}
+                      </span>
+                      {app.eval_archetype && (
+                        <span className="font-mono text-xs text-[#4B5563] border border-[#4B5563] px-2 py-0.5">
+                          {app.eval_archetype}
+                        </span>
+                      )}
+                    </div>
+                    {review.summary && (
+                      <p className="font-sans text-sm text-[#1a1a1a]">{review.summary}</p>
+                    )}
+                  </div>
+
+                  {/* Strengths */}
+                  {review.strengths.length > 0 && (
+                    <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] p-5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-green-600" />
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Strengths</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {review.strengths.map((s, i) => (
+                          <li key={i} className="font-sans text-sm flex gap-2">
+                            <span className="text-green-600 flex-shrink-0">+</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Gaps */}
+                  {review.gaps.length > 0 && (
+                    <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] p-5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-orange-500" />
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Gaps</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {review.gaps.map((g, i) => (
+                          <li key={i} className="font-sans text-sm flex gap-2">
+                            <span className="text-orange-500 flex-shrink-0">!</span>
+                            <span>{g}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {review.actions.length > 0 && (
+                    <div className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] p-5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-blue-600" />
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#4B5563]">Actions before applying</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {review.actions.map((a, i) => (
+                          <li key={i} className="font-sans text-sm flex gap-2">
+                            <span className="text-blue-600 flex-shrink-0">{i + 1}.</span>
+                            <span>{a}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Split view ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={`flex flex-1 overflow-hidden ${tab === 'analysis' ? 'hidden' : ''}`}>
 
         {/* Editor panel */}
         <div className={`flex flex-col border-r-2 border-black bg-white ${

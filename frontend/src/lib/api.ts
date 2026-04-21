@@ -39,6 +39,17 @@ export interface Application {
   status: 'not_started' | 'applied' | 'followed_up' | 'interviewed' | 'rejected'
   status_log: string  // JSON: [{status, changed_at}]
   follow_up: number   // 0 | 1
+  eval_score: number | null
+  eval_recommendation: string | null
+  eval_archetype: string | null
+  eval_review: string | null  // JSON: {strengths, gaps, actions, summary}
+}
+
+export interface EvalResult {
+  eval_score: number
+  eval_recommendation: string
+  eval_archetype: string
+  eval_review: string
 }
 
 export interface ResumeTemplate {
@@ -124,6 +135,11 @@ export const api = {
     return request(`/applications/${id}/rescore`, { method: 'POST', body: JSON.stringify(jd ? { jd } : {}) })
   },
 
+  evaluateApplication(id: number): Promise<EvalResult> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ eval_score: 78, eval_recommendation: 'Apply', eval_archetype: 'Backend / Platform Engineer', eval_review: '{}' }) }
+    return request(`/applications/${id}/evaluate`, { method: 'POST' })
+  },
+
   getPdfUrl(id: number, type: 'resume' | 'coverletter'): string {
     if (DEMO_MODE) return `${import.meta.env.BASE_URL}demo/${type === 'coverletter' ? 'coverletter' : 'resume'}.pdf`
     return `${BASE}/applications/${id}/pdf?type=${type}`
@@ -132,6 +148,16 @@ export const api = {
   preview(markdown: string, type: 'resume' | 'coverletter', theme?: string): Promise<{ html: string }> {
     if (DEMO_MODE) return fetch(`${import.meta.env.BASE_URL}demo/preview.html`).then(r => r.text()).then(html => ({ html }))
     return request('/preview', { method: 'POST', body: JSON.stringify({ markdown, type, theme }) })
+  },
+
+  getProfile(): Promise<{ profile: string }> {
+    if (DEMO_MODE) return Promise.resolve({ profile: '' })
+    return request('/profile')
+  },
+
+  saveProfile(body: { profile: string }): Promise<{ ok: boolean }> {
+    if (DEMO_MODE) { triggerDemo(); return Promise.resolve({ ok: true }) }
+    return request('/profile', { method: 'PUT', body: JSON.stringify(body) })
   },
 
   getCv(): Promise<{ cv: string }> {

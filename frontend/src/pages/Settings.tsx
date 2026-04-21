@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Loader2, Check } from 'lucide-react'
 
-type SettingsTab = 'cover-letter' | 'cv'
+type SettingsTab = 'cover-letter' | 'cv' | 'profile'
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('cover-letter')
@@ -12,6 +12,7 @@ export default function Settings() {
   const TAB_LABELS: Record<SettingsTab, string> = {
     'cover-letter': 'Cover Letter Template',
     'cv': 'CV (cv.md)',
+    'profile': 'Profile',
   }
 
   return (
@@ -42,7 +43,9 @@ export default function Settings() {
         ))}
       </div>
 
-      {activeTab === 'cover-letter' ? <CoverLetterPanel /> : <CvPanel />}
+      {activeTab === 'cover-letter' && <CoverLetterPanel />}
+      {activeTab === 'cv'           && <CvPanel />}
+      {activeTab === 'profile'      && <ProfilePanel />}
     </div>
   )
 }
@@ -165,6 +168,52 @@ function CoverLetterPanel() {
       error={error}
       onSave={handleSave}
       saveLabel="Save Template"
+    />
+  )
+}
+
+// ─── Profile panel ─────────────────────────────────────────────────────────────
+
+function ProfilePanel() {
+  const [profile, setProfile] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  useEffect(() => {
+    api.getProfile()
+      .then(d => setProfile(d.profile))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleSave() {
+    setSaving(true); setError(null); setSaved(false)
+    try {
+      await api.saveProfile({ profile })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <EditorPanel
+      label="Profile (user/profile.md)"
+      hint="Defines your target roles, adaptive framing, and professional narrative. The AI reads this before every resume tailor to decide what to emphasise."
+      value={profile}
+      onChange={setProfile}
+      placeholder="## Target Roles&#10;&#10;| Archetype | Thematic axes | What they buy |&#10;|-----------|---------------|---------------|&#10;| **Full-stack SWE** | React, Node, REST APIs | Someone who owns both layers |"
+      loading={loading}
+      saving={saving}
+      saved={saved}
+      error={error}
+      onSave={handleSave}
+      saveLabel="Save Profile"
     />
   )
 }
