@@ -1,9 +1,10 @@
 # Personal data — create your own from the *.example.* files
 user/cv.md
-user/profile.md
 user/prompts.json
 user/cover-letter/template.md
-user/cover-letter/static.md
+user/profile.md
+user/coverl-letter/static.md
+
 
 # Dependencies
 backend/node_modules/
