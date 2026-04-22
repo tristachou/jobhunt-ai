@@ -4,12 +4,13 @@ const fs   = require('fs');
 const path = require('path');
 const { callLLM } = require('./tailor');
 
-const PROMPTS_DIR = path.join(__dirname, '../prompts');
-const CV_MD       = path.join(__dirname, '../user/cv.md');
+const PROMPTS_DIR  = path.join(__dirname, '../prompts');
+const CV_MD        = path.join(__dirname, '../user/cv.md');
+const PROFILE_MD   = path.join(__dirname, '../user/profile.md');
 
 async function evaluateApplication({ jd }) {
   const shared   = fs.readFileSync(path.join(PROMPTS_DIR, '_shared.md'), 'utf8');
-  const profile  = fs.readFileSync(path.join(PROMPTS_DIR, '_profile.md'), 'utf8');
+  const profile  = fs.existsSync(PROFILE_MD) ? fs.readFileSync(PROFILE_MD, 'utf8') : '';
   const evaluate = fs.readFileSync(path.join(PROMPTS_DIR, 'evaluate.md'), 'utf8');
   const cvMd     = fs.existsSync(CV_MD) ? fs.readFileSync(CV_MD, 'utf8') : '';
 

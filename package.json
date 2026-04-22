@@ -8,6 +8,7 @@
     "build:demo": "npm run build:demo --prefix frontend",
     "gen:demo": "node scripts/generate-demo-assets.js",
     "setup": "node scripts/setup.js",
+    "typecheck": "npm run typecheck --prefix frontend",
     "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "start": "npm run start --prefix backend"

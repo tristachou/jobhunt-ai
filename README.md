@@ -86,7 +86,9 @@ npm run setup
 - `user/cover-letter/template.md` — your cover letter template
 
 ```bash
-# 4. Set your Gemini API key — edit backend/.env and fill in GEMINI_API_KEY
+# 4. Set your AI credentials — edit backend/.env
+#    Gemini (default): set GEMINI_API_KEY
+#    Ollama (local, no key needed): set LLM_PROVIDER=ollama, OLLAMA_BASE_URL, OLLAMA_MODEL
 
 # 5. (Optional) Choose your default theme in user.config.js
 #    Options: classic | modern | minimal | compact | bold
@@ -132,11 +134,10 @@ Five built-in themes live in `themes/`. Switch per-application in the Generate f
 
 | Theme | Description |
 |-------|-------------|
-| `classic` | Single column, Times New Roman, centered header |
-| `modern` | Two-column layout with sidebar (left: summary/skills/education, right: experience) |
-| `minimal` | Work in progress — falls back to classic |
-| `compact` | Work in progress — falls back to classic |
-| `bold` | Work in progress — falls back to classic |
+| `classic` | Single column, serif font, centered header |
+| `modern` | Two-column layout (left: contact/skills/education, right: experience) |
+| `executive` | Single column, professional layout with stronger typographic hierarchy |
+| `sidebar` | Two-column with a dark left sidebar for contact and skills |
 
 ---
 
@@ -171,6 +172,6 @@ The demo build uses `VITE_DEMO_MODE=true` — all API calls are intercepted and 
 |-------|------|
 | Frontend | React + Vite + TypeScript + Tailwind CSS + shadcn/ui |
 | Backend | Node.js v22+, Express (port 3000) |
-| AI | Google Gemini API |
+| AI | Google Gemini API (default) or Ollama (local) — set via `LLM_PROVIDER` env var |
 | Database | SQLite via `node:sqlite` (built-in, no npm install needed) |
 | PDF export | Puppeteer |

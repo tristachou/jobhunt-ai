@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { api, type Application, type EvalResult, THEMES } from '@/lib/api'
+import { api, type Application, THEMES } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -55,7 +55,7 @@ export default function Editor() {
   }, [appId])
 
   async function refreshPreview(md: string, currentTab: Tab, currentTheme?: string) {
-    if (!md) return
+    if (!md || currentTab === 'analysis') return
     setLoadingPreview(true)
     try {
       const theme = currentTheme ?? app?.theme

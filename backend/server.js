@@ -9,7 +9,6 @@ const fs      = require('fs');
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 
 const USER_CONFIG_PATH = path.resolve(__dirname, '../user.config.js');
-const PROMPTS_PATH     = path.resolve(__dirname, '../user/prompts.json');
 const THEMES_DIR       = path.resolve(__dirname, '../themes');
 
 /** Load user config (not cached — allows live changes without restart issues) */

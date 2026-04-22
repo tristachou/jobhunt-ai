@@ -28,9 +28,8 @@ Job-Apply-Bot/
 ├── themes/                        # Resume CSS themes
 │   ├── classic.css
 │   ├── modern.css
-│   ├── minimal.css
-│   ├── compact.css
-│   └── bold.css
+│   ├── executive.css
+│   └── sidebar.css
 ├── user.config.js                 # Active theme name (not cached — live reload)
 ├── frontend/
 │   └── src/
@@ -108,8 +107,6 @@ Stage 3 — GET /api/applications/:id/pdf?type=resume|coverletter
 | PUT | `/api/cv` | Save `user/cv.md` |
 | GET | `/api/cover-letter/template` | Read cover letter template |
 | PUT | `/api/cover-letter/template` | Save cover letter template |
-| GET | `/api/prompts` | Read `user/prompts.json` (rescore + coverletter) |
-| PUT | `/api/prompts` | Save `user/prompts.json` |
 | GET | `/api/style` | Active theme name + CSS |
 | PUT | `/api/style` | Save CSS to theme file |
 | GET | `/api/style/themes` | All available themes |
@@ -120,7 +117,8 @@ Stage 3 — GET /api/applications/:id/pdf?type=resume|coverletter
 | PUT | `/api/resume-templates/:id` | Update template |
 | DELETE | `/api/resume-templates/:id` | Delete template |
 | PATCH | `/api/resume-templates/:id/default` | Set as default template |
-| POST | `/api/resume-templates/build` | Build template from structured fields |
+| POST | `/api/resume-templates/build` | Build template from structured fields, save to DB |
+| POST | `/api/resume-templates/build-preview` | Generate markdown from structured fields (no DB save) |
 | GET | `/api/health` | `{ status: "ok" }` |
 
 ---
@@ -176,7 +174,7 @@ Placeholders:
 
 ### evaluator.js
 
-Runs a condensed job fit evaluation using `prompts/_shared.md` + `prompts/evaluate.md`.
+Runs a condensed job fit evaluation using `prompts/_shared.md` + `user/profile.md` + `prompts/evaluate.md`.
 
 Returns and saves to DB:
 ```json

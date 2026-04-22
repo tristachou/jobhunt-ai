@@ -1,3 +1,61 @@
+## 2026-04-23 — Fix evaluator.js to read user/profile.md; clean up legacy files
+
+- Fix `evaluator.js`: replace hardcoded `prompts/_profile.md` path with `user/profile.md` — evaluator now reads the same profile file as tailor.js; `_profile.md` was a legacy path that was already deleted
+- Remove v1 leftover files: `user/base.md`, `user/config.json` (superseded by `user/cv.md` in Phase 6), `prompts/_profile.md`, `prompts/auto-pipeline.md`, `prompts/oferta.md`, `prompts/pdf.md` (unused), `REPO_ONBOARDING_PLAN.md`, `docs/prompt-integration-plan.md`
+- Add `user/cover-letter/static.example.md`; add `static.md` and `prompts.json` entries to `scripts/setup.js`
+- Fix `.gitignore`: add `user/profile.md` and `user/cover-letter/static.md`; untrack personal files that were accidentally committed
+- Remove dead `geminiModel` key from `user.config.js` — never read by backend; Gemini model always comes from `GEMINI_MODEL` env var
+
+## 2026-04-23 — Remove v1 leftover directories
+
+- Delete `resumes/` (resume.css + templates/classic.css + templates/two-column.css) — v1 CSS files superseded by `themes/` in Phase 6; nothing in backend or frontend reads from this path
+- Delete `cover-letter/template.md` from repo root — v1 leftover; backend reads from `user/cover-letter/template.md` exclusively
+
+## 2026-04-23 — Add frontend typecheck to CI and local scripts
+
+- Delete `cover-letter/template.md` from repo root — v1 leftover; backend reads from `user/cover-letter/template.md` exclusively; files were identical
+
+## 2026-04-23 — Add frontend typecheck to CI and local scripts
+
+- Add `typecheck` script to `frontend/package.json` (`tsc --noEmit`) and root `package.json` (delegates to frontend) — previously TypeScript errors were only caught during `npm run build:demo`, not during local development or the test workflow
+- Split `test.yml` into two parallel jobs: `backend-test` (existing) and `frontend-typecheck` (new) — TypeScript errors now fail CI at the test stage before reaching the deploy workflow
+- Update `CONTRIBUTING.md` pre-submit checklist to include `npm run typecheck`
+
+## 2026-04-23 — Slim down CLAUDE.md to rules-only; move facts to SPEC.md
+
+- Remove Key directories, API Endpoints table, and Environment Variables sections from CLAUDE.md — all three already exist in SPEC.md; keeping them in both caused the drift problems seen today
+- CLAUDE.md now contains only: commands, automatic rules, and coding conventions (how to work in this repo, not what the repo contains)
+- Add Fetch/API, SQLite access, and Demo mode convention blocks — these were previously missing and caused issues
+
+## 2026-04-23 — Sync CLAUDE.md and PLAN.md to v2 architecture
+
+- Rewrite CLAUDE.md key directories section: add evaluator.js, prompts/ dir, user/profile.md, scripts/setup.js; fix tailor.js description (v2: LLM call returning tailored_resume_md/archetype, not stack detection + placeholder fill); fix themes (classic/modern/executive/sidebar); fix prompts.json keys (rescore/coverletter only); fix status values; add Ollama env vars; remove reference to deleted REFACTOR_PLAN.md; replace stale API table (add all v2 endpoints, remove deleted /api/prompts)
+- Rewrite PLAN.md Component Reference: replace v1 tailor.js logic (stack/placeholder) with v2 (prompts/tailor.md assembly); update /analyze response shape; add all v2 endpoints; add missing DB columns (status_log, follow_up, resume_template_id, eval_*); add resume_templates table; update .env keys (add LLM_PROVIDER/Ollama vars, remove OUTPUT_DIR)
+
+## 2026-04-23 — Correct README and SPEC to match live codebase
+
+- SPEC.md: remove deleted `/api/prompts` GET/PUT endpoints; add missing `POST /api/resume-templates/build-preview`; fix themes list in project structure (minimal/compact/bold → executive/sidebar)
+- README.md: fix Themes table (was listing non-existent minimal/compact/bold, now shows actual classic/modern/executive/sidebar); update Tech Stack AI row to mention Ollama alongside Gemini; update Getting Started `.env` step to include Ollama setup option
+- CONTRIBUTING.md: update themes list in Welcome Contributions section
+
+## 2026-04-23 — Fix demo build TypeScript errors (CI failure)
+
+- Delete `frontend/src/pages/ProfileTab.tsx` — dead file never imported anywhere; Settings.tsx replaced it with inline `ProfilePanel`, `CvPanel`, `CoverLetterPanel` components
+- Fix `demo-data.ts`: remove stale v1 imports (`AppConfig`, `ExperienceBlock`) and deleted v1-only constants (`DEMO_EXPERIENCES`, `DEMO_CONFIG`); add missing `eval_score/recommendation/archetype/review` fields to all three `DEMO_APPLICATIONS` entries; fix `DEMO_ANALYZE_RESULT` (remove `stack`, `bolded_skills`, `soft_skills_injected`; add `job_title`)
+- Fix `Editor.tsx`: remove unused `EvalResult` import; guard `refreshPreview` from being called when `tab === 'analysis'` (prevented type error passing `Tab` to `api.preview()` which only accepts `'resume' | 'coverletter'`)
+
+## 2026-04-23 — Remove dead prompt code
+
+- Remove unused `PROMPTS_PATH` constant from `server.js` (left over after `/api/prompts` endpoints were deleted in April 2026)
+- Remove dead `tailor` key from `user/prompts.json` and `user/prompts.example.json` — tailor prompt now lives in `prompts/tailor.md` (fixed file read by `tailor.js` directly); the JSON key was never read
+
+## 2026-04-22 — Add contributor documentation for open source
+
+- Add `CONTRIBUTING.md` — prerequisites (Node v22+ + node:sqlite rationale), full local setup steps, architecture overview, development rules (api.ts / db.js / LLM boundaries), demo mode update requirements, DB migration pattern, PR guidelines, welcome contributions, and off-limits list
+- Add `.github/ISSUE_TEMPLATE/bug_report.md` and `feature_request.md` with environment fields (OS, Node, LLM provider/model) and `config.yml` to disable blank issues
+- Add `SECURITY.md` directing reporters to GitHub Private Vulnerability Reporting
+- Add `.github/pull_request_template.md` with checklist covering tests, Gemini/Ollama verification, demo mode mocks, schema migrations, and UI screenshots
+
 ## 2026-04-22 — Rewrite SPEC.md to match current v2 architecture; update README
 
 - Rewrite SPEC.md from scratch — removes all v1 references (Oh My CV, vanilla JS frontend, /process endpoint, base.md + config.json)

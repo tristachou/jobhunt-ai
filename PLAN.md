@@ -97,62 +97,78 @@
 
 ## Component Reference
 
-### tailor.js logic
-1. Gemini reads JD → returns `{ stack, detected_skills, fit_score }` (JSON mode)
-2. Programmatic: format each skill list (primary always bold; detected others bold+front; rest plain)
-3. Programmatic: scan JD for `soft_skills.pool[].keyword` → pick ≤2 bullets → inject before Phygitalker block
-4. Programmatic: `replaceAll` all 16 `{{placeholders}}` in `base.md` (includes `{{name}}` driven by stack)
-5. Summary / bullets / education / certs / dates: **DO NOT touch**
+### tailor.js logic (v2)
+1. Reads `prompts/tailor.md` (fixed system prompt) + `user/profile.md` + `user/cv.md` (or `baseMd` from DB template)
+2. Sends single LLM call (Gemini or Ollama, selected via `LLM_PROVIDER` env var)
+3. Returns `{ markdown, fit_score, detected_skills, job_title, archetype }`
+4. Validates response shape; clamps `fit_score` to 0–100
+5. **Never touches** bullet text, dates, metrics, YAML front matter — only rewrites Summary and reorders
 
 ### coverletter.js placeholders
 `{{company}}` `{{job_title}}` `{{why_company}}` `{{matching_skills}}` `{{specific_project}}` `{{why_company_culture}}`
+Prompt loaded from `user/prompts.json` (`coverletter` key).
 
-### API endpoints
+### evaluator.js logic
+Reads `prompts/_shared.md` + `user/profile.md` + `prompts/evaluate.md` → single LLM call.
+Returns `{ eval_score, eval_recommendation, eval_archetype, eval_review }`.
+
+### API endpoints (see SPEC.md for full reference)
 ```
-POST /analyze        { job_title, company, jd, url, source, theme? } → { id, fit_score, stack, detected_skills, bolded_skills, theme }
-GET  /applications/:id/pdf?type=resume|coverletter → PDF using stored theme
-POST /preview        { markdown, type, theme? } → { html }
-GET  /prompts        → { tailor, coverletter }
-PUT  /prompts        { tailor, coverletter } → { ok }
-GET  /applications   → all records
-GET  /applications/:id → single record
-PATCH /applications/:id → partial update (includes theme)
-DELETE /applications/:id → delete
-GET  /style          → { theme, css }
-PUT  /style          { css, theme? } → { ok }
-GET  /style/themes   → [{ name, label, css }]
-POST /style/preview  { css } → { html }
-GET  /health         → { status: "ok" }
+POST /api/analyze        → { id, fit_score, job_title, detected_skills, cover_letter_available, theme }
+POST /api/applications   → { id }  (create without AI)
+GET  /api/applications   → all records
+GET  /api/applications/:id → single record
+PATCH /api/applications/:id → partial update
+DELETE /api/applications/:id
+GET  /api/applications/:id/pdf?type=resume|coverletter → PDF stream
+POST /api/applications/:id/rescore → { fit_score }
+POST /api/applications/:id/evaluate → { eval_score, eval_recommendation, eval_archetype, eval_review }
+POST /api/preview        → { html }
+GET/PUT /api/profile     — user/profile.md
+GET/PUT /api/cv          — user/cv.md
+GET/PUT /api/cover-letter/template
+GET/PUT /api/style · GET /api/style/themes · POST /api/style/preview
+GET/POST/PUT/DELETE /api/resume-templates(/:id)
+PATCH /api/resume-templates/:id/default
+POST /api/resume-templates/build · POST /api/resume-templates/build-preview
+GET  /api/health
 ```
 
 ### SQLite table: `applications`
-`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status, theme`
+`id, created_at, company, job_title, url, source, jd_text, stack_used, fit_score, resume_md, cover_md, status, theme, status_log, follow_up, resume_template_id, eval_score, eval_recommendation, eval_archetype, eval_review`
+
+Status values: `not_started` | `applied` | `followed_up` | `interviewed` | `rejected`
+
+### SQLite table: `resume_templates`
+`id, name, markdown, is_default, created_at, updated_at`
 
 ### renderer.js
-- `renderResume(markdown, theme?)` — parses `~` syntax + YAML front matter → full HTML string (CSS from `themes/${theme || userConfig.theme}.css`)
-- `renderResumeWithCss(markdown, css)` — same but with explicit CSS (used by Style page preview)
-- `renderCoverLetter(markdown)` — simple markdown → HTML
-- `loadThemeCss(theme?)` — reads CSS from `themes/` for the given theme
+- `renderResume(markdown, theme)` — parses `~` syntax + YAML front matter → full HTML
+- `renderResumeWithCss(markdown, css, theme)` — injects CSS string directly (live style editor)
+- `renderCoverLetter(markdown)` — simple HTML wrapper
+- Two-column themes detected via `TWO_COLUMN_THEMES` set; emits `.resume-left` / `.resume-right`
 
 ### exporter.js
-- `exportResumePDF(markdown, theme?)` — loads theme CSS, calls `renderResume(markdown, theme)` → Puppeteer PDF
-- `exportCoverLetterPDF(markdown)` — calls `renderCoverLetter` → Puppeteer PDF
-- No external dev server dependency
+- `exportResumePDF(markdown, theme)` → Buffer
+- `exportCoverLetterPDF(markdown)` → Buffer
+- Both use `page.setContent()` + `page.pdf({ printBackground: true })`
 
-### package.json dependencies
+### backend/package.json dependencies
 `express`, `axios`, `dotenv`, `puppeteer`
 
 ### .env keys
 ```
-GEMINI_API_KEY   — Gemini API key
-GEMINI_MODEL     — model name (overrides user.config.js geminiModel if set)
-OUTPUT_DIR       — output folder relative to backend/ (default: ../output)
+GEMINI_API_KEY       — Gemini API key
+GEMINI_MODEL         — Gemini model name
+LLM_PROVIDER         — "gemini" (default) or "ollama"
+OLLAMA_BASE_URL      — Ollama base URL (default: http://localhost:11434)
+OLLAMA_MODEL         — Ollama model name (default: gemma3:12b)
+LLM_TIMEOUT_MS       — LLM request timeout in ms (default: 120000)
 ```
 
 ### user.config.js keys
 ```
-theme       — active theme name (must match a file in themes/)
-geminiModel — Gemini model (used if GEMINI_MODEL not set in .env)
+theme  — default theme name (must match a file in themes/); fallback when no theme is specified per-application
 ```
 
 ---

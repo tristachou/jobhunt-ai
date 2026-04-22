@@ -1,112 +1,33 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
 > These rules apply to every conversation. Follow them automatically without being asked.
 
+---
+
 ## Project Summary
 
-Semi-automatic job application pipeline. User pastes JD → AI tailors resume + cover letter (markdown) → user reviews/edits in browser → exports PDF on demand.
+Semi-automatic job application pipeline. User pastes JD → AI tailors resume + cover letter → user reviews/edits in browser → exports PDF on demand.
 
-Key docs:
-- `SPEC.md` — source of truth for architecture and component behaviour
-- `PLAN.md` — implementation progress tracker
-- `REFACTOR_PLAN.md` — v2 refactoring roadmap (Phases 1–4 complete)
+Architecture and file structure: **see SPEC.md**.
 
 ---
 
 ## Commands
 
 ```bash
-# Install all dependencies (root + backend + frontend)
-npm run install:all
+npm run install:all          # install root + backend + frontend deps
+npm run setup                # first-time: copy example files into user/
+npm run dev                  # start both servers (backend :3000, frontend :5173)
+npm run build                # Vite → backend/public/ (production)
+npm run start                # backend only (serves built frontend)
+npm run build:demo           # static demo build → demo-dist/
+npm run gen:demo             # regenerate demo PDFs + preview HTML
 
-# Development (runs both servers concurrently)
-npm run dev
-# → backend: http://localhost:3000   (Express + API)
-# → frontend: http://localhost:5173  (Vite dev server, proxies /api → :3000)
-
-# Production build (Vite → backend/public/)
-npm run build
-
-# Start backend only (serves production build from backend/public/)
-npm run start
-
-# Tests (backend only)
-cd backend && npm test
-
-# Run a single test file
-cd backend && node --test tests/tailor.test.js
+cd backend && npm test                        # run all tests
+cd backend && node --test tests/<file>.test.js  # run one test file
 ```
-
----
-
-## Architecture
-
-### Two-stage pipeline
-
-```
-POST /api/analyze
-  JD → Gemini → resume_md + cover_md → saved to DB → returns metadata (no PDF)
-
-User edits markdown in browser editor
-
-GET /api/applications/:id/pdf?type=resume|coverletter
-  DB markdown → renderer.js → Puppeteer → PDF stream (on-demand)
-```
-
-### Frontend / Backend split
-
-| Mode | Frontend | Backend | Notes |
-|------|----------|---------|-------|
-| Dev  | Vite on :5173 | Express on :3000 | Vite proxies `/api/*` → :3000 |
-| Prod | — | Express on :3000 | Serves `backend/public/` (built by `npm run build`) |
-
-### Key directories
-
-```
-backend/
-  server.js         — Express; all routes under /api
-  tailor.js         — Gemini call (stack + fit_score + detected_skills) + programmatic skill formatting
-  coverletter.js    — Gemini fill-in-the-blank for cover letter placeholders
-  renderer.js       — Oh-My-CV markdown → HTML; parses YAML front matter + `~ text` right-annotations
-  exporter.js       — HTML → PDF via Puppeteer (page.setContent + page.pdf)
-  db.js             — All SQLite CRUD via node:sqlite
-
-frontend/src/
-  pages/            — NewApplication, History, Editor, Settings, Style, Dashboard
-  components/       — AppSidebar + shadcn/ui components in ui/
-  lib/api.ts        — Typed fetch wrapper for all /api calls
-
-user/               — EDIT THIS to personalise your instance
-  cv.md             — Your complete resume (Oh My CV markdown, no placeholders)
-  cover-letter/template.md
-  prompts.json      — Gemini prompt strings (tailor / rescore / coverletter)
-
-themes/             — CSS files (classic / modern / minimal / compact / bold)
-user.config.js      — Active theme name (overridden by GEMINI_MODEL in .env)
-```
-
----
-
-## API Endpoints
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/api/analyze` | Stage 1: AI → save markdown to DB |
-| GET | `/api/applications` | All records |
-| GET | `/api/applications/:id` | Single record |
-| PATCH | `/api/applications/:id` | Update any allowed field |
-| DELETE | `/api/applications/:id` | Delete record |
-| GET | `/api/applications/:id/pdf?type=resume\|coverletter` | On-demand PDF |
-| POST | `/api/preview` | Render markdown → HTML (live preview) |
-| GET | `/api/prompts` | Get current Gemini prompts |
-| PUT | `/api/prompts` | Save prompts to user/prompts.json |
-| GET | `/api/style` | Active theme name + CSS |
-| PUT | `/api/style` | Save CSS to theme file |
-| GET | `/api/style/themes` | All available themes |
-| POST | `/api/style/preview` | Render resume with arbitrary CSS |
-| GET | `/api/health` | `{ status: "ok" }` |
 
 ---
 
@@ -117,39 +38,30 @@ user.config.js      — Active theme name (overridden by GEMINI_MODEL in .env)
 Update `SPEC.md` whenever any of the following change:
 - API endpoints (added / removed / request or response shape changed)
 - File structure (new files added, files removed or renamed)
-- Component behaviour (tailor.js, coverletter.js, exporter.js, renderer.js logic)
+- Component behaviour (tailor.js, coverletter.js, evaluator.js, renderer.js logic)
 - Tech stack decisions (new dependency added or removed)
 - Environment variables (new keys in .env)
 - DB schema (new columns, new tables)
 
-How: read the current SPEC.md first, then make targeted edits to the affected sections only. Do not rewrite unrelated sections.
+Read the current SPEC.md first, then make targeted edits to the affected sections only.
 
 ### Rule 2 — Update PLAN.md automatically
 
-Update `PLAN.md` whenever:
-- A task or phase is completed → mark `[x]`, add brief notes column
-- A new task is identified → add a row to the appropriate phase
-- Architecture decisions are made → update the Component Reference section
-- A phase is started → mark tasks `[~]` as they begin
+- Task completed → mark `[x]`, add notes
+- New task identified → add a row to the appropriate phase
+- Architecture decision made → update the Component Reference section
 
 ### Rule 3 — Run tests after code changes
 
-After any change to `tailor.js`, `coverletter.js`, `db.js`, or `renderer.js`, run:
-```
+After any change to `tailor.js`, `coverletter.js`, `db.js`, or `renderer.js`:
+
+```bash
 cd backend && npm test
 ```
-Report pass/fail. If tests fail, diagnose and fix before finishing.
 
-### Rule 4 — REFACTOR_PLAN.md
+Report pass/fail. Fix before finishing if tests fail.
 
-During active refactor phases, update `REFACTOR_PLAN.md` to:
-- Mark phases as complete
-- Record decisions made (especially Open Questions that get answered)
-- Add new open questions that arise
-
-### Rule 5 — Update CHANGELOG.md on every code change
-
-After any code change in a conversation, update `CHANGELOG.md` with:
+### Rule 4 — Update CHANGELOG.md on every code change
 
 ```
 ## YYYY-MM-DD — <short title>
@@ -157,8 +69,8 @@ After any code change in a conversation, update `CHANGELOG.md` with:
 <what changed and why, 2–5 bullet points>
 ```
 
-- **Same conversation** → keep editing the same entry
-- **New conversation** → prepend a new entry at the top
+- Same conversation → keep editing the same entry
+- New conversation → prepend a new entry at the top
 - Imperative mood ("Add", "Fix", "Refactor"); focus on *what* and *why*
 
 ---
@@ -166,61 +78,51 @@ After any code change in a conversation, update `CHANGELOG.md` with:
 ## Key Conventions
 
 ### node:sqlite
-- Built-in Node v22+, no npm install needed
-- Named params: `:name` syntax (not `@name`)
-- `run(data)` takes plain object keys (no `:` prefix)
+- Built-in Node v22+ — no npm install needed
+- Named params: `:name` syntax in SQL; `stmt.run(obj)` takes plain object keys (no `:` prefix)
+- Do not enable WAL mode via pragma — version support is inconsistent
 
-### Gemini API
-- Model set via `GEMINI_MODEL` env var — never hardcode model name
-- JSON mode: `generationConfig: { response_mime_type: 'application/json' }`
-- Prompts loaded from `user/prompts.json` at runtime (not hardcoded in tailor.js/coverletter.js)
+### LLM (Gemini or Ollama)
+- Provider: `LLM_PROVIDER` env var (`gemini` | `ollama`)
+- Gemini model: always from `GEMINI_MODEL` env var — never hardcode a model name
+- Tailor prompt: assembled from `prompts/tailor.md` + `user/profile.md` + `user/cv.md`
+- Rescore + coverletter prompts: loaded from `user/prompts.json` at runtime
+- JSON mode: Gemini → `response_mime_type: 'application/json'`; Ollama → `format: "json"`
 
-### resume markdown format (user/cv.md)
-- Uses Oh My CV syntax: `  ~ text` for right-side annotations; YAML front matter for header
-- Complete CV with no `{{placeholders}}` — AI rewrites summary and reorders skills/bullets directly
-- Copy from `user/cv.example.md` as a starting point
+### Fetch / API
+- All browser `fetch()` calls must go through `frontend/src/lib/api.ts` — never raw fetch in components
+- When adding an endpoint: add the typed method to `api.ts` first, then update SPEC.md and the demo mock
 
-### DB
-- Test DB: set `TEST_DB_PATH` env var in tests to avoid touching production DB
-- All CRUD in `db.js`, imported by `server.js`
-- Status values: `not_started` | `analyzed` | `exported` | `applied` | `interview` | `rejected`
-- `updateApplication` accepts any column in `applications` table — caller controls what to update
+### SQLite access
+- All reads and writes go through `backend/db.js` — `server.js` never queries the DB directly
+- DB schema changes: add column to `CREATE TABLE` block AND to the `ALTER TABLE` migration loop in `db.js`
+- Valid status values: `not_started` | `applied` | `followed_up` | `interviewed` | `rejected`
 
-### Frontend
-- React + TypeScript + Vite + Tailwind + shadcn/ui
-- All API calls go through `frontend/src/lib/api.ts`
-- Path alias `@/` resolves to `frontend/src/`
-- Production build output: `backend/public/` (served by Express as SPA fallback)
+### Demo mode
+- `VITE_DEMO_MODE=true` intercepts all API calls before any `fetch`
+- New read paths → add mock data to `demo-data.ts` and a branch in `api.ts`
+- After editing demo source markdown: `npm run gen:demo`
 
 ### renderer.js
-- `renderResume(markdown, theme)` — reads CSS from `themes/<theme>.css`
-- `renderResumeWithCss(markdown, css, theme)` — uses provided CSS string (for live style preview)
-- `renderCoverLetter(markdown)` — simple HTML for cover letter PDF
-- Two-column layout triggered by theme's CSS (modern theme uses `.two-col`)
+- `renderResume(markdown, theme)` — reads `themes/<theme>.css`
+- `renderResumeWithCss(markdown, css, theme)` — injects CSS string (live style editor)
+- `renderCoverLetter(markdown)` — simple HTML wrapper
+- Two-column layout: controlled by `TWO_COLUMN_THEMES` set; emits `.resume-left` / `.resume-right`
 
 ### exporter.js
-- `exportResumePDF(markdown, theme)` → Buffer
-- `exportCoverLetterPDF(markdown)` → Buffer
-- Both use `page.setContent()` + `page.pdf({ printBackground: true })`
-- No Oh My CV dependency — renders directly from `renderer.js` HTML
+- `exportResumePDF(markdown, theme)` and `exportCoverLetterPDF(markdown)` → Buffer
+- Always use `printBackground: true` — required for coloured elements
 
----
-
-## Environment Variables (`backend/.env`)
-
-```
-GEMINI_API_KEY=AIza...
-GEMINI_MODEL=gemini-2.5-flash
-OUTPUT_DIR=../output          # optional, PDFs streamed directly (not saved to disk in v2)
-```
-
-Oh My CV (`OHMYCV_PATH`, `OHMYCV_PORT`) has been removed — no longer needed.
+### user/ directory
+- `user/cv.md` — complete resume, no `{{placeholders}}`, AI rewrites directly
+- `user/profile.md` — target roles + adaptive framing; read by tailor.js on every analyze
+- `user/prompts.json` — user-editable prompts (`rescore` and `coverletter` keys only)
+- This directory is gitignored; never commit personal files
 
 ---
 
 ## Known Gotchas
 
-1. Puppeteer `page.pdf()` requires `printBackground: true` to render coloured elements
-2. `node:sqlite` does NOT support WAL mode toggle via pragma in all versions — keep default journal mode
-3. `user.config.js` is not cached (`delete require.cache[...]`) so live theme changes take effect without restart
-4. `tailor.js` uses `baseMd` if provided (from DB template); falls back to `user/cv.md` otherwise
+1. `user.config.js` is not cached (`delete require.cache[...]`) — live theme changes work without restart
+2. `tailor.js` uses `baseMd` if provided (from a DB template); falls back to `user/cv.md` otherwise
+3. Puppeteer `page.pdf()` requires `printBackground: true` or coloured backgrounds vanish

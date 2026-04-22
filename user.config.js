@@ -1,16 +1,12 @@
 /**
  * user.config.js — User-facing configuration
  *
- * Edit this file to customise your Job Application Tracking System instance.
- * All personal data (resume, config, cover letter) lives in user/.
+ * Edit this file to set your default resume theme.
+ * The theme can also be changed per-application in the UI.
  */
 module.exports = {
-  /** Resume theme. Must match a filename in themes/ (without .css) */
-  theme: 'classic',
-
-  /**
-   * Gemini model to use for tailoring and cover letter generation.
-   * Overridden by GEMINI_MODEL in backend/.env if that key is set.
+  /** Default resume theme. Must match a filename in themes/ (without .css)
+   *  Options: classic | modern | executive | sidebar
    */
-  geminiModel: 'gemini-2.5-flash',
+  theme: 'classic',
 };

@@ -31,9 +31,19 @@ const copies = [
     hint: 'Edit user/cover-letter/template.md — write your cover letter template.',
   },
   {
+    src:  'user/cover-letter/static.example.md',
+    dest: 'user/cover-letter/static.md',
+    hint: 'Edit user/cover-letter/static.md — your pre-written cover letter for applications without AI (only {{job_title}} and {{company}} are filled automatically).',
+  },
+  {
+    src:  'user/prompts.example.json',
+    dest: 'user/prompts.json',
+    hint: 'Edit user/prompts.json — customize the rescore and coverletter LLM prompts (optional).',
+  },
+  {
     src:  'backend/.env.example',
     dest: 'backend/.env',
-    hint: 'Edit backend/.env — set GEMINI_API_KEY to your Gemini API key.',
+    hint: 'Edit backend/.env — set GEMINI_API_KEY, or set LLM_PROVIDER=ollama for local inference.',
   },
 ];
 
