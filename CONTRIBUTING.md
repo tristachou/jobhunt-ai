@@ -134,7 +134,7 @@ jobhunt-ai/
 │   ├── tailor.md          # One-shot resume tailor prompt
 │   ├── evaluate.md        # Job fit evaluation prompt
 │   └── _shared.md         # Shared scoring rules and archetype table
-├── themes/                # Resume CSS (classic / modern / minimal / compact / bold)
+├── themes/                # Resume CSS (classic / modern / executive / sidebar)
 ├── user/                  # ← gitignored; each contributor keeps their own copy
 │   ├── cv.md              # Complete resume (Oh My CV markdown, no placeholders)
 │   ├── profile.md         # Target roles + narrative framing
@@ -250,6 +250,19 @@ for (const col of [
 
 ## Pull Request Guidelines
 
+### Branch naming
+
+Use the format `<type>/<short-description>` — keep it lowercase with hyphens:
+
+| Pattern | Example |
+|---|---|
+| `feat/<description>` | `feat/ollama-provider` |
+| `fix/<description>` | `fix/pdf-export-blank-page` |
+| `docs/<description>` | `docs/update-readme` |
+| `chore/<description>` | `chore/bump-puppeteer` |
+
+If the change relates to an issue, include the number: `fix/123-pdf-export-blank-page`.
+
 ### Title prefix
 
 Use one of these prefixes so the change type is immediately clear:
@@ -277,6 +290,7 @@ Your PR description should answer:
 
 - [ ] `cd backend && npm test` passes
 - [ ] `npm run typecheck` passes (frontend TypeScript — same check as CI)
+- [ ] `npm run lint` passes (ESLint for both backend and frontend — same check as CI)
 - [ ] If you changed LLM-related code (`tailor.js`, `coverletter.js`, `evaluator.js`): tested with at least one real job description against your configured provider
 - [ ] If you added a new API endpoint: updated `SPEC.md` (API endpoints table) and added a mock in `api.ts` demo layer (if applicable)
 - [ ] If you changed the DB schema: followed the migration pattern above and updated `SPEC.md`

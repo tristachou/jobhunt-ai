@@ -354,7 +354,7 @@ api.post('/style/preview', (req, res) => {
     const latest   = apps.find(a => a.resume_md);
     const markdown = latest
       ? latest.resume_md
-      : fs.readFileSync(BASE_MD_PATH, 'utf8');
+      : fs.readFileSync(CV_MD_PATH, 'utf8');
     res.json({ html: renderResumeWithCss(markdown, css, theme || undefined) });
   } catch (err) {
     res.status(500).json({ error: err.message });

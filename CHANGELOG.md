@@ -1,3 +1,15 @@
+## 2026-04-23 — Contributor tooling: ESLint, Prettier, editorconfig, CODE_OF_CONDUCT, CI lint
+
+- Add `backend/eslint.config.js` (ESLint 9 flat config, CJS); install `@eslint/js` + `globals` as backend devDeps — `npm run lint --prefix backend` now works
+- Fix `server.js`: replace undefined `BASE_MD_PATH` with `CV_MD_PATH` in style preview endpoint (caught by ESLint `no-undef`)
+- Add `frontend-lint` and `backend-lint` jobs to `.github/workflows/test.yml` — ESLint now runs in CI on every PR
+- Add `.editorconfig` (LF, 2-space indent, UTF-8, trim trailing whitespace)
+- Add `.prettierrc`; install `prettier` as root devDep; add `format` and `format:check` scripts to root `package.json`
+- Add `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1)
+- Fix `.gitignore` typo: `coverl-letter` → `cover-letter`
+- Fix `README.md`: add `cp .env.example .env` to Getting Started step 4; fix theme options comment (`minimal|compact|bold` → `executive|sidebar`); fix "Five built-in themes" → "Four"; remove broken `style.png` screenshot reference; remove duplicate gitignore note
+- Fix `CONTRIBUTING.md`: add branch naming convention section; add `npm run lint` to pre-submit checklist; fix architecture comment (`minimal/compact/bold` → `classic/modern/executive/sidebar`)
+
 ## 2026-04-23 — Fix evaluator.js to read user/profile.md; clean up legacy files
 
 - Fix `evaluator.js`: replace hardcoded `prompts/_profile.md` path with `user/profile.md` — evaluator now reads the same profile file as tailor.js; `_profile.md` was a legacy path that was already deleted

@@ -54,8 +54,6 @@ KPI cards (total / applied / interview rate / avg fit score), a status pipeline 
 ### Style — live CSS editor
 Pick a built-in theme or write your own CSS. The preview updates in real time so you can tweak spacing, fonts, and colours without leaving the browser.
 
-![Style page](docs/screenshots/style.png)
-
 ---
 
 > **This tool is designed for local, single-user use only.**
@@ -86,20 +84,19 @@ npm run setup
 - `user/cover-letter/template.md` — your cover letter template
 
 ```bash
-# 4. Set your AI credentials — edit backend/.env
-#    Gemini (default): set GEMINI_API_KEY
-#    Ollama (local, no key needed): set LLM_PROVIDER=ollama, OLLAMA_BASE_URL, OLLAMA_MODEL
+# 4. Set your AI credentials
+cp backend/.env.example backend/.env
+# Edit backend/.env — set GEMINI_API_KEY
+# (Ollama users: set LLM_PROVIDER=ollama, OLLAMA_BASE_URL, OLLAMA_MODEL instead)
 
 # 5. (Optional) Choose your default theme in user.config.js
-#    Options: classic | modern | minimal | compact | bold
+#    Options: classic | modern | executive | sidebar
 
 # 6. Start
 npm run dev
 ```
 
 Open **http://localhost:5173**, paste a job description, click Generate.
-
-The `user/` folder is gitignored — your personal data stays local.
 
 > The `user/` folder is gitignored — your personal data (CV, profile, cover letter) stays local and is never committed.
 
@@ -130,7 +127,7 @@ Paste JD → Generate → Gemini tailors resume + cover letter
 
 ## Themes
 
-Five built-in themes live in `themes/`. Switch per-application in the Generate form or Editor, or use the **Style** page to live-edit CSS.
+Four built-in themes live in `themes/`. Switch per-application in the Generate form or Editor, or use the **Style** page to live-edit CSS.
 
 | Theme | Description |
 |-------|-------------|
