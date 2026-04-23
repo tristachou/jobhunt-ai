@@ -1,3 +1,9 @@
+## 2026-04-23 — Remove v1 leftover files from frontend
+
+- Delete `frontend/app.js`, `frontend/editor.html`, `frontend/editor.js` — v1 vanilla JS files superseded by React/TypeScript in `frontend/src/`
+
+---
+
 ## 2026-04-23 — Contributor tooling: ESLint, Prettier, editorconfig, CODE_OF_CONDUCT, CI lint
 
 - Add `backend/eslint.config.js` (ESLint 9 flat config, CJS); install `@eslint/js` + `globals` as backend devDeps — `npm run lint --prefix backend` now works
